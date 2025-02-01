@@ -29,7 +29,7 @@
 
 namespace enc {
 
-double getDistToActionSequenceCoord(const std::vector<std::shared_ptr<Actoid>> &sequence, const blaze::DynamicVector<int> &distances)
+double getDistToActionSequenceCoord(const std::vector<Actoid *> &sequence, const blaze::DynamicVector<int> &distances)
 {
   auto &battleMap = BattleMap::getInstance();
 
@@ -48,9 +48,9 @@ double getDistToActionSequenceCoord(const std::vector<std::shared_ptr<Actoid>> &
   return 0.0; // No movement found, or sequence is at current position
 }
 
-std::pair<std::vector<std::shared_ptr<Actoid>>, ThreatScore>
+std::pair<std::vector<Actoid *>, ThreatScore>
 getNearestAndMinimize(
-    std::vector<std::vector<std::shared_ptr<Actoid>>>& sequences,
+    std::vector<std::vector<Actoid *>>& sequences,
     const std::vector<size_t>& sortedSequences,
     const std::unordered_map<size_t, ThreatScore>& sequenceToThreat,
     const blaze::DynamicVector<int>& distances,
@@ -94,7 +94,7 @@ getNearestAndMinimize(
     // Filter out transitions that contribute nothing
     for (size_t idx : minDistSequences) {
         auto& sequence = sequences[idx];
-        std::vector<std::shared_ptr<Actoid>> newSequence;
+        std::vector<Actoid *> newSequence;
         
         for (size_t tIdx = 0; tIdx < sequence.size(); ++tIdx) {
             bool shouldKeep = false;
@@ -134,8 +134,8 @@ getNearestAndMinimize(
 
 SequenceSearchResult
 findBestSequence(Combatant &combatant, const StateMachine &fsm,
-                 const std::unordered_map<std::shared_ptr<Actoid>, CoordVector> &transitionToEligibleCoords,
-                 std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndMovementType,
+                 const std::unordered_map<Actoid *, CoordVector> &transitionToEligibleCoords,
+                 std::unordered_map<Actoid *, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndMovementType,
                  const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths, double infeasibilityMultiplier)
 {
   auto &battleMap = BattleMap::getInstance();
@@ -149,9 +149,9 @@ findBestSequence(Combatant &combatant, const StateMachine &fsm,
     }
 
   // We'll need these for tracking sequences and their threats
-  std::vector<std::vector<std::shared_ptr<Actoid>>> sequences;
-  std::unordered_set<std::vector<std::shared_ptr<Actoid>>, ActoidVectorHash> sequenceSet;
-  std::unordered_map<std::shared_ptr<Actoid>, CoordVector> transitionToMsPath;
+  std::vector<std::vector<Actoid *>> sequences;
+  std::unordered_set<std::vector<Actoid *>, ActoidVectorHash> sequenceSet;
+  std::unordered_map<Actoid *, CoordVector> transitionToMsPath;
 
   // Track threats
   std::unordered_map<size_t, ThreatScore> sequenceToThreat;
@@ -175,12 +175,12 @@ findBestSequence(Combatant &combatant, const StateMachine &fsm,
     }
 
   // DFS helper function
-  std::function<void(StateId, std::vector<std::shared_ptr<Actoid>> &, const CoordAndMovementType *)> dfs;
-  dfs = [&](StateId currentState, std::vector<std::shared_ptr<Actoid>> &currentSequence, const CoordAndMovementType *coord) {
+  std::function<void(StateId, std::vector<Actoid *> &, const CoordAndMovementType *)> dfs;
+  dfs = [&](StateId currentState, std::vector<Actoid *> &currentSequence, const CoordAndMovementType *coord) {
     if(currentState == -1)
       { // NOP state
         // Create sequence set without depth indicators
-        std::vector<std::shared_ptr<Actoid>> strippedSequence;
+        std::vector<Actoid *> strippedSequence;
         bool containsThreatModifier = false;
 
         for(const auto &action : currentSequence)
@@ -225,7 +225,7 @@ findBestSequence(Combatant &combatant, const StateMachine &fsm,
   };
 
   // Start DFS from initial state
-  std::vector<std::shared_ptr<Actoid>> currentSequence;
+  std::vector<Actoid *> currentSequence;
   dfs(0, currentSequence, nullptr);
   // Clear threat calculation caches
   // TODO: Add cache clearing mechanism for C++
@@ -290,7 +290,7 @@ findBestSequence(Combatant &combatant, const StateMachine &fsm,
           battleMap.withCombatantPosition(combatant, coord, [&]() {
             for(size_t idx : ids)
               {
-                std::shared_ptr<Actoid> deltaActionInSequence;
+                Actoid * deltaActionInSequence;
                 double threatAcc = 0.0;
                 bool firstFeasibilityCheckDone = false;
                 double feasibilityMultiplier = 1.0;
@@ -424,7 +424,7 @@ findBestSequence(Combatant &combatant, const StateMachine &fsm,
   return {std::move(nearestSequence), std::move(maxThreat), std::move(transitionToMsPath)};
 }
 
-std::shared_ptr<Actoid> getAction(Combatant &combatant)
+Actoid * getAction(Combatant &combatant)
 {
   auto &battleMap = BattleMap::getInstance();
   // battleMap.clearCaches();

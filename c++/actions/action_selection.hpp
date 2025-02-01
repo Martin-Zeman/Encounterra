@@ -59,14 +59,14 @@ namespace enc
 
   struct SequenceSearchResult
   {
-    std::vector<std::shared_ptr<Actoid>> sequence;
+    std::vector<Actoid *> sequence;
     ThreatScore threat;
-    std::unordered_map<std::shared_ptr<Actoid>, CoordVector> msTransitionPaths;
+    std::unordered_map<Actoid *, CoordVector> msTransitionPaths;
   };
 
   struct ActoidVectorHash
   {
-    size_t operator()(const std::vector<std::shared_ptr<Actoid>> &vec) const
+    size_t operator()(const std::vector<Actoid *> &vec) const
     {
       size_t hash = 0;
       for(const auto &actoid : vec)
@@ -79,7 +79,7 @@ namespace enc
 
   // struct ActoidVectorEqual
   // {
-  //   bool operator()(const std::vector<std::shared_ptr<Actoid>> &lhs, const std::vector<std::shared_ptr<Actoid>> &rhs) const
+  //   bool operator()(const std::vector<Actoid *> &lhs, const std::vector<Actoid *> &rhs) const
   //   {
   //     return lhs.size() == rhs.size() && std::equal(lhs.begin(), lhs.end(), rhs.begin(), [](const auto &l, const auto &r) { return l == r; });
   //   }
@@ -87,7 +87,7 @@ namespace enc
 
   struct ActionSequence
   {
-    std::vector<std::shared_ptr<Actoid>> actions;
+    std::vector<Actoid *> actions;
     double threatScore;
 
     bool operator==(const ActionSequence &other) const
@@ -113,13 +113,13 @@ namespace enc
       for(const auto &action : seq.actions)
         {
           // Combine hashes using FNV-1a inspired approach
-          hash ^= std::hash<void *>{}(action.get()) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+          hash ^= std::hash<void *>{}(action) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
         }
       return hash;
     }
   };
 
-  double getDistToActionSequenceCoord(const std::vector<std::shared_ptr<Actoid>> &sequence, const blaze::DynamicVector<int> &distances);
+  double getDistToActionSequenceCoord(const std::vector<Actoid *> &sequence, const blaze::DynamicVector<int> &distances);
 
   /**
    *  Filters, minimizes, and sorts action sequences to find the one with maximum threat while maintaining minimum distance.
@@ -143,8 +143,8 @@ namespace enc
    *   @return: A pair of the action sequence with maximum threat and more distant coordinate requirement after
    *   minimization and the maximum threat.
    */
-  std::pair<std::vector<std::shared_ptr<Actoid>>, ThreatScore>
-  getNearestAndMinimize(std::vector<std::vector<std::shared_ptr<Actoid>>> &sequences, const std::vector<size_t> &sortedSequences,
+  std::pair<std::vector<Actoid *>, ThreatScore>
+  getNearestAndMinimize(std::vector<std::vector<Actoid *>> &sequences, const std::vector<size_t> &sortedSequences,
                         const std::unordered_map<size_t, ThreatScore> &sequenceToThreat, const blaze::DynamicVector<int> &distances,
                         const std::unordered_map<size_t, std::unordered_map<size_t, double>> &sequenceIdxToTransitionStepThreat);
 
@@ -156,8 +156,8 @@ namespace enc
    */
   SequenceSearchResult
   findBestSequence(Combatant &combatant, const StateMachine &fsm,
-                   const std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> &transitionToEligibleCoords,
-                   std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndType,
+                   const std::unordered_map<Actoid *, std::vector<Coord>> &transitionToEligibleCoords,
+                   std::unordered_map<Actoid *, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndType,
                    const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
                    double infeasibilityMultiplier = 0.5);
 
@@ -167,6 +167,6 @@ namespace enc
    *  the best action is recalculated every time to react to any possible changes on the battle_map.
    *  @return: the next best actoid
    */
-  std::shared_ptr<Actoid> getAction(Combatant &combatant);
+  Actoid * getAction(Combatant &combatant);
 
 } // namespace enc

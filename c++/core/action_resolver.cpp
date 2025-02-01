@@ -137,13 +137,13 @@ namespace enc
     BattleMap::getInstance().removeCombatantIfDead(target);
   }
 
-  ActionResult resolveByActoidFlags(const std::shared_ptr<Actoid> &action, Combatant &combatant)
+  ActionResult resolveByActoidFlags(Actoid *action, Combatant &combatant)
   {
     // TODO:
     return ActionResult::MISS;
   }
 
-  std::shared_ptr<Actoid> handleErrorCase(const std::shared_ptr<Actoid> &action, Combatant &combatant)
+  Actoid *handleErrorCase(Actoid *action, Combatant &combatant)
   {
     if(action->getFactory().getAbilityType() == AbilityType::STANDARD_MOVEMENT)
       {
@@ -155,9 +155,7 @@ namespace enc
     if(combatant.hasAction())
       {
         std::cerr << "Action " << action->toString() << " by " << combatant._name << " is not feasible. Taking the Dodge action!" << std::endl;
-        auto dodgeFactory = std::make_shared<DodgeFactory>(
-          std::shared_ptr<Combatant>(&combatant, [](Combatant *) {}) // non-owning shared_ptr, TODO: I don't like this
-        );
+        auto dodgeFactory = std::make_shared<DodgeFactory>(&combatant);
         return dodgeFactory->create({});
       }
 
@@ -165,7 +163,7 @@ namespace enc
     return nullptr;
   }
 
-  ActionResult resolveAction(const std::shared_ptr<Actoid> &action, Combatant &combatant)
+  ActionResult resolveAction(Actoid *action, Combatant &combatant)
   {
     // Takes care of possible wildshape
     Combatant &currentForm = combatant.getCurrentForm();

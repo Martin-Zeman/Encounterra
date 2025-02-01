@@ -14,9 +14,9 @@ namespace enc
   {
     std::unordered_set<size_t> actionHashes;
     // Optionally keep the actions if we need them later
-    // std::vector<std::shared_ptr<Actoid>> actions;
+    // std::vector<Actoid *> actions;
 
-    explicit ActionFootprint(const std::vector<std::shared_ptr<Actoid>> &actoids)// : actions(actoids) // Optional
+    explicit ActionFootprint(const std::vector<Actoid *> &actoids)// : actions(actoids) // Optional
     {
       for(const auto &actoid : actoids)
         {
@@ -80,9 +80,9 @@ namespace enc
   public:
     DummyActoidFactory() : ActoidFactory("DummyFactory", "Dummy", nullptr, AbilityType::NOP) {}
 
-    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override { return {}; }
+    std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override { return {}; }
 
-    std::shared_ptr<Actoid> create(void *target) override { return nullptr; }
+    Actoid * create(void *target) override { return nullptr; }
 
     std::optional<Resource *> getResource() override { return std::nullopt; }
 

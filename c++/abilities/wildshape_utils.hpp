@@ -8,10 +8,10 @@
 
 namespace enc
 {
-  using CombatantFactory = std::function<std::unique_ptr<Combatant>(const std::string &)>;
+  using CombatantFactory = std::function<Combatant *(const std::string &)>;
 
   std::vector<CombatantFactory> getAvailableWildshapeForms(int level, AbilityType actionType);
 
-  std::vector<std::shared_ptr<Wildshape>> preallocateWildshapeForms(Combatant& combatant, AbilityType actionType, WildshapeFactory &factory);
+  std::vector<Wildshape *> preallocateWildshapeForms(Combatant *combatant, AbilityType actionType, WildshapeFactory &factory);
 
 } // namespace enc

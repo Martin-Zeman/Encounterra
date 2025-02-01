@@ -15,8 +15,7 @@ namespace enc
   class RoundManager
   {
   public:
-    RoundManager(std::vector<std::shared_ptr<Combatant>> &combatants, int numRounds = 50) : _combatants(combatants), _numRounds(numRounds)
-    {}
+    RoundManager(std::vector<Combatant *> &combatants, int numRounds = 50) : _combatants(combatants), _numRounds(numRounds) {}
 
     void rollInitiative();
 
@@ -24,7 +23,7 @@ namespace enc
 
     void prepCombatants();
 
-    bool goesBeforeInInitiative(const Combatant &combatant1, const Combatant &combatant2) const;
+    bool goesBeforeInInitiative(const Combatant *combatant1, const Combatant *combatant2) const;
 
     bool isOnlyOneTeamStanding() const;
 
@@ -38,8 +37,8 @@ namespace enc
     void printResults();
 
   private:
-    std::vector<std::shared_ptr<Combatant>> &_combatants;
+    std::vector<Combatant *> &_combatants;
     int _numRounds;
-    std::weak_ptr<Combatant> _currCombatant; // For serialization purposes
+    Combatant *_currCombatant; // For serialization purposes
   };
 } // namespace enc

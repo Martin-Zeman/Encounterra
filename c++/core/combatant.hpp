@@ -123,17 +123,17 @@ namespace enc
     Combatant *getSwallower() const { return _swallower; }
     void setSwallower(Combatant *swallower) { _swallower = swallower; }
     bool isSwallowed() const { return _swallower != nullptr; }
-    const std::vector<std::shared_ptr<Condition>> &getConditions() const { return _conditions; }
-    const std::vector<std::shared_ptr<ConditionWithDC>> &getDCConditions() const { return _dcConditions; }
+    const std::vector<Condition *> &getConditions() const { return _conditions; }
+    const std::vector<ConditionWithDC *> &getDCConditions() const { return _dcConditions; }
     bool isAffectedBy(Conditions condition) const;
-    void applyCondition(std::shared_ptr<Condition> condition);
-    void applyDCCondition(std::shared_ptr<ConditionWithDC> dcCondition);
+    void applyCondition(Condition *condition);
+    void applyDCCondition(ConditionWithDC *dcCondition);
     bool removeCondition(Conditions condition, Combatant *initiator = nullptr);
     bool removeDCCondition(Conditions condition, Combatant *initiator = nullptr);
     void removeAllConditionsOfType(Conditions condition);
     Combatant *getInitiatorOfCondition(Conditions condition);
     Combatant *getGrappledTarget();
-    std::vector<std::weak_ptr<ConditionWithDC>> needsToBreakOutOfGrapple() const;
+    std::vector<ConditionWithDC*> needsToBreakOutOfGrapple() const;
     bool breakOutOfGrapple(ConditionWithDC *grappleCondition);
     void setConcentrationEffect(Effect *effect);
     Effect *getConcentrationEffect() const { return _concentrationEffect; }
@@ -183,8 +183,8 @@ namespace enc
     std::vector<std::shared_ptr<ActoidFactory>> &getBonusActionFactories() { return _bonusActionFactories; }
     std::vector<std::shared_ptr<ActoidFactory>> &getReactionFactories() { return _reactionFactories; }
     std::vector<std::shared_ptr<ActoidFactory>> &getHasteActionFactories() { return _hasteActionFactories; }
-    void setAvailableWildshapeForms(std::vector<std::shared_ptr<Wildshape>> wildshapeForms) { _availableWildshapeForms = wildshapeForms; }
-    const std::vector<std::shared_ptr<Wildshape>> &getAvailableWildshapeForms() { return _availableWildshapeForms; }
+    void setAvailableWildshapeForms(std::vector<Wildshape *> wildshapeForms) { _availableWildshapeForms = wildshapeForms; }
+    const std::vector<Wildshape *> &getAvailableWildshapeForms() { return _availableWildshapeForms; }
     DirectThreatFactory* getDangerZoneAttack() { return _dangerZoneAttack; }
     void setDangerZoneAttack(DirectThreatFactory *dangerZoneAttack) { _dangerZoneAttack = dangerZoneAttack; }
     AttackFactory* getAoOFactory() { return _aoOFactory; }
@@ -209,10 +209,10 @@ namespace enc
     bool checkConcentration(int dmg);
     void withActionEnablerEffect(Actoid& action, const std::function<void(bool)>& fn);
     void withHasAction(const std::function<void()> &fn);
-    const std::vector<std::shared_ptr<Actoid>> &getActionPlan() const;
-    void setActionPlan(std::vector<std::shared_ptr<Actoid>> plan);
-    std::shared_ptr<Actoid> popActionPlan(); // Removes and returns first action
-    std::vector<std::shared_ptr<Actoid>>
+    const std::vector<Actoid *> &getActionPlan() const;
+    void setActionPlan(std::vector<Actoid *> plan);
+    Actoid * popActionPlan(); // Removes and returns first action
+    std::vector<Actoid *>
     calculateActionPlan(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths);
 
     /**
@@ -221,7 +221,7 @@ namespace enc
      * ----------------------------------------------------------------------------------------------------------------------------------------------
      */
 
-    std::shared_ptr<ActoidFactory> addMeleeAttack(const std::string &name, const std::shared_ptr<Combatant>& owner, int toHit, const std::vector<Die> &dmgDice, int dmgBonus,
+    std::shared_ptr<ActoidFactory> addMeleeAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice, int dmgBonus,
                                                   DamageType damageType, int attackRange)
     {
       auto factory = std::make_shared<MeleeAttackFactory>("MeleeAttackFactory", name, owner, AbilityType::MELEE_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
@@ -229,7 +229,7 @@ namespace enc
       return factory;
     }
 
-    std::shared_ptr<ActoidFactory> addRangedAttack(const std::string &name, const std::shared_ptr<Combatant>& owner, int toHit, const std::vector<Die> &dmgDice,
+    std::shared_ptr<ActoidFactory> addRangedAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice,
                                                    int dmgBonus, DamageType damageType, int attackRange)
     {
       auto factory = std::make_shared<RangedAttackFactory>("RangedAttackFactory", name, owner, AbilityType::RANGED_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
@@ -456,8 +456,7 @@ namespace enc
      */
 
   private:
-
-    template <typename ConditionType> Combatant *checkConditionList(const std::vector<std::shared_ptr<ConditionType>> &condList, Conditions condition)
+    template <typename ConditionType> Combatant *checkConditionList(const std::vector<ConditionType *> &condList, Conditions condition)
     {
       for(const auto &cond : condList)
         {
@@ -529,11 +528,11 @@ namespace enc
     std::shared_ptr<Spellslots> _spellslots;
     std::unordered_map<AbilityType, std::shared_ptr<Resource>> _resources;
     std::unique_ptr<ActionPlanStrategy> _actionPlanStrategy;
-    std::vector<std::shared_ptr<Actoid>> _actionPlan;
+    std::vector<Actoid *> _actionPlan;
     int _weaponDmgDealtThisTurn = 0; // This is used for ActionSurge
     int _oneTimeAcbonus = 0; // TODO: Parry may work differently in 2024 (battle master parry reduces dmg, let's wait for monsters)
     Effect *_concentrationEffect{nullptr};
-    std::vector<std::shared_ptr<Wildshape>> _availableWildshapeForms;
+    std::vector<Wildshape *> _availableWildshapeForms;
     std::unique_ptr<blaze::DynamicMatrix<Coord>> _shortestPathsCache = nullptr; // TODO: Do I still need this?
     bool _uncannyDodgeActive = false;
 

@@ -23,13 +23,13 @@ namespace enc
     static constexpr bool concentration = false;
     static constexpr SpellType type = SpellType::OTHER;
 
-    MistyStepFactory(Combatant * caster, Resource *resource);
+    MistyStepFactory(Combatant *caster, Resource *resource);
 
     std::optional<Coord> getEligibleTargets() const;
 
-    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
+    std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override;
 
-    std::shared_ptr<Actoid> create(void *target) override;
+    Actoid * create(void *target) override;
 
     std::optional<Resource *> getResource() override { return _resource; }
 

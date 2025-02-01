@@ -595,7 +595,7 @@ TEST_F(ThreatUtilsTest, CalcThreatForPathWithMistyStepScenario1) {
     auto [threat, maxThreatPath] = calcThreatForPathWithMistyStep(path.value(), draconic_sorcerer_lvl_5, effectToCoords);
     EXPECT_DOUBLE_EQ(threat[0], 0.0);
 
-    std::vector<std::shared_ptr<Actoid>> actoids;
+    std::vector<Actoid *> actoids;
     std::shared_ptr<ActoidFactory> msFactory = std::make_shared<MistyStepFactory>(draconic_sorcerer_lvl_5, &draconic_sorcerer_lvl_5->getSpellslots());
 
     EXPECT_EQ(actoids.size(), 6);

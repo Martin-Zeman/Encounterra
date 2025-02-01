@@ -18,7 +18,7 @@ namespace enc
 
   struct ActoidSetHash
   {
-    size_t operator()(const std::unordered_set<std::shared_ptr<Actoid>> &set) const
+    size_t operator()(const std::unordered_set<Actoid *> &set) const
     {
       size_t hash = 0;
       for(const auto &actoid : set)
@@ -31,7 +31,7 @@ namespace enc
 
   struct ActoidSetEqual
   {
-    bool operator()(const std::unordered_set<std::shared_ptr<Actoid>> &lhs, const std::unordered_set<std::shared_ptr<Actoid>> &rhs) const
+    bool operator()(const std::unordered_set<Actoid *> &lhs, const std::unordered_set<Actoid *> &rhs) const
     {
       if(lhs.size() != rhs.size())
         return false;
@@ -42,8 +42,8 @@ namespace enc
   struct ActionDagResult
   {
     StateMachine fsm;
-    std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> movementTransToCoordAndType;
-    std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> transitionToEligibleCoords;
+    std::unordered_map<Actoid *, std::pair<Coord, MovementThreatType>> movementTransToCoordAndType;
+    std::unordered_map<Actoid *, std::vector<Coord>> transitionToEligibleCoords;
   };
   // Regular expressions for movement patterns
   extern const std::regex regexMovementPattern;
@@ -56,7 +56,7 @@ namespace enc
    * @param prioActionDict Either PRIORITY_ACTIONS or PRIORITY_BONUS_ACTIONS
    * @return Dict mapping priority action -> list of eligible follow-up transitions
    */
-  std::unordered_map<std::shared_ptr<Actoid>, std::vector<std::pair<std::shared_ptr<Actoid>, StateId>>>
+  std::unordered_map<Actoid *, std::vector<std::pair<Actoid *, StateId>>>
   getPostTransitionsOfPriorityTransitions(StateMachine &fsm, const std::unordered_map<AbilityType, PriorityActionInfo> &prioActionDict);
 
   /**
@@ -67,8 +67,8 @@ namespace enc
    *     1. Priority action -> list of eligible follow-up transitions
    *     2. Priority bonus action -> list of eligible follow-up transitions
    */
-  std::pair<std::unordered_map<std::shared_ptr<Actoid>, std::vector<std::pair<std::shared_ptr<Actoid>, StateId>>>,
-            std::unordered_map<std::shared_ptr<Actoid>, std::vector<std::pair<std::shared_ptr<Actoid>, StateId>>>>
+  std::pair<std::unordered_map<Actoid *, std::vector<std::pair<Actoid *, StateId>>>,
+            std::unordered_map<Actoid *, std::vector<std::pair<Actoid *, StateId>>>>
   getPostTransitionsOfAllPriorityTransitions(StateMachine &protoFsm);
 
   /**
@@ -77,7 +77,7 @@ namespace enc
    * @param fsm The FSM to analyze
    * @return Vector of transitions available after Misty Step
    */
-  std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> getPostMistyStepTransitions(StateMachine &fsm);
+  std::vector<std::pair<Actoid *, StateId>> getPostMistyStepTransitions(StateMachine &fsm);
 
   /**
    * Movement states that share eligible transitions can be merged. Create new states for them.
@@ -88,9 +88,9 @@ namespace enc
    *     1. Map from eligible transitions set to newly created state
    *     2. Map from coordinate to set of eligible transitions
    */
-  std::pair<std::unordered_map<std::unordered_set<std::shared_ptr<Actoid>>, StateId, ActoidSetHash, ActoidSetEqual>,
-            std::unordered_map<Coord, std::unordered_set<std::shared_ptr<Actoid>>>>
-  createMovementStates(StateMachine &fsm, const std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> &transitionToEligibleCoords);
+  std::pair<std::unordered_map<std::unordered_set<Actoid *>, StateId, ActoidSetHash, ActoidSetEqual>,
+            std::unordered_map<Coord, std::unordered_set<Actoid *>>>
+  createMovementStates(StateMachine &fsm, const std::unordered_map<Actoid *, std::vector<Coord>> &transitionToEligibleCoords);
 
   /**
    * Builds the Misty Step transitions of the FSM.
@@ -100,9 +100,9 @@ namespace enc
    * @param transitionToEligibleCoords Mapping from action names to their eligible coordinates
    * @param movementTransToCoordAndType Mapping from movement transition -> (coord, MovementThreatType)
    */
-  void buildMistyStepTransitions(StateMachine &fsm, const std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> &msPostTransitions,
-                                 const std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> &transitionToEligibleCoords,
-                                 std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndType);
+  void buildMistyStepTransitions(StateMachine &fsm, const std::vector<std::pair<Actoid *, StateId>> &msPostTransitions,
+                                 const std::unordered_map<Actoid *, std::vector<Coord>> &transitionToEligibleCoords,
+                                 std::unordered_map<Actoid *, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndType);
 
   /**
    * Builds the priority part of the FSM such as Dodge or Disengage.
@@ -115,9 +115,9 @@ namespace enc
    */
   void buildPriorityTransitions(
     StateMachine &fsm,
-    const std::unordered_map<std::shared_ptr<Actoid>, std::vector<std::pair<std::shared_ptr<Actoid>, StateId>>> &postPriorityTransitions,
-    const std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> &transitionToEligibleCoords,
-    std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndType,
+    const std::unordered_map<Actoid *, std::vector<std::pair<Actoid *, StateId>>> &postPriorityTransitions,
+    const std::unordered_map<Actoid *, std::vector<Coord>> &transitionToEligibleCoords,
+    std::unordered_map<Actoid *, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndType,
     const std::unordered_map<AbilityType, PriorityActionInfo> &prioActionDict);
 
   /**

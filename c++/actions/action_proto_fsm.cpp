@@ -61,11 +61,11 @@ namespace enc
      *  Note: This function assumes that it's called within the context of `generate_proto_fsm`
      *  where the FSM and other necessary structures are initialized.
      */
-    std::function<void(Combatant &, StateId, int, std::shared_ptr<Actoid>, const ActionFootprint *)> dfs;
+    std::function<void(Combatant &, StateId, int, Actoid *, const ActionFootprint *)> dfs;
 
-    dfs = [&](Combatant &subject, StateId previousStateId, int depth, std::shared_ptr<Actoid> actionTaken, const ActionFootprint *previousFeasibleActions) {
+    dfs = [&](Combatant &subject, StateId previousStateId, int depth, Actoid * actionTaken, const ActionFootprint *previousFeasibleActions) {
       auto feasibleActionFactories = getAllFeasibleActionFactories(subject, depth);
-      std::vector<std::shared_ptr<Actoid>> feasibleActions;
+      std::vector<Actoid *> feasibleActions;
       for(const auto &factory : feasibleActionFactories)
         {
           auto actions = factory->createAll();
@@ -111,7 +111,7 @@ namespace enc
                     battleMap.withCombatantWildshapeReplacement(
                       *fa, subject, battleMap.getCombatantCoordinates(subject).getRoot(), [&](Combatant &finalCombatantForm) {
                         auto newFeasibleActionFactories = getAllFeasibleActionFactories(finalCombatantForm, depth);
-                        std::vector<std::shared_ptr<Actoid>> newActions;
+                        std::vector<Actoid *> newActions;
                         newActions.reserve(newFeasibleActionFactories.size() * 4);
                         for(const auto &factory : newFeasibleActionFactories)
                           {
@@ -123,7 +123,7 @@ namespace enc
                   }
                 else if(fa->hasFlag(ActoidFlags::IS_ACTION_ENABLER))
                   {
-                    std::vector<std::shared_ptr<Actoid>> newActions;
+                    std::vector<Actoid *> newActions;
                     newActions.reserve(feasibleActionFactories.size() * 4);
                     for(const auto &factory : feasibleActionFactories)
                       {
@@ -162,11 +162,11 @@ namespace enc
     std::unordered_map<ActionFootprint, StateId, ActionFootprintHash> stateFootprintToStateId;
     std::unordered_set<ActionFootprint, ActionFootprintHash> visited;
 
-    std::function<void(Combatant &, StateId, int, std::shared_ptr<Actoid>)> dfs;
+    std::function<void(Combatant &, StateId, int, Actoid *)> dfs;
 
-    dfs = [&](Combatant &subject, StateId previousStateId, int depth, std::shared_ptr<Actoid> actionTaken) {
+    dfs = [&](Combatant &subject, StateId previousStateId, int depth, Actoid * actionTaken) {
       auto feasibleActionFactories = getAllFeasibleActionFactories(subject, depth);
-      std::vector<std::shared_ptr<Actoid>> feasibleActions;
+      std::vector<Actoid *> feasibleActions;
       for(const auto &factory : feasibleActionFactories)
         {
           auto actions = factory->createAll();
@@ -211,7 +211,7 @@ namespace enc
                     battleMap.withCombatantWildshapeReplacement(
                       *fa, subject, battleMap.getCombatantCoordinates(subject).getRoot(), [&](Combatant &finalCombatantForm) {
                         auto newFeasibleActionFactories = getAllFeasibleActionFactories(finalCombatantForm, depth);
-                        std::vector<std::shared_ptr<Actoid>> newActions;
+                        std::vector<Actoid *> newActions;
                         newActions.reserve(newFeasibleActionFactories.size() * 4);
                         for(const auto &factory : newFeasibleActionFactories)
                           {
@@ -223,7 +223,7 @@ namespace enc
                   }
                 else if(fa->hasFlag(ActoidFlags::IS_ACTION_ENABLER))
                   {
-                    std::vector<std::shared_ptr<Actoid>> newActions;
+                    std::vector<Actoid *> newActions;
                     newActions.reserve(feasibleActionFactories.size() * 4);
                     for(const auto &factory : feasibleActionFactories)
                       {

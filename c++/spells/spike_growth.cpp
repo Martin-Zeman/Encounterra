@@ -22,13 +22,13 @@ namespace enc
     return coord;
   }
 
-  std::vector<std::shared_ptr<Actoid>> SpikeGrowthFactory::createAll(void *previousActionInDag)
+  std::vector<Actoid *> SpikeGrowthFactory::createAll(void *previousActionInDag)
   {
     auto bestCoord = findBestArgs();
     return {std::make_unique<SpikeGrowth>(bestCoord, *this)};
   }
 
-  std::shared_ptr<Actoid> SpikeGrowthFactory::create(void *target)
+  Actoid * SpikeGrowthFactory::create(void *target)
   {
     Coord *coord = static_cast<Coord *>(target);
     return std::make_shared<SpikeGrowth>(*coord, *this);

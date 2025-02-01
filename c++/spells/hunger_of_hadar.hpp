@@ -25,11 +25,11 @@ namespace enc
     static constexpr SpellType type = SpellType::HARMFUL;
     static constexpr DamageType dmgType = DamageType::Cold;
 
-    HungerOfHadarFactory(int dc, AbilityType abilityType, Combatant * caster, Resource *resource);
+    HungerOfHadarFactory(int dc, AbilityType abilityType, Combatant *caster, Resource *resource);
 
     std::vector<Combatant *> getEligibleTargets() const;
-    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
-    std::shared_ptr<Actoid> create(void *target) override;
+    std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override;
+    Actoid * create(void *target) override;
 
     int getRange() const override { return static_cast<int>(HungerOfHadarFactory::range); }
 

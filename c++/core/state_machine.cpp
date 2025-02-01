@@ -66,7 +66,7 @@ namespace enc
   //     }
   // }
 
-  void StateMachine::addTransition(std::shared_ptr<Actoid> action, StateId origin, StateId dest)
+  void StateMachine::addTransition(Actoid * action, StateId origin, StateId dest)
   {
     if(origin >= _states.size() || dest >= _states.size())
       {
@@ -77,7 +77,7 @@ namespace enc
     _isDagDirty = true;
   }
 
-  void StateMachine::removeTransition(std::shared_ptr<Actoid> action, StateId origin)
+  void StateMachine::removeTransition(Actoid * action, StateId origin)
   {
     if(origin < _states.size())
       {
@@ -93,7 +93,7 @@ namespace enc
       }
   }
 
-  void StateMachine::removeTransitionFromAllStates(std::shared_ptr<Actoid> action)
+  void StateMachine::removeTransitionFromAllStates(Actoid * action)
   {
     for(StateId originState = 0; originState < _states.size(); ++originState)
       {
@@ -109,12 +109,12 @@ namespace enc
       }
   }
 
-  std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> StateMachine::getForwardTransitions(StateId state) const
+  std::vector<std::pair<Actoid *, StateId>> StateMachine::getForwardTransitions(StateId state) const
   {
     if(state >= _states.size())
       return {};
 
-    std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> result;
+    std::vector<std::pair<Actoid *, StateId>> result;
     result.reserve(_states[state].size());
     for(const auto &transition : _states[state])
       {
@@ -123,9 +123,9 @@ namespace enc
     return result;
   }
 
-  std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> StateMachine::getCurrentForwardTransitions() const
+  std::vector<std::pair<Actoid *, StateId>> StateMachine::getCurrentForwardTransitions() const
   {
-    std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> result;
+    std::vector<std::pair<Actoid *, StateId>> result;
     result.reserve(_states[_currentState].size());
     for(const auto &transition : _states[_currentState])
       {
@@ -144,7 +144,7 @@ namespace enc
     return _cachedToposort;
   }
 
-  bool StateMachine::triggerTransition(std::shared_ptr<Actoid> action)
+  bool StateMachine::triggerTransition(Actoid * action)
   {
     auto &current_transitions = _states[_currentState];
     auto it = std::find_if(current_transitions.begin(), current_transitions.end(), [&](const Transition &t) { return t.action == action; });
@@ -157,9 +157,9 @@ namespace enc
     return false;
   }
 
-  std::vector<std::shared_ptr<Actoid>> StateMachine::getAllTransitions() const
+  std::vector<Actoid *> StateMachine::getAllTransitions() const
   {
-    std::vector<std::shared_ptr<Actoid>> result;
+    std::vector<Actoid *> result;
     for(const auto &transitions : _states)
       {
         for(const auto &transition : transitions)

@@ -26,7 +26,7 @@ namespace enc
 
   void RoundManager::prepCombatants()
   {
-    for(auto &combatant : _combatants)
+    for(Combatant *combatant : _combatants)
       {
         // Check for moon & regular wildshape
         for(const auto &factory : combatant->getBonusActionFactoriesConst())
@@ -41,7 +41,7 @@ namespace enc
       }
   }
 
-  bool RoundManager::goesBeforeInInitiative(const Combatant &combatant1, const Combatant &combatant2) const
+  bool RoundManager::goesBeforeInInitiative(const Combatant *combatant1, const Combatant *combatant2) const
   {
     auto it1 = std::find(_combatants.begin(), _combatants.end(), combatant1);
     auto it2 = std::find(_combatants.begin(), _combatants.end(), combatant2);

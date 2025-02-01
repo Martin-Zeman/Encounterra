@@ -23,10 +23,10 @@ namespace enc
     // _actionType = (std::holds_alternative<Action>(_actionType)) ? Action::MENACING_MELEE_ATTACK : BonusAction::BONUS_MENACING_MELEE_ATTACK;
   }
 
-  std::vector<std::shared_ptr<Actoid>> MenacingMeleeAttackFactory::createAll(void *previousActionInDag)
+  std::vector<Actoid *> MenacingMeleeAttackFactory::createAll(void *previousActionInDag)
   {
     auto eligibleTargets = getEligibleTargets();
-    std::vector<std::shared_ptr<Actoid>> result;
+    std::vector<Actoid *> result;
     result.reserve(eligibleTargets.size());
     for(const auto &target : eligibleTargets)
       {
@@ -35,7 +35,7 @@ namespace enc
     return result;
   }
 
-  std::shared_ptr<Actoid> MenacingMeleeAttackFactory::create(void *target)
+  Actoid * MenacingMeleeAttackFactory::create(void *target)
   {
     return std::make_shared<MenacingMeleeAttack>(AbilityType::MENACING_MELEE_ATTACK, *static_cast<Combatant *>(target), *this);
   }

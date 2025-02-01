@@ -11,11 +11,11 @@ namespace enc
     friend class Disengage;
 
   public:
-    DisengageFactory(Combatant& combatant, AbilityType abilityType = AbilityType::DISENGAGE) : ActoidFactory("DisengageFactory", "Disengage", combatant, abilityType) {}
+    DisengageFactory(Combatant *combatant, AbilityType abilityType = AbilityType::DISENGAGE) : ActoidFactory("DisengageFactory", "Disengage", combatant, abilityType) {}
 
-    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
+    std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override;
 
-    std::shared_ptr<Actoid> create(void *target) override;
+    Actoid * create(void *target) override;
 
     std::optional<Resource *> getResource() override { return {}; }
   };

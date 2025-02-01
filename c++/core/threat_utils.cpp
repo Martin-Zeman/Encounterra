@@ -378,7 +378,7 @@ namespace enc
     std::unordered_map<StateId, Coord> stateIdToCoord;
     std::unordered_map<StateId, StateId> stateToMsState;
     std::unordered_map<std::pair<StateId, StateId>, double, PairHash> transitionThreat;
-    std::unordered_map<StateId, std::pair<StateId, std::shared_ptr<Actoid>>> maxThreatPredecessor;
+    std::unordered_map<StateId, std::pair<StateId, Actoid *>> maxThreatPredecessor;
 
     // Track path waypoints
     CoordVector waypoints;

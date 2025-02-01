@@ -16,10 +16,10 @@ namespace enc
     setFlag(FactoryFlags::IS_RANGED);
   }
 
-  std::vector<std::shared_ptr<Actoid>> RangedAttackFactory::createAll(void *previousActionInDag)
+  std::vector<Actoid *> RangedAttackFactory::createAll(void *previousActionInDag)
   {
     auto eligibleTargets = getEligibleTargets();
-    std::vector<std::shared_ptr<Actoid>> result;
+    std::vector<Actoid *> result;
     result.reserve(eligibleTargets.size());
     for(const auto &target : eligibleTargets)
       {
@@ -28,7 +28,7 @@ namespace enc
     return result;
   }
 
-  std::shared_ptr<Actoid> RangedAttackFactory::create(void *target)
+  Actoid * RangedAttackFactory::create(void *target)
   {
     return std::make_shared<RangedAttack>(AbilityType::RANGED_ATTACK, *static_cast<Combatant *>(target), *this);
   }

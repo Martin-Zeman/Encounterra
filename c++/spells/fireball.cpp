@@ -17,13 +17,13 @@ namespace enc
     return coord;
   }
 
-  std::vector<std::shared_ptr<Actoid>> FireballFactory::createAll(void *previousActionInDag)
+  std::vector<Actoid *> FireballFactory::createAll(void *previousActionInDag)
   {
     auto bestCoord = findBestArgs();
     return {std::make_unique<Fireball>(bestCoord, *this)};
   }
 
-  std::shared_ptr<Actoid> FireballFactory::create(void *target)
+  Actoid * FireballFactory::create(void *target)
   {
     Coord* coord = static_cast<Coord*>(target);
     return std::make_shared<Fireball>(*coord, *this);

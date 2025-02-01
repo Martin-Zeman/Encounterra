@@ -13,7 +13,7 @@ namespace
     StateMachine fsm;
     TestActoidFactory factory;
 
-    std::shared_ptr<Actoid> createTestAction(const std::string &name) { return factory.createTestActoid(name); }
+    Actoid * createTestAction(const std::string &name) { return factory.createTestActoid(name); }
   };
 
   TEST_F(StateMachineTest, BasicFunctionality)

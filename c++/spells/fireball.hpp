@@ -23,7 +23,7 @@ namespace enc
     static constexpr SpellType type = SpellType::HARMFUL;
     static constexpr DamageType dmgType = DamageType::Fire;
 
-    FireballFactory(int dc, AbilityType abilityType, Combatant * caster, Resource *resource, bool hasSpellSculpting = false)
+    FireballFactory(int dc, AbilityType abilityType, Combatant *caster, Resource *resource, bool hasSpellSculpting = false)
         : DirectThreatFactory("FireballFactory", "Fireball", caster, abilityType), _dc(dc), _resource(resource),
           _hasSpellSculpting(hasSpellSculpting), _savingThrow(SavingThrow::DEX), _dmgDice({{8, 6}})
     {
@@ -31,9 +31,9 @@ namespace enc
     }
 
     Coord findBestArgs() const;
-    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
+    std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override;
 
-    std::shared_ptr<Actoid> create(void *target) override;
+    Actoid * create(void *target) override;
 
     int getRange() const override { return static_cast<int>(FireballFactory::range); }
 

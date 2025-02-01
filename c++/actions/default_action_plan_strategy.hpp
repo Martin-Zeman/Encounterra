@@ -16,16 +16,16 @@ namespace enc
   public:
     explicit DefaultActionPlanStrategy(Combatant &combatant) : ActionPlanStrategy(combatant) {}
 
-    std::vector<std::shared_ptr<Actoid>>
+    std::vector<Actoid *>
     calculateActionPlan(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths) override;
 
   private:
-    std::pair<std::vector<std::shared_ptr<Actoid>>, std::array<double, 2>>
+    std::pair<std::vector<Actoid *>, std::array<double, 2>>
     getMovementAndThreatForNextTurn(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
                                     double infeasibilityMultiplier = 0.5);
 
-    std::vector<std::shared_ptr<Actoid>> extractMovement(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
-                                                         const std::vector<std::shared_ptr<Actoid>> &sequence);
+    std::vector<Actoid *> extractMovement(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
+                                                         const std::vector<Actoid *> &sequence);
   };
 
 } // namespace enc

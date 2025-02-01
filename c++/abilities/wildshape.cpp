@@ -30,26 +30,26 @@ namespace enc
     return {};
   }
 
-  std::vector<std::shared_ptr<Actoid>> WildshapeFactory::createAll(void *previousActionInDag)
+  std::vector<Actoid *> WildshapeFactory::createAll(void *previousActionInDag)
   {
     if(auto combatant = _combatant)
       {
-        const auto &forms = combatant->getAvailableWildshapeForms();
-        std::vector<std::shared_ptr<Actoid>> result;
+        const std::vector<Wildshape *> &forms = combatant->getAvailableWildshapeForms();
+        std::vector<Actoid *> result;
         result.reserve(forms.size());
-        for(const auto &form : forms)
+        for(Wildshape *form : forms)
           {
-            result.push_back(std::static_pointer_cast<Actoid>(form));
+            result.push_back(static_cast<Actoid*>(form));
           }
         return result;
       }
     return {};
   }
 
-  std::shared_ptr<Actoid> WildshapeFactory::create(void *form)
+  Actoid *WildshapeFactory::create(void *form)
   {
-    auto *formPtr = static_cast<std::shared_ptr<Combatant> *>(form);
-    return std::make_shared<Wildshape>(_combatant, std::move(*formPtr), *this);
+    auto *formPtr = static_cast<Combatant *>(form);
+    return new Wildshape(_combatant, formPtr, *this);
   }
 
   double WildshapeFactory::calculateThreat(const Kwargs &kwargs)

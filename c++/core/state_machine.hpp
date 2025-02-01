@@ -20,7 +20,7 @@ namespace enc
   private:
     struct Transition
     {
-      std::shared_ptr<Actoid> action;
+      Actoid * action;
       StateId destination;
     };
 
@@ -43,21 +43,21 @@ namespace enc
 
     // void removeState(StateId stateId);
 
-    void addTransition(std::shared_ptr<Actoid> action, StateId origin, StateId dest);
+    void addTransition(Actoid * action, StateId origin, StateId dest);
 
-    void removeTransition(std::shared_ptr<Actoid> action, StateId origin);
+    void removeTransition(Actoid * action, StateId origin);
 
-    void removeTransitionFromAllStates(std::shared_ptr<Actoid> action);
+    void removeTransitionFromAllStates(Actoid * action);
 
-    std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> getForwardTransitions(StateId state) const;
+    std::vector<std::pair<Actoid *, StateId>> getForwardTransitions(StateId state) const;
 
-    std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> getCurrentForwardTransitions() const;
+    std::vector<std::pair<Actoid *, StateId>> getCurrentForwardTransitions() const;
 
     std::vector<StateId> toposort() const;
 
-    bool triggerTransition(std::shared_ptr<Actoid> action);
+    bool triggerTransition(Actoid * action);
 
-    std::vector<std::shared_ptr<Actoid>> getAllTransitions() const;
+    std::vector<Actoid *> getAllTransitions() const;
 
     std::vector<StateId> getAllStates() const;
 

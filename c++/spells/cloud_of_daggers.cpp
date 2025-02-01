@@ -8,13 +8,13 @@ namespace enc
         _dmgDice({{4, 4}})
   {}
 
-  std::shared_ptr<Actoid> CloudOfDaggersFactory::create(void *target)
+  Actoid * CloudOfDaggersFactory::create(void *target)
   {
     Coord *coord = static_cast<Coord *>(target);
     return std::make_shared<CloudOfDaggers>(*coord, *this);
   }
 
-  std::vector<std::shared_ptr<Actoid>> CloudOfDaggersFactory::createAll(void *previousActionInDag)
+  std::vector<Actoid *> CloudOfDaggersFactory::createAll(void *previousActionInDag)
   {
     return {}; // TODO
   }

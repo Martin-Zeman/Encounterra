@@ -26,14 +26,14 @@ namespace enc
     static constexpr DamageType dmgType = DamageType::Piercing;
 
     //! @todo Can I remove the resource here?
-    SpikeGrowthFactory(AbilityType abilityType, Combatant * caster, Resource *resource);
+    SpikeGrowthFactory(AbilityType abilityType, Combatant *caster, Resource *resource);
 
     Coord findBestArgs() const;
 
     std::vector<Combatant *> getEligibleTargets() const;
-    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
+    std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override;
 
-    std::shared_ptr<Actoid> create(void *target) override;
+    Actoid * create(void *target) override;
 
     int getRange() const override { return static_cast<int>(SpikeGrowthFactory::range); }
 

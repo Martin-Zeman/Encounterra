@@ -42,9 +42,9 @@ namespace enc
   public:
     TestActoidFactory() : ActoidFactory("TestFactory", "Test", nullptr, AbilityType::NOP) {}
 
-    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override { return {}; }
+    std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override { return {}; }
 
-    std::shared_ptr<Actoid> create(void *target) override { return nullptr; }
+    Actoid * create(void *target) override { return nullptr; }
 
     std::optional<Resource *> getResource() override { return std::nullopt; }
 

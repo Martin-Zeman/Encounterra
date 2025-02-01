@@ -7,7 +7,7 @@ namespace enc
       : ActoidFactory("BreakGrappleFactory", "Break Grapple", nullptr, AbilityType::BREAK_GRAPPLE), _grappleCondition(grappleCondition)
   {}
 
-  std::shared_ptr<Actoid> BreakGrappleFactory::create(void *target) { return std::make_shared<BreakGrapple>(*this); }
+  Actoid * BreakGrappleFactory::create(void *target) { return std::make_shared<BreakGrapple>(*this); }
 
   BreakGrapple::BreakGrapple(BreakGrappleFactory &factory) : Actoid(factory, ActoidFlags::IS_BREAK_GRAPPLE, AbilityType::BREAK_GRAPPLE) {}
 

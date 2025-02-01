@@ -16,7 +16,7 @@ namespace enc
     explicit ActionPlanStrategy(Combatant &combatant) : _combatant(combatant) {}
     virtual ~ActionPlanStrategy() = default;
 
-    virtual std::vector<std::shared_ptr<Actoid>>
+    virtual std::vector<Actoid *>
     calculateActionPlan(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths) = 0;
 
   protected:

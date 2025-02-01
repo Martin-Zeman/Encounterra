@@ -14,10 +14,10 @@ namespace enc
     setFlag(FactoryFlags::IS_MELEE);
   }
 
-  std::vector<std::shared_ptr<Actoid>> MeleeAttackFactory::createAll(void *previousActionInDag)
+  std::vector<Actoid *> MeleeAttackFactory::createAll(void *previousActionInDag)
   {
     auto eligibleTargets = getEligibleTargets();
-    std::vector<std::shared_ptr<Actoid>> result;
+    std::vector<Actoid *> result;
     result.reserve(eligibleTargets.size());
     for(const auto &target : eligibleTargets)
       {
@@ -26,7 +26,7 @@ namespace enc
     return result;
   }
 
-  std::shared_ptr<Actoid> MeleeAttackFactory::create(void *target) { return std::make_shared<MeleeAttack>(AbilityType::MELEE_ATTACK, *static_cast<Combatant *>(target), *this); }
+  Actoid * MeleeAttackFactory::create(void *target) { return std::make_shared<MeleeAttack>(AbilityType::MELEE_ATTACK, *static_cast<Combatant *>(target), *this); }
 
   std::optional<CoordVector>
   MeleeAttack::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)

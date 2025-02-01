@@ -13,12 +13,12 @@ namespace enc
   public:
     explicit BreakGrappleFactory(std::weak_ptr<ConditionWithDC> grappleCondition);
 
-    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override 
+    std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override 
     { 
       return {create(nullptr)}; 
     }
 
-    std::shared_ptr<Actoid> create(void *target) override;
+    Actoid * create(void *target) override;
     std::optional<Resource *> getResource() override { return {}; }
 
   private:

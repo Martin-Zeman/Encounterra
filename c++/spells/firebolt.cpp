@@ -19,10 +19,10 @@ namespace enc
     return {}; // Placeholder
   }
 
-  std::vector<std::shared_ptr<Actoid>> FireboltFactory::createAll(void *previousActionInDag)
+  std::vector<Actoid *> FireboltFactory::createAll(void *previousActionInDag)
   {
     auto eligibleTargets = getEligibleTargets();
-    std::vector<std::shared_ptr<Actoid>> result;
+    std::vector<Actoid *> result;
     result.reserve(eligibleTargets.size());
     for(const auto &target : eligibleTargets)
       {
@@ -31,7 +31,7 @@ namespace enc
     return result;
   }
 
-  std::shared_ptr<Actoid> FireboltFactory::create(void *target)
+  Actoid * FireboltFactory::create(void *target)
   {
     return std::make_shared<Firebolt>(*static_cast<Combatant*>(target), *this);
   }
@@ -86,7 +86,7 @@ namespace enc
   double FireboltFactory::calculateMaxThreat() const
   {
     auto eligibleTargets = getEligibleTargets();
-    std::vector<std::shared_ptr<Actoid>> result;
+    std::vector<Actoid *> result;
     result.reserve(eligibleTargets.size());
     double maxThreat = std::numeric_limits<double>::lowest();
     for(const auto &target : eligibleTargets)

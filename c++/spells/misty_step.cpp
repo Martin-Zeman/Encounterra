@@ -20,7 +20,7 @@ namespace enc
     return Coord{0, 0};
   }
 
-  std::vector<std::shared_ptr<Actoid>> MistyStepFactory::createAll(void *previousActionInDag)
+  std::vector<Actoid *> MistyStepFactory::createAll(void *previousActionInDag)
   {
     auto coord = getEligibleTargets();
     if(coord.has_value())
@@ -30,7 +30,7 @@ namespace enc
     return {};
   }
 
-  std::shared_ptr<Actoid> MistyStepFactory::create(void *target)
+  Actoid * MistyStepFactory::create(void *target)
   {
     if(!target)
       {

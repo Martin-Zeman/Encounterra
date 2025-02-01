@@ -19,10 +19,10 @@ namespace enc
        {AbilityType::RAGE, {"m_", MovementThreatType::STANDARD}},
        {AbilityType::AGGRESSIVE, {"m_", MovementThreatType::STANDARD}}};
 
-  std::unordered_map<std::shared_ptr<Actoid>, std::vector<std::pair<std::shared_ptr<Actoid>, StateId>>>
+  std::unordered_map<Actoid *, std::vector<std::pair<Actoid *, StateId>>>
   getPostTransitionsOfPriorityTransitions(StateMachine &fsm, const std::unordered_map<AbilityType, PriorityActionInfo> &prioActionDict)
   {
-    std::unordered_map<std::shared_ptr<Actoid>, std::vector<std::pair<std::shared_ptr<Actoid>, StateId>>> postPriorityTransitions;
+    std::unordered_map<Actoid *, std::vector<std::pair<Actoid *, StateId>>> postPriorityTransitions;
 
     auto transitions = fsm.getForwardTransitions(0); // Get transitions from initial state
     for(const auto &transition : transitions)
@@ -34,7 +34,7 @@ namespace enc
         auto action = transition.first;
         if(prioActionDict.contains(action->getAbilityType()))
           {
-            std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> postTransitions;
+            std::vector<std::pair<Actoid *, StateId>> postTransitions;
 
             // Try to trigger the transition
             if(fsm.triggerTransition(action))
@@ -54,8 +54,8 @@ namespace enc
     return postPriorityTransitions;
   }
 
-  std::pair<std::unordered_map<std::shared_ptr<Actoid>, std::vector<std::pair<std::shared_ptr<Actoid>, StateId>>>,
-            std::unordered_map<std::shared_ptr<Actoid>, std::vector<std::pair<std::shared_ptr<Actoid>, StateId>>>>
+  std::pair<std::unordered_map<Actoid *, std::vector<std::pair<Actoid *, StateId>>>,
+            std::unordered_map<Actoid *, std::vector<std::pair<Actoid *, StateId>>>>
   getPostTransitionsOfAllPriorityTransitions(StateMachine &protoFsm)
   {
     auto postPriorityActionTransitions = getPostTransitionsOfPriorityTransitions(protoFsm, PRIORITY_ACTIONS);
@@ -76,7 +76,7 @@ namespace enc
     return {postPriorityActionTransitions, postPriorityBonusActionTransitions};
   }
 
-  std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> getPostMistyStepTransitions(StateMachine &fsm)
+  std::vector<std::pair<Actoid *, StateId>> getPostMistyStepTransitions(StateMachine &fsm)
   {
     // Find Misty Step action in initial state transitions
     auto initialTransitions = fsm.getForwardTransitions(0);
@@ -88,7 +88,7 @@ namespace enc
         return {};
       }
 
-    std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> msPostTransitions;
+    std::vector<std::pair<Actoid *, StateId>> msPostTransitions;
     if(fsm.triggerTransition(msIt->first))
       {
         auto forwardTrans = fsm.getCurrentForwardTransitions();
@@ -106,12 +106,12 @@ namespace enc
     return msPostTransitions;
   }
 
-  std::pair<std::unordered_map<std::unordered_set<std::shared_ptr<Actoid>>, StateId, ActoidSetHash, ActoidSetEqual>,
-            std::unordered_map<Coord, std::unordered_set<std::shared_ptr<Actoid>>>>
-  createMovementStates(StateMachine &fsm, const std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> &transitionToEligibleCoords)
+  std::pair<std::unordered_map<std::unordered_set<Actoid *>, StateId, ActoidSetHash, ActoidSetEqual>,
+            std::unordered_map<Coord, std::unordered_set<Actoid *>>>
+  createMovementStates(StateMachine &fsm, const std::unordered_map<Actoid *, std::vector<Coord>> &transitionToEligibleCoords)
   {
     // Build coordinate to transitions mapping
-    std::unordered_map<Coord, std::unordered_set<std::shared_ptr<Actoid>>> coordToEligibleTransitions;
+    std::unordered_map<Coord, std::unordered_set<Actoid *>> coordToEligibleTransitions;
 
     for(const auto &[transition, coords] : transitionToEligibleCoords)
       {
@@ -122,7 +122,7 @@ namespace enc
       }
 
     // Create states for unique sets of transitions
-    std::unordered_map<std::unordered_set<std::shared_ptr<Actoid>>, StateId, ActoidSetHash, ActoidSetEqual> eligibleTransitionsToState;
+    std::unordered_map<std::unordered_set<Actoid *>, StateId, ActoidSetHash, ActoidSetEqual> eligibleTransitionsToState;
 
     for(const auto &[coord, transitions] : coordToEligibleTransitions)
       {
@@ -137,9 +137,9 @@ namespace enc
     return {eligibleTransitionsToState, coordToEligibleTransitions};
   }
 
-  void buildMistyStepTransitions(StateMachine &fsm, const std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> &msPostTransitions,
-                                 const std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> &transitionToEligibleCoords,
-                                 std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndType)
+  void buildMistyStepTransitions(StateMachine &fsm, const std::vector<std::pair<Actoid *, StateId>> &msPostTransitions,
+                                 const std::unordered_map<Actoid *, std::vector<Coord>> &transitionToEligibleCoords,
+                                 std::unordered_map<Actoid *, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndType)
   {
     auto [eligibleTransitionsToState, coordToEligibleTransitions] = createMovementStates(fsm, transitionToEligibleCoords);
 
@@ -168,9 +168,9 @@ namespace enc
 
   void buildPriorityTransitions(
     StateMachine &fsm,
-    const std::unordered_map<std::shared_ptr<Actoid>, std::vector<std::pair<std::shared_ptr<Actoid>, StateId>>> &postPriorityTransitions,
-    const std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> &transitionToEligibleCoords,
-    std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndType,
+    const std::unordered_map<Actoid *, std::vector<std::pair<Actoid *, StateId>>> &postPriorityTransitions,
+    const std::unordered_map<Actoid *, std::vector<Coord>> &transitionToEligibleCoords,
+    std::unordered_map<Actoid *, std::pair<Coord, MovementThreatType>> &movementTransToCoordAndType,
     const std::unordered_map<AbilityType, PriorityActionInfo> &prioActionDict)
   {
     auto [eligibleTransitionsToState, coordToEligibleTransitions] = createMovementStates(fsm, transitionToEligibleCoords);
@@ -237,7 +237,7 @@ namespace enc
     auto [postPriorityActionTransitions, postPriorityBonusActionTransitions] = getPostTransitionsOfAllPriorityTransitions(protoFsm);
 
     // Handle Misty Step if present
-    std::vector<std::pair<std::shared_ptr<Actoid>, StateId>> postMistyStepTransitions;
+    std::vector<std::pair<Actoid *, StateId>> postMistyStepTransitions;
     if(auto initialTransitions = protoFsm.getForwardTransitions(0);
        std::any_of(initialTransitions.begin(), initialTransitions.end(),
                    [](const auto &trans) { return trans.first->getAbilityType() == AbilityType::MISTY_STEP; }))
@@ -248,7 +248,7 @@ namespace enc
     StateMachine fsm = protoFsm; // Create working copy
 
     // Get eligible coordinates for each type of action
-    std::unordered_map<std::shared_ptr<Actoid>, std::vector<Coord>> transitionToEligibleCoords;
+    std::unordered_map<Actoid *, std::vector<Coord>> transitionToEligibleCoords;
     for(auto &[action, _] : fsm.getForwardTransitions(0))
       {
         if(action->getAbilityType() == AbilityType::MISTY_STEP)
@@ -290,7 +290,7 @@ namespace enc
     // Create movement states and transitions
     auto [eligibleTransitionsToState, coordToEligibleTransitions] = createMovementStates(fsm, transitionToEligibleCoords);
 
-    std::unordered_map<std::shared_ptr<Actoid>, std::pair<Coord, MovementThreatType>> movementTransToCoordAndType;
+    std::unordered_map<Actoid *, std::pair<Coord, MovementThreatType>> movementTransToCoordAndType;
 
     // Build standard movement transitions
     for(const auto &[action, coords] : transitionToEligibleCoords)

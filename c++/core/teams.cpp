@@ -160,7 +160,7 @@ namespace enc
     Color combatantTeam = getTeam(combatant);
     for(int id : _colorToCombatantIds.at(combatantTeam))
       {
-        if(auto ally = _idToCombatant.at(id); ally && ally->isAlive() && !ally->getSwallower() && ally != combatant)
+        if(Combatant *ally = _idToCombatant.at(id); ally && ally->isAlive() && !ally->getSwallower() && *ally != combatant)
           {
             result.push_back(ally);
           }
@@ -187,8 +187,7 @@ namespace enc
     Color combatantTeam = getTeam(combatant);
     for(int id : _colorToCombatantIds.at(combatantTeam))
       {
-        Combatant *ally = _idToCombatant.at(id);
-        if(auto ally = _idToCombatant.at(id); ally && ally->isAlive() && ally != combatant)
+        if(Combatant *ally = _idToCombatant.at(id); ally && ally->isAlive() && *ally != combatant)
           {
             result.push_back(ally);
           }

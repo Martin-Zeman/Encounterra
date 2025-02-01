@@ -48,12 +48,12 @@ namespace enc
     }
 
     //! @todo Can I remove the resource here?
-    FireboltFactory(int toHit, AbilityType abilityType, Combatant * caster, Resource *resource);
+    FireboltFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource);
 
     std::vector<Combatant *> getEligibleTargets() const;
-    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
+    std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override;
 
-    std::shared_ptr<Actoid> create(void *target) override;
+    Actoid * create(void *target) override;
 
     std::optional<Resource *> getResource() override { return _resource; }
     int getRange() const override { return static_cast<int>(FireboltFactory::range); }

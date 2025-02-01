@@ -23,8 +23,8 @@ namespace enc
   public:
     WildshapeFactory(Combatant* combatant, AbilityType actionType);
 
-    std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
-    std::shared_ptr<Actoid> create(void *form) override;
+    std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override;
+    Actoid *create(void *form) override;
     std::optional<Resource *> getResource() override { return {}; }
     double calculateThreat(const Kwargs &kwargs) override;
 

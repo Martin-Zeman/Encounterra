@@ -155,8 +155,8 @@ namespace enc
     Combatant *getCombatant() { return _combatant; }
     void setCombatant(Combatant *combatant) { _combatant = combatant; }
     virtual ~ActoidFactory() = default;
-    virtual std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) = 0;
-    virtual std::shared_ptr<Actoid> create(void *target) = 0;
+    virtual std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) = 0;
+    virtual Actoid * create(void *target) = 0;
     virtual std::optional<Resource *> getResource() = 0;
     AbilityType getAbilityType() const { return _abilityType; }
   };

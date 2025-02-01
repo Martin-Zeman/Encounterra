@@ -2,6 +2,7 @@
 #include "core/geometry.hpp"
 #include "core/teams.hpp"
 #include "core/misc.hpp"
+#include "core/operator_overloads.hpp"
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -474,7 +475,7 @@ namespace enc
         if((Teams::getInstance().*teamFunc)(*potentialTargetCombatant, combatant) && dist < minDist)
           {
             minDist = dist;
-            nearest = weakPotentialTargetCombatant;
+            nearest = potentialTargetCombatant;
           }
       }
 
@@ -497,8 +498,8 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
       int combatantId = getCombatantGridValueAt(adjacentCoord);
       if(combatantId != -1)
         {
-          Combatant *potentialAlly = Teams::getInstance().getCombatantById(combatantId);
-          if(potentialAlly && potentialAlly != combatant && Teams::getInstance().areAllies(combatant, *potentialAlly)
+          const Combatant *potentialAlly = Teams::getInstance().getCombatantById(combatantId);
+          if(potentialAlly && *potentialAlly != combatant && Teams::getInstance().areAllies(combatant, *potentialAlly)
              && !potentialAlly->isAffectedByAny({Conditions::INCAPACITATED}))
             {
               return true;

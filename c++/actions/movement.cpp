@@ -9,13 +9,13 @@ namespace enc
        {AbilityType::FORCED_MOVEMENT, "Forced Movement"},
        {AbilityType::GET_UP_FROM_PRONE, "Get Up From Prone"}};
 
-  MovementFactory::MovementFactory(Combatant& combatant, CoordVector path, AbilityType movementType)
+  MovementFactory::MovementFactory(Combatant *combatant, CoordVector path, AbilityType movementType)
       : ActoidFactory("MovementFactory", MOVEMENT_TYPE_NAMES.at(movementType), combatant, movementType), _path(path)
   {}
 
-  std::vector<std::shared_ptr<Actoid>> MovementFactory::createAll(void *previousActionInDag)
+  std::vector<Actoid *> MovementFactory::createAll(void *previousActionInDag)
   {
-    std::vector<std::shared_ptr<Actoid>> increments;
+    std::vector<Actoid *> increments;
     increments.reserve(_path.size());
 
     bool isStandardMovement = (getAbilityType() == AbilityType::STANDARD_MOVEMENT);
@@ -33,7 +33,7 @@ namespace enc
     return increments;
   }
 
-  std::shared_ptr<Actoid> MovementFactory::create(void *target)
+  Actoid * MovementFactory::create(void *target)
   {
     if(_path.empty())
       return nullptr;
@@ -44,7 +44,7 @@ namespace enc
     return std::make_shared<MovementIncrement>(increment, getAbilityType() == AbilityType::STANDARD_MOVEMENT, *this);
   }
 
-  std::shared_ptr<Actoid> GetUpFactory::create(void *target) { return std::make_shared<GetUpFromProne>(*this); }
+  Actoid * GetUpFactory::create(void *target) { return std::make_shared<GetUpFromProne>(*this); }
 
   size_t MovementIncrement::hash() const
   {

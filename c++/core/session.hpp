@@ -19,19 +19,20 @@ namespace enc
   public:
     Session();
 
-    void addCombatant(std::shared_ptr<Combatant> combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel);
+    void addCombatant(Combatant *combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel);
+
     template <typename CombatantType>
-    void
-    addCombatant(std::shared_ptr<CombatantType> combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel); // For testing purposes
+    void addCombatant(CombatantType *combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel); // For testing purposes
+
     template <typename CombatantType> void addCombatant(Color teamColor, ResourceDepletionLevel resourceDepletionLevel);
-    void addCombatant(std::shared_ptr<Combatant> combatant, Color teamColor);
+    void addCombatant(Combatant *combatant, Color teamColor);
 
   private:
     void generateUniqueShortCodes()
     {
       std::set<std::string> usedCodes;
 
-      for(auto &combatant : _combatants)
+      for(Combatant *combatant : _combatants)
         {
           int classId = combatant->getClassId();
           std::string name = combatant->_name;
@@ -121,7 +122,7 @@ namespace enc
         }
     }
 
-    std::vector<std::shared_ptr<Combatant>> _combatants;
+    std::vector<Combatant *> _combatants;
     std::unordered_map<int, int> _typeCounter;
     Teams &_teams;
 

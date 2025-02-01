@@ -1,8 +1,8 @@
 #pragma once
 
 #include "core/types.hpp"
-#include "core/combatant.hpp"
-#include "core/operator_overloads.hpp"
+// #include "core/combatant.hpp"
+// #include "core/operator_overloads.hpp"
 
 namespace enc
 {

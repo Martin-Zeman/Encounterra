@@ -18,7 +18,7 @@ namespace enc
     setFlag(FactoryFlags::DEX_SAVE_APPLIES);
   }
 
-  std::vector<std::shared_ptr<Actoid>> HungerOfHadarFactory::createAll(void *previousActionInDag)
+  std::vector<Actoid *> HungerOfHadarFactory::createAll(void *previousActionInDag)
   {
     auto &battleMap = BattleMap::getInstance();
     auto [coord, _1, _2] = battleMap.findBestPlacementHarmfulCircular(*_combatant, static_cast<int>(HungerOfHadarFactory::range),
@@ -26,7 +26,7 @@ namespace enc
     return {std::make_shared<HungerOfHadar>(coord, *this)};
   }
 
-  std::shared_ptr<Actoid> HungerOfHadarFactory::create(void *target) { return std::make_shared<HungerOfHadar>(*static_cast<Coord *>(target), *this); }
+  Actoid * HungerOfHadarFactory::create(void *target) { return std::make_shared<HungerOfHadar>(*static_cast<Coord *>(target), *this); }
 
   double HungerOfHadarFactory::calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const
   {

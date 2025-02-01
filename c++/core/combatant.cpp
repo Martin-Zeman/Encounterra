@@ -147,9 +147,9 @@ namespace enc
   bool Combatant::isAffectedBy(Conditions condition) const
   {
     return std::any_of(_conditions.begin(), _conditions.end(),
-                       [condition](const std::shared_ptr<Condition> &c) { return containsCondition(c->conditionComposite, condition); })
+                       [condition](Condition *c) { return containsCondition(c->conditionComposite, condition); })
            || std::any_of(_dcConditions.begin(), _dcConditions.end(),
-                          [condition](const std::shared_ptr<ConditionWithDC> &c) { return containsCondition(c->conditionComposite, condition); });
+                          [condition](ConditionWithDC *c) { return containsCondition(c->conditionComposite, condition); });
   }
 
   bool Combatant::isImmuneTo(DamageType dmgType) const { return _immunities.find(dmgType) != _immunities.end(); }
@@ -160,7 +160,7 @@ namespace enc
 
   bool Combatant::hasPassiveAbility(AbilityType ability) const { return _passiveAbilities.contains(ability); }
 
-  void Combatant::applyCondition(std::shared_ptr<Condition> condition)
+  void Combatant::applyCondition(Condition *condition)
   {
     if(!condition)
       {
@@ -174,7 +174,7 @@ namespace enc
     _conditions.push_back(std::move(condition));
   }
 
-  void Combatant::applyDCCondition(std::shared_ptr<ConditionWithDC> dcCondition)
+  void Combatant::applyDCCondition(ConditionWithDC *dcCondition)
   {
     if(!dcCondition)
       {
@@ -190,7 +190,7 @@ namespace enc
 
   bool Combatant::removeCondition(Conditions condition, Combatant *initiator)
   {
-    auto it = std::find_if(_conditions.begin(), _conditions.end(), [condition, initiator](const std::shared_ptr<Condition> &c) {
+    auto it = std::find_if(_conditions.begin(), _conditions.end(), [condition, initiator](Condition *c) {
       return containsCondition(c->conditionComposite, condition) && (!initiator || c->initiator == initiator);
     });
 
@@ -208,7 +208,7 @@ namespace enc
 
   bool Combatant::removeDCCondition(Conditions condition, Combatant *initiator)
   {
-    auto it = std::find_if(_dcConditions.begin(), _dcConditions.end(), [condition, initiator](const std::shared_ptr<ConditionWithDC> &c) {
+    auto it = std::find_if(_dcConditions.begin(), _dcConditions.end(), [condition, initiator](ConditionWithDC *c) {
       return containsCondition(c->conditionComposite, condition) && (!initiator || c->initiator == initiator);
     });
 
@@ -264,10 +264,10 @@ namespace enc
     return nullptr;
   }
 
-  std::vector<std::weak_ptr<ConditionWithDC>> Combatant::needsToBreakOutOfGrapple() const
+  std::vector<ConditionWithDC *> Combatant::needsToBreakOutOfGrapple() const
   {
-    std::vector<std::weak_ptr<ConditionWithDC>> grappleConditions;
-    for(const auto &dcCond : _dcConditions)
+    std::vector<ConditionWithDC *> grappleConditions;
+    for(ConditionWithDC *dcCond : _dcConditions)
       {
         if(containsCondition(dcCond->conditionComposite, Conditions::GRAPPLED) && dcCond->phase == PhaseOfTurn::ACTION)
           {
@@ -627,17 +627,17 @@ namespace enc
 
   void Combatant::removeVulnerability(DamageType dmgType) { _vulnerabities.erase(dmgType); }
 
-  std::vector<std::shared_ptr<Actoid>>
+  std::vector<Actoid *>
   Combatant::calculateActionPlan(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     return _actionPlanStrategy->calculateActionPlan(distances, shortestPaths);
   }
 
-  const std::vector<std::shared_ptr<Actoid>> &Combatant::getActionPlan() const { return _actionPlan; }
+  const std::vector<Actoid *> &Combatant::getActionPlan() const { return _actionPlan; }
 
-  void Combatant::setActionPlan(std::vector<std::shared_ptr<Actoid>> plan) { _actionPlan = std::move(plan); }
+  void Combatant::setActionPlan(std::vector<Actoid *> plan) { _actionPlan = std::move(plan); }
 
-  std::shared_ptr<Actoid> Combatant::popActionPlan()
+  Actoid * Combatant::popActionPlan()
   {
     if(_actionPlan.empty())
       return nullptr;
