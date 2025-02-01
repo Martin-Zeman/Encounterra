@@ -97,6 +97,66 @@ namespace enc
     _combatantFactories[classId] = [](int num) { return std::make_unique<CombatantType>(num); };
   }
 
+  // std::unordered_map<Team, int> Session::simulate(bool parallel)
+  // {
+  //   if(!parallel || _numSimulations < std::thread::hardware_concurrency())
+  //     {
+  //       return round_manager.simulateN(_numSimulations);
+  //     }
+
+  //   // Calculate simulations per thread
+  //   const size_t numThreads = std::thread::hardware_concurrency();
+  //   const size_t simsPerThread = _numSimulations / numThreads;
+  //   const size_t remainder = _numSimulations % numThreads;
+
+  //   // Create futures to store results
+  //   std::vector<std::future<std::unordered_map<Team, int>>> futures;
+  //   futures.reserve(numThreads + (remainder > 0 ? 1 : 0));
+
+  //   // Launch simulation threads
+  //   for(size_t i = 0; i < numThreads; ++i)
+  //     {
+  //       futures.push_back(std::async(std::launch::async, [this, simsPerThread]() {
+  //         // Each thread gets its own instance of RoundManager
+  //         RoundManager threadRm(combatants, teams, EffectTracker::getInstance());
+  //         place_combatants_on_the_map(); // This will use thread-local BattleMap
+  //         BattleMap::getInstance().buildBaseAdjacencyMatrix();
+  //         return threadRm.simulateN(simsPerThread);
+  //       }));
+  //     }
+
+  //   // Handle remainder simulations if any
+  //   if(remainder > 0)
+  //     {
+  //       futures.push_back(std::async(std::launch::async, [this, remainder]() {
+  //         RoundManager threadRm(combatants, teams, EffectTracker::getInstance());
+  //         place_combatants_on_the_map();
+  //         BattleMap::getInstance().buildBaseAdjacencyMatrix();
+  //         return threadRm.simulateN(remainder);
+  //       }));
+  //     }
+
+  //   // Accumulate results
+  //   std::unordered_map<Team, int> accumulatedTally;
+  //   for(auto &future : futures)
+  //     {
+  //       auto tally = future.get();
+  //       for(const auto &[team, victories] : tally)
+  //         {
+  //           accumulatedTally[team] += victories;
+  //         }
+  //     }
+
+  //   // Log results
+  //   logger.warning("--------------STATISTICS--------------");
+  //   for(const auto &[team, victories] : accumulatedTally)
+  //     {
+  //       logger.warning("Team " + team.name + " won total of " + std::to_string(victories) + " times", {{"team", team}});
+  //     }
+
+  //   return accumulatedTally;
+  // }
+
   // Explicit template instantiations
   template void Session::addCombatant<Acolyte>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<BattlemasterFighterLvl5>(Color, ResourceDepletionLevel);

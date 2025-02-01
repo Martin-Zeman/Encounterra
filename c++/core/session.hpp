@@ -27,6 +27,8 @@ namespace enc
     template <typename CombatantType> void addCombatant(Color teamColor, ResourceDepletionLevel resourceDepletionLevel);
     void addCombatant(Combatant *combatant, Color teamColor);
 
+    // std::unordered_map<Team, int> simulate(bool parallel = false);
+
   private:
     void generateUniqueShortCodes()
     {
@@ -124,6 +126,7 @@ namespace enc
 
     std::vector<Combatant *> _combatants;
     std::unordered_map<int, int> _typeCounter;
+    int _numSimulations;
     Teams &_teams;
 
     // Map to store factory functions for each combatant type
