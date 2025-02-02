@@ -43,7 +43,7 @@ namespace enc
 
     if(Combatant *swallower = combatant->getSwallower())
       {
-        if(*swallower == _target)
+        if(swallower == &_target)
           {
             return CoordVector{currCoord};
           }

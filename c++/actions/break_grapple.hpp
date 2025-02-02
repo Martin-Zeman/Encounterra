@@ -1,5 +1,4 @@
 #pragma once
-
 #include "core/interfaces.hpp"
 #include "actions/action_types.hpp"
 #include "core/conditions.hpp"
@@ -7,32 +6,28 @@
 
 namespace enc
 {
-
   class BreakGrappleFactory : public ActoidFactory
   {
   public:
-    explicit BreakGrappleFactory(std::weak_ptr<ConditionWithDC> grappleCondition);
+    explicit BreakGrappleFactory(Combatant *combatant) : ActoidFactory("BreakGrappleFactory", "Break Grapple", combatant, AbilityType::BREAK_GRAPPLE)
+    {}
 
-    std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override 
-    { 
-      return {create(nullptr)}; 
+    std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override
+    {
+      return {}; // Can't create without knowing the condition
     }
 
-    Actoid * create(void *target) override;
-    std::optional<Resource *> getResource() override { return {}; }
+    Actoid *create(void *target) override;
 
-  private:
-    std::weak_ptr<ConditionWithDC> _grappleCondition;
+    std::optional<Resource *> getResource() override { return {}; }
   };
 
   class BreakGrapple : public Actoid
   {
   public:
-    explicit BreakGrapple(BreakGrappleFactory &factory);
+    BreakGrapple(BreakGrappleFactory &factory, ConditionWithDC *grappleCondition);
 
-    BreakGrapple(const BreakGrapple &other)
-        : Actoid(const_cast<ActoidFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType)
-    {}
+    BreakGrapple(const BreakGrapple &other);
 
     Actoid *clone() const override { return new BreakGrapple(*this); }
 
@@ -45,10 +40,19 @@ namespace enc
       return std::nullopt;
     }
 
-    bool equals(const Actoid &other) const override { return true;}
+    bool equals(const Actoid &other) const override
+    {
+      if(auto *breakGrapple = dynamic_cast<const BreakGrapple *>(&other))
+        {
+          return _grappleCondition == breakGrapple->_grappleCondition;
+        }
+      return false;
+    }
 
   protected:
-    size_t hash() const override { return 0;}
-  };
+    size_t hash() const override { return std::hash<ConditionWithDC *>{}(_grappleCondition); }
 
+  private:
+    ConditionWithDC *_grappleCondition;
+  };
 } // namespace enc

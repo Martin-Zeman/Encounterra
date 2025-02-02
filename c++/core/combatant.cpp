@@ -5,6 +5,7 @@
 #include "effects/effect_tracker.hpp"
 #include "effects/action_enabler_effect.hpp"
 #include "actions/default_action_plan_strategy.cpp"
+#include "actions/break_grapple.hpp"
 
 namespace enc
 {
@@ -16,8 +17,10 @@ namespace enc
         _movement(speed / 5), _resistances(resistances), _immunities(immunities), _vulnerabities(vulnerabities),
         _conditionImmunities(conditionImmunities), _type(type), _subtype(subtype), _level(level)
   {
-    _dodgeFactory = std::make_shared<DodgeFactory>(this);
-    _disengageFactory = std::make_shared<DisengageFactory>(this);
+    _dodgeFactory = new DodgeFactory(this);
+    _disengageFactory = new DisengageFactory(this);
+    _getUpFactory = new GetUpFactory(this);
+    _breakGrappleFactory = new BreakGrappleFactory(this);
     _actionFactories.push_back(_dodgeFactory);
     _actionFactories.push_back(_disengageFactory);
     _actionPlanStrategy = std::make_unique<DefaultActionPlanStrategy>(*this);
@@ -34,7 +37,50 @@ namespace enc
   //   _actionFactories = {_dodgeFactory, _disengageFactory};
   // }
 
-  Combatant::~Combatant() { breakConcentration(); }
+  Combatant::~Combatant()
+  {
+    breakConcentration();
+
+    delete _dodgeFactory;
+    delete _disengageFactory;
+    delete _getUpFactory;
+    delete _breakGrappleFactory;
+    delete _dangerZoneAttack;
+    delete _aoOFactory;
+
+    for(ActoidFactory *factory : _actionFactories)
+      {
+        if(factory != _dodgeFactory && factory != _disengageFactory)
+          { // Avoid double deletion
+            delete factory;
+          }
+      }
+    _actionFactories.clear();
+
+    for(ActoidFactory *factory : _bonusActionFactories)
+      {
+        delete factory;
+      }
+    _bonusActionFactories.clear();
+
+    for(ActoidFactory *factory : _reactionFactories)
+      {
+        delete factory;
+      }
+    _reactionFactories.clear();
+
+    for(ActoidFactory *factory : _hasteActionFactories)
+      {
+        delete factory;
+      }
+    _hasteActionFactories.clear();
+
+    for(Wildshape *form : _availableWildshapeForms)
+      {
+        delete form;
+      }
+    _availableWildshapeForms.clear();
+  }
 
   std::string Combatant::toString() const { return _name; }
 
@@ -334,16 +380,16 @@ namespace enc
     return false;
   }
 
-  std::weak_ptr<ActoidFactory> Combatant::getActionFactory(AbilityType type)
+  ActoidFactory* Combatant::getActionFactory(AbilityType type)
   {
     for(auto &factory : _actionFactories)
       {
         if(factory->getAbilityType() == type)
           {
-            return std::weak_ptr<ActoidFactory>(factory);
+            return factory;
           }
       }
-    return std::weak_ptr<ActoidFactory>();
+    return nullptr;
   }
 
   void Combatant::rollForRecharge()
@@ -352,7 +398,7 @@ namespace enc
       {
         if(factory->hasFlag(FactoryFlags::IS_RECHARGE))
           {
-            static_cast<RechargeableFactory *>(factory.get())->rollForRecharge();
+            static_cast<RechargeableFactory *>(factory)->rollForRecharge();
           }
       }
 
@@ -360,7 +406,7 @@ namespace enc
       {
         if(factory->hasFlag(FactoryFlags::IS_RECHARGE))
           {
-            static_cast<RechargeableFactory *>(factory.get())->rollForRecharge();
+            static_cast<RechargeableFactory *>(factory)->rollForRecharge();
           }
       }
   }

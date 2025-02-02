@@ -22,7 +22,7 @@ namespace enc
 
     for(const auto &effect : _effects)
       {
-        if(combatant == *effect->getInitiator())
+        if(&combatant == effect->getInitiator())
           {
             bool keep = effect->startOfTurnTick();
             if(!keep)
@@ -119,7 +119,7 @@ namespace enc
     std::vector<Effect *> initiatorEffects;
     for(const auto &effect : _effects)
       {
-        if(*effect->getInitiator() == initiator)
+        if(effect->getInitiator() == &initiator)
           {
             initiatorEffects.push_back(effect);
           }
@@ -134,7 +134,7 @@ namespace enc
       {
         effect->deactivate();
         _effects.erase(
-          std::remove_if(_effects.begin(), _effects.end(), [&combatant](const auto &effect) { return *effect->getInitiator() == combatant; }),
+          std::remove_if(_effects.begin(), _effects.end(), [&combatant](const auto &effect) { return effect->getInitiator() == &combatant; }),
           _effects.end());
       }
   }
@@ -174,7 +174,7 @@ namespace enc
     for(const auto &effect : getEffectsByInitiator(combatant))
       {
         auto tgt = effect->getTarget();
-        if(effect->getEffectType() == EffectType::HIDE && tgt && *tgt == target)
+        if(effect->getEffectType() == EffectType::HIDE && tgt && tgt == &target)
           {
             return true;
           }

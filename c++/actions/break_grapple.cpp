@@ -3,12 +3,26 @@
 namespace enc
 {
 
-  BreakGrappleFactory::BreakGrappleFactory(std::weak_ptr<ConditionWithDC> grappleCondition)
-      : ActoidFactory("BreakGrappleFactory", "Break Grapple", nullptr, AbilityType::BREAK_GRAPPLE), _grappleCondition(grappleCondition)
+  explicit BreakGrappleFactory::BreakGrappleFactory(Combatant *combatant)
+      : ActoidFactory("BreakGrappleFactory", "Break Grapple", combatant, AbilityType::BREAK_GRAPPLE)
   {}
 
-  Actoid *BreakGrappleFactory::create(void *target) { return new BreakGrapple(*this); }
+  Actoid *BreakGrappleFactory::create(void *target)
+  {
+    if(!target)
+      {
+        return nullptr;
+      }
+    return new BreakGrapple(*this, static_cast<ConditionWithDC *>(target));
+  }
 
-  BreakGrapple::BreakGrapple(BreakGrappleFactory &factory) : Actoid(factory, ActoidFlags::IS_BREAK_GRAPPLE, AbilityType::BREAK_GRAPPLE) {}
+  BreakGrapple::BreakGrapple(BreakGrappleFactory &factory, ConditionWithDC *grappleCondition)
+      : Actoid(factory, ActoidFlags::IS_BREAK_GRAPPLE, AbilityType::BREAK_GRAPPLE), _grappleCondition(grappleCondition)
+  {}
+
+  BreakGrapple::BreakGrapple(const BreakGrapple &other)
+      : Actoid(const_cast<ActoidFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
+        _grappleCondition(other._grappleCondition)
+  {}
 
 } // namespace enc

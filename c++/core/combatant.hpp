@@ -173,22 +173,26 @@ namespace enc
     void setSavingThrowRollTypeMod(SavingThrow type, RollType rollType);
     void removeSavingThrowRollTypeMod(SavingThrow type, RollType rollType);
     void clearSavingThrowRollTypeMods(SavingThrow type);
-    std::weak_ptr<ActoidFactory> getActionFactory(AbilityType type);
+    ActoidFactory *getActionFactory(AbilityType type);
     void clearAllSavingThrowMods();
     void rollForRecharge();
-    const std::vector<std::shared_ptr<ActoidFactory>> &getActionFactoriesConst() const { return _actionFactories; }
-    const std::vector<std::shared_ptr<ActoidFactory>> &getBonusActionFactoriesConst() const { return _bonusActionFactories; }
-    const std::vector<std::shared_ptr<ActoidFactory>> &getReactionFactoriesConst() const { return _reactionFactories; }
-    const std::vector<std::shared_ptr<ActoidFactory>> &getHasteActionFactoriesConst() const { return _hasteActionFactories; }
-    std::vector<std::shared_ptr<ActoidFactory>> &getActionFactories() { return _actionFactories; }
-    std::vector<std::shared_ptr<ActoidFactory>> &getBonusActionFactories() { return _bonusActionFactories; }
-    std::vector<std::shared_ptr<ActoidFactory>> &getReactionFactories() { return _reactionFactories; }
-    std::vector<std::shared_ptr<ActoidFactory>> &getHasteActionFactories() { return _hasteActionFactories; }
+    const std::vector<ActoidFactory *> &getActionFactoriesConst() const { return _actionFactories; }
+    const std::vector<ActoidFactory *> &getBonusActionFactoriesConst() const { return _bonusActionFactories; }
+    const std::vector<ActoidFactory *> &getReactionFactoriesConst() const { return _reactionFactories; }
+    const std::vector<ActoidFactory *> &getHasteActionFactoriesConst() const { return _hasteActionFactories; }
+    std::vector<ActoidFactory *> &getActionFactories() { return _actionFactories; }
+    std::vector<ActoidFactory *> &getBonusActionFactories() { return _bonusActionFactories; }
+    std::vector<ActoidFactory *> &getReactionFactories() { return _reactionFactories; }
+    std::vector<ActoidFactory *> &getHasteActionFactories() { return _hasteActionFactories; }
     void setAvailableWildshapeForms(std::vector<Wildshape *> wildshapeForms) { _availableWildshapeForms = wildshapeForms; }
     const std::vector<Wildshape *> &getAvailableWildshapeForms() { return _availableWildshapeForms; }
     DirectThreatFactory* getDangerZoneAttack() { return _dangerZoneAttack; }
     void setDangerZoneAttack(DirectThreatFactory *dangerZoneAttack) { _dangerZoneAttack = dangerZoneAttack; }
-    AttackFactory* getAoOFactory() { return _aoOFactory; }
+    AttackFactory *getAoOFactory() { return _aoOFactory; }
+    ActoidFactory *getGetUpFactory() { return _getUpFactory; }
+    ActoidFactory *getBreakGrappleFactory() { return _breakGrappleFactory; }
+    ActoidFactory *getDodgeFactory() { return _dodgeFactory; }
+    ActoidFactory *getDisengageFactory() { return _disengageFactory; }
     void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &shortestPaths);
     const blaze::DynamicMatrix<Coord> &getShortestPathsCache() const { return *_shortestPathsCache; }
     int receiveDmg(int dmg, DamageType dmg_type, int multiplier = 1);
@@ -222,18 +226,18 @@ namespace enc
      * ----------------------------------------------------------------------------------------------------------------------------------------------
      */
 
-    std::shared_ptr<ActoidFactory> addMeleeAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice, int dmgBonus,
-                                                  DamageType damageType, int attackRange)
+    ActoidFactory *addMeleeAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice, int dmgBonus,
+                                  DamageType damageType, int attackRange)
     {
-      auto factory = std::make_shared<MeleeAttackFactory>("MeleeAttackFactory", name, owner, AbilityType::MELEE_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
+      auto factory = new MeleeAttackFactory("MeleeAttackFactory", name, owner, AbilityType::MELEE_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
       _actionFactories.emplace_back(factory);
       return factory;
     }
 
-    std::shared_ptr<ActoidFactory> addRangedAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice,
-                                                   int dmgBonus, DamageType damageType, int attackRange)
+    ActoidFactory *addRangedAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice, int dmgBonus,
+                                   DamageType damageType, int attackRange)
     {
-      auto factory = std::make_shared<RangedAttackFactory>("RangedAttackFactory", name, owner, AbilityType::RANGED_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
+      auto factory = new RangedAttackFactory("RangedAttackFactory", name, owner, AbilityType::RANGED_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
       _actionFactories.emplace_back(factory);
       return factory;
     }
@@ -503,12 +507,14 @@ namespace enc
     Conditions _conditionImmunities;
     // ... Other member variables
 
-    std::shared_ptr<ActoidFactory> _dodgeFactory;
-    std::shared_ptr<ActoidFactory> _disengageFactory;
-    std::vector<std::shared_ptr<ActoidFactory>> _actionFactories;
-    std::vector<std::shared_ptr<ActoidFactory>> _bonusActionFactories;
-    std::vector<std::shared_ptr<ActoidFactory>> _reactionFactories;
-    std::vector<std::shared_ptr<ActoidFactory>> _hasteActionFactories;
+    ActoidFactory *_dodgeFactory;
+    ActoidFactory *_disengageFactory;
+    ActoidFactory *_getUpFactory;
+    ActoidFactory *_breakGrappleFactory;
+    std::vector<ActoidFactory *> _actionFactories;
+    std::vector<ActoidFactory *> _bonusActionFactories;
+    std::vector<ActoidFactory *> _reactionFactories;
+    std::vector<ActoidFactory *> _hasteActionFactories;
     DirectThreatFactory *_dangerZoneAttack = nullptr;
     AttackFactory *_aoOFactory = nullptr;
     std::unordered_set<AbilityType> _passiveAbilities;

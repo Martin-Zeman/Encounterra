@@ -432,14 +432,14 @@ namespace enc
       }
 
     // Add Misty Step connections
+    MistyStepFactory msFactory(&combatant, nullptr);
     for(size_t i = 0; i < waypoints.size() - 1; ++i)
       {
         for(size_t j = i + 1; j < waypoints.size(); ++j)
           {
             if(std::hypot(waypoints[j][0] - waypoints[i][0], waypoints[j][1] - waypoints[i][1]) <= static_cast<double>(MistyStepFactory::range))
               {
-                auto msFactory = std::make_shared<MistyStepFactory>(combatant, nullptr);
-                auto msAction = msFactory->create(&waypoints[j]);
+                auto msAction = msFactory.create(&waypoints[j]);
 
                 if(msAction)
                   {
