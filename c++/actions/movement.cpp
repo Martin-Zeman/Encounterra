@@ -25,7 +25,7 @@ namespace enc
         // if(!_combatant->hasMovement()) actually, how much movement a combatant has should not enter into this
         //   break;
 
-        increments.push_back(std::make_shared<MovementIncrement>(increment, isStandardMovement, static_cast<ActoidFactory &>(*this)));
+        increments.push_back(new MovementIncrement(increment, isStandardMovement, static_cast<ActoidFactory &>(*this)));
 
         // _combatant->decrementMovement();
       }
@@ -41,10 +41,10 @@ namespace enc
     auto increment = _path.front();
     _path.erase(_path.begin());
 
-    return std::make_shared<MovementIncrement>(increment, getAbilityType() == AbilityType::STANDARD_MOVEMENT, *this);
+    return new MovementIncrement(increment, getAbilityType() == AbilityType::STANDARD_MOVEMENT, *this);
   }
 
-  Actoid * GetUpFactory::create(void *target) { return std::make_shared<GetUpFromProne>(*this); }
+  Actoid * GetUpFactory::create(void *target) { return new GetUpFromProne(*this); }
 
   size_t MovementIncrement::hash() const
   {

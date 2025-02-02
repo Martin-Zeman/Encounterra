@@ -21,12 +21,12 @@ namespace enc
     result.reserve(eligibleTargets.size());
     for(const auto &target : eligibleTargets)
       {
-        result.push_back(std::make_shared<MeleeAttack>(AbilityType::MELEE_ATTACK, *target, *this));
+        result.push_back(new MeleeAttack(AbilityType::MELEE_ATTACK, *target, *this));
       }
     return result;
   }
 
-  Actoid * MeleeAttackFactory::create(void *target) { return std::make_shared<MeleeAttack>(AbilityType::MELEE_ATTACK, *static_cast<Combatant *>(target), *this); }
+  Actoid * MeleeAttackFactory::create(void *target) { return new MeleeAttack(AbilityType::MELEE_ATTACK, *static_cast<Combatant *>(target), *this); }
 
   std::optional<CoordVector>
   MeleeAttack::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
@@ -37,7 +37,7 @@ namespace enc
     auto combatant = factory._combatant;
     if(Combatant *swallower = combatant->getSwallower())
       {
-        if(*swallower == _target)
+        if(swallower == &_target)
           {
             return CoordVector{battleMap.getCombatantCoordinates(*combatant).getRoot()};
           }

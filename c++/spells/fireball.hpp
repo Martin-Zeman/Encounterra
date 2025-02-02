@@ -59,6 +59,13 @@ namespace enc
           _empowered(empowered), _heightened(heightened)
     {}
 
+    Fireball(const Fireball &other)
+        : Actoid(const_cast<FireballFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
+          DirectThreat(other), _coord(other._coord), _factory(other._factory), _empowered(other._empowered), _heightened(other._heightened)
+    {}
+
+    Actoid *clone() const override { return new Fireball(*this); }
+
     std::string toString() const override
     {
       std::string prefix = (_factory._abilityType == AbilityType::QUICKENED_FIREBALL) ? "Quickened " : "";

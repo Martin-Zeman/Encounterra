@@ -28,12 +28,17 @@ namespace enc
     std::vector<std::vector<StateId>> _dependencies;
     StateId _currentState;
     StateId _nextAvailableId;
+    std::unordered_set<Actoid *> _ownedActoids; // Keep track of unique Actoids to delete them in destructor
 
     mutable std::vector<StateId> _cachedToposort;
     mutable bool _isDagDirty;
 
   public:
     StateMachine();
+
+    StateMachine(const StateMachine &other);
+
+    ~StateMachine();
 
     void addNewState(StateId id);
 

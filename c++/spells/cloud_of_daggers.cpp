@@ -11,7 +11,7 @@ namespace enc
   Actoid * CloudOfDaggersFactory::create(void *target)
   {
     Coord *coord = static_cast<Coord *>(target);
-    return std::make_shared<CloudOfDaggers>(*coord, *this);
+    return new CloudOfDaggers(*coord, *this);
   }
 
   std::vector<Actoid *> CloudOfDaggersFactory::createAll(void *previousActionInDag)

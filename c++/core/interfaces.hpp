@@ -68,6 +68,7 @@ namespace enc
         : _factory(factory), _actoidFlags(static_cast<uint32_t>(flags)), _abilityType(abilityType)
     {}
     virtual ~Actoid() = default;
+    virtual Actoid *clone() const = 0;
     ActoidFlags getFlags() const { return static_cast<ActoidFlags>(_actoidFlags); }
     bool hasFlag(ActoidFlags flag) const { return (_actoidFlags & static_cast<uint32_t>(flag)) != 0; }
     AbilityType getAbilityType() const;

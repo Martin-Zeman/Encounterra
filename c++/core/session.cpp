@@ -94,7 +94,7 @@ namespace enc
   template <typename CombatantType> void Session::registerCombatantType()
   {
     int classId = CombatantType::getStaticClassId();
-    _combatantFactories[classId] = [](int num) { return std::make_unique<CombatantType>(num); };
+    _combatantFactories[classId] = [](int num) { return new CombatantType(num); };
   }
 
   // std::unordered_map<Team, int> Session::simulate(bool parallel)

@@ -20,13 +20,13 @@ namespace enc
   std::vector<Actoid *> FireballFactory::createAll(void *previousActionInDag)
   {
     auto bestCoord = findBestArgs();
-    return {std::make_unique<Fireball>(bestCoord, *this)};
+    return {new Fireball(bestCoord, *this)};
   }
 
   Actoid * FireballFactory::create(void *target)
   {
     Coord* coord = static_cast<Coord*>(target);
-    return std::make_shared<Fireball>(*coord, *this);
+    return new Fireball(*coord, *this);
   }
 
   double FireballFactory::calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const

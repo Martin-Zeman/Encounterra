@@ -30,14 +30,14 @@ namespace enc
     result.reserve(eligibleTargets.size());
     for(const auto &target : eligibleTargets)
       {
-        result.push_back(std::make_shared<MenacingMeleeAttack>(AbilityType::MENACING_MELEE_ATTACK, *target, *this));
+        result.push_back(new MenacingMeleeAttack(AbilityType::MENACING_MELEE_ATTACK, *target, *this));
       }
     return result;
   }
 
   Actoid * MenacingMeleeAttackFactory::create(void *target)
   {
-    return std::make_shared<MenacingMeleeAttack>(AbilityType::MENACING_MELEE_ATTACK, *static_cast<Combatant *>(target), *this);
+    return new MenacingMeleeAttack(AbilityType::MENACING_MELEE_ATTACK, *static_cast<Combatant *>(target), *this);
   }
 
 }

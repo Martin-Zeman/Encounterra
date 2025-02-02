@@ -2,6 +2,7 @@
 #include "actions/action_fsm.hpp"
 #include "actions/movement.hpp"
 #include "actions/action_proto_fsm.hpp"
+#include "actions/dummy_actoid_factory.hpp"
 #include "core/state_machine.hpp"
 
 namespace enc
@@ -220,8 +221,7 @@ namespace enc
       {
         if(fsm.getForwardTransitions(state).empty())
           {
-            auto dummyFactory = std::make_shared<DummyActoidFactory>();
-            auto dummyAction = std::make_shared<DummyActoid>(*dummyFactory, "dummy");
+            auto dummyAction = new DummyActoid(DummyActoidFactory::getInstance(), "dummy");
             fsm.addTransition(dummyAction, state, -1);
           }
       }
@@ -256,9 +256,9 @@ namespace enc
             continue;
           }
 
-        Combatant& baseForm = action->getFactory().getCombatant()->getBaseForm();
-        if(baseForm != action->getFactory().getCombatant())
+        if(action->getFactory().getCombatant()->isWildshapeForm())
           {
+            Combatant& baseForm = action->getFactory().getCombatant()->getBaseForm();
             // Handle wildshape form actions
             battleMap.withCombatantWildshapeReplacement(*action, baseForm, battleMap.getCombatantCoordinates(baseForm).getRoot(),
                                                         [&](Combatant &form) {

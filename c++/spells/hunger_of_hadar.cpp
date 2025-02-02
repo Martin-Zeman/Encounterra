@@ -23,10 +23,10 @@ namespace enc
     auto &battleMap = BattleMap::getInstance();
     auto [coord, _1, _2] = battleMap.findBestPlacementHarmfulCircular(*_combatant, static_cast<int>(HungerOfHadarFactory::range),
                                                                     TRANSLATE_RADIUS.at(HungerOfHadarFactory::target));
-    return {std::make_shared<HungerOfHadar>(coord, *this)};
+    return {new HungerOfHadar(coord, *this)};
   }
 
-  Actoid * HungerOfHadarFactory::create(void *target) { return std::make_shared<HungerOfHadar>(*static_cast<Coord *>(target), *this); }
+  Actoid * HungerOfHadarFactory::create(void *target) { return new HungerOfHadar(*static_cast<Coord *>(target), *this); }
 
   double HungerOfHadarFactory::calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const
   {

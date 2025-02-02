@@ -23,14 +23,14 @@ namespace enc
     result.reserve(eligibleTargets.size());
     for(const auto &target : eligibleTargets)
       {
-        result.push_back(std::make_shared<RangedAttack>(AbilityType::RANGED_ATTACK, *target, *this));
+        result.push_back(new RangedAttack(AbilityType::RANGED_ATTACK, *target, *this));
       }
     return result;
   }
 
   Actoid * RangedAttackFactory::create(void *target)
   {
-    return std::make_shared<RangedAttack>(AbilityType::RANGED_ATTACK, *static_cast<Combatant *>(target), *this);
+    return new RangedAttack(AbilityType::RANGED_ATTACK, *static_cast<Combatant *>(target), *this);
   }
 
   std::optional<CoordVector>

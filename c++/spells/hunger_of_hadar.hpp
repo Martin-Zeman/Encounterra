@@ -52,6 +52,13 @@ namespace enc
   public:
     HungerOfHadar(const Coord &coord, const HungerOfHadarFactory &factory);
 
+    HungerOfHadar(const HungerOfHadar &other)
+        : Actoid(const_cast<ActoidFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
+          LimitedDurationEffect(other), AoeSphericEffect(other), DirectThreat(other), _coord(other._coord), _factory(other._factory)
+    {}
+
+    Actoid *clone() const override { return new HungerOfHadar(*this); }
+
     std::string toString() const override;
     std::string shorthandStr() const;
 

@@ -42,6 +42,13 @@ namespace enc
   public:
     MistyStep(const Coord &coord, const MistyStepFactory &factory);
 
+    MistyStep(const MistyStep &other)
+        : Actoid(const_cast<MistyStepFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
+          _coord(other._coord), _factory(other._factory)
+    {}
+
+    Actoid *clone() const override { return new MistyStep(*this); }
+
     ~MistyStep() override;
 
     std::string toString() const override { return "MistyStep to (" + std::to_string(_coord[0]) + ", " + std::to_string(_coord[1]) + ")"; }

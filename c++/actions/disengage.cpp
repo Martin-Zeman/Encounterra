@@ -13,10 +13,10 @@ namespace enc
   std::vector<Actoid *> DisengageFactory::createAll(void *previousActionInDag)
   {
     Disengage d(static_cast<ActoidFactory &>(*this));
-    return {Actoid *(new Disengage(d))};
+    return {new Disengage(d)};
   }
 
-  Actoid * DisengageFactory::create(void *target) { return std::make_shared<Disengage>(static_cast<ActoidFactory &>(*this)); }
+  Actoid *DisengageFactory::create(void *target) { return new Disengage(static_cast<ActoidFactory &>(*this)); }
 
   std::optional<CoordVector>
   Disengage::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)

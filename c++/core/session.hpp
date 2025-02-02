@@ -130,7 +130,7 @@ namespace enc
     Teams &_teams;
 
     // Map to store factory functions for each combatant type
-    std::unordered_map<int, std::function<std::shared_ptr<Combatant>(int)>> _combatantFactories;
+    std::unordered_map<int, std::function<Combatant *(int)>> _combatantFactories;
 
     // Helper function to register combatant types
     template <typename CombatantType> void registerCombatantType();

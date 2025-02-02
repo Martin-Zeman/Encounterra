@@ -854,6 +854,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
         removeCombatant(targetToRemove);
         return false;
       }
+      return true;
   }
 
   void BattleMap::resetCombatantsToInitialPositions(const std::unordered_map<int, Coords> initialPositions){

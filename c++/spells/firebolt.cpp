@@ -26,21 +26,21 @@ namespace enc
     result.reserve(eligibleTargets.size());
     for(const auto &target : eligibleTargets)
       {
-        result.push_back(std::make_unique<Firebolt>(*target, *this));
+        result.push_back(new Firebolt(*target, *this));
       }
     return result;
   }
 
   Actoid * FireboltFactory::create(void *target)
   {
-    return std::make_shared<Firebolt>(*static_cast<Combatant*>(target), *this);
+    return new Firebolt(*static_cast<Combatant*>(target), *this);
   }
 
   double FireboltFactory::calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const
   {
     BattleMap &battleMap = BattleMap::getInstance();
     // Coord currCoord = battleMap.getCombatantCoordinates(*factory._combatant).getRoot();
-    if(target.getSwallowerPtr())
+    if(target.getSwallower())
       {
         return 0;
       }
@@ -133,7 +133,7 @@ namespace enc
     BattleMap &battleMap = BattleMap::getInstance();
     auto combatant = factory._combatant;
     Coord currCoord = battleMap.getCombatantCoordinates(*combatant).getRoot();
-    if(auto swallower = combatant->getSwallowerPtr())
+    if(auto swallower = combatant->getSwallower())
       {
         if(*swallower == _target)
           {

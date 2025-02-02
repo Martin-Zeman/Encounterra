@@ -140,7 +140,9 @@ namespace enc
     return *this;
   }
 
-  bool Combatant::isWildshaped() const { return _baseForm != nullptr; }
+  bool Combatant::isWildshapeForm() const { return _baseForm != nullptr; }
+
+  bool Combatant::isWildshaped() const { return _wildshapeForm != nullptr; }
 
   bool Combatant::isBaseForm() const { return _baseForm == nullptr; }
 

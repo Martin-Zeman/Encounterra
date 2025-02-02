@@ -8,10 +8,10 @@ namespace enc
   std::vector<Actoid *> DodgeFactory::createAll(void *previousActionInDag)
   {
     Dodge d(static_cast<ActoidFactory &>(*this));
-    return {Actoid *(new Dodge(d))};
+    return {new Dodge(d)};
   }
 
-  Actoid * DodgeFactory::create(void *target) { return std::make_shared<Dodge>(static_cast<ActoidFactory&>(*this)); }
+  Actoid * DodgeFactory::create(void *target) { return new Dodge(static_cast<ActoidFactory&>(*this)); }
 
   std::optional<CoordVector>
   Dodge::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)

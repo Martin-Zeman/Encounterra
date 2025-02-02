@@ -30,6 +30,12 @@ namespace enc
   public:
     explicit BreakGrapple(BreakGrappleFactory &factory);
 
+    BreakGrapple(const BreakGrapple &other)
+        : Actoid(const_cast<ActoidFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType)
+    {}
+
+    Actoid *clone() const override { return new BreakGrapple(*this); }
+
     std::string toString() const override { return "Break Grapple"; }
     std::string shorthandStr() const { return "Break Grapple"; }
 

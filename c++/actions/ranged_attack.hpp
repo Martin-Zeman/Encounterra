@@ -28,6 +28,10 @@ namespace enc
   public:
     RangedAttack(AbilityType abilityType, Combatant &target, AttackFactory &factory) : Attack(abilityType, target, factory) {}
 
+    RangedAttack(const RangedAttack &other) : Attack(other._abilityType, other._target, other._factory) {}
+
+    Actoid *clone() const override { return new RangedAttack(*this); }
+
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                  const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
 

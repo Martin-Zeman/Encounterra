@@ -25,18 +25,18 @@ namespace enc
     auto coord = getEligibleTargets();
     if(coord.has_value())
       {
-        return {std::make_shared<MistyStep>(*coord, *this)};
+        return {new MistyStep(*coord, *this)};
       }
     return {};
   }
 
-  Actoid * MistyStepFactory::create(void *target)
+  Actoid *MistyStepFactory::create(void *target)
   {
     if(!target)
       {
         return nullptr;
       }
-    return std::make_shared<MistyStep>(*static_cast<Coord *>(target), *this);
+    return new MistyStep(*static_cast<Coord *>(target), *this);
   }
 
   MistyStep::MistyStep(const Coord &coord, const MistyStepFactory &factory)

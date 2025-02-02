@@ -1,4 +1,5 @@
 #include "actions/action_proto_fsm.hpp"
+#include "actions/dummy_actoid_factory.hpp"
 #include "core/combatant.hpp"
 #include "core/battle_map.hpp"
 #include "core/feasibility.hpp"
@@ -76,7 +77,8 @@ namespace enc
       if(previousFeasibleActions && stateFootprint == *previousFeasibleActions)
         {
           // Protection against three consecutive attacks
-          stateFootprint.actionHashes.insert(std::make_shared<DummyActoid>(*new DummyActoidFactory(), std::to_string(depth))->getHash());
+          DummyActoid dummy(DummyActoidFactory::getInstance(), std::to_string(depth));
+          stateFootprint.actionHashes.insert(dummy.getHash());
         }
 
       if(actionTaken && feasibleActions.empty()) // TODO do I need the actionTaken check?
@@ -115,7 +117,7 @@ namespace enc
                         newActions.reserve(newFeasibleActionFactories.size() * 4);
                         for(const auto &factory : newFeasibleActionFactories)
                           {
-                            auto actions = factory->createAll(actionTaken.get());
+                            auto actions = factory->createAll(actionTaken);
                             newActions.insert(newActions.end(), actions.begin(), actions.end());
                           }
                         dfs(finalCombatantForm, currStateId, depth + 1, fa, &stateFootprint);
@@ -127,7 +129,7 @@ namespace enc
                     newActions.reserve(feasibleActionFactories.size() * 4);
                     for(const auto &factory : feasibleActionFactories)
                       {
-                        auto actions = factory->createAll(fa.get());  // The trick here is in the previousActionInDag
+                        auto actions = factory->createAll(fa);  // The trick here is in the previousActionInDag
                         newActions.insert(newActions.end(), actions.begin(), actions.end());
                       }
                     dfs(subject, currStateId, depth + 1, fa, &stateFootprint);
@@ -215,7 +217,7 @@ namespace enc
                         newActions.reserve(newFeasibleActionFactories.size() * 4);
                         for(const auto &factory : newFeasibleActionFactories)
                           {
-                            auto actions = factory->createAll(actionTaken.get());
+                            auto actions = factory->createAll(actionTaken);
                             newActions.insert(newActions.end(), actions.begin(), actions.end());
                           }
                         dfs(finalCombatantForm, currStateId, depth + 1, fa);
@@ -227,7 +229,7 @@ namespace enc
                     newActions.reserve(feasibleActionFactories.size() * 4);
                     for(const auto &factory : feasibleActionFactories)
                       {
-                        auto actions = factory->createAll(fa.get()); // The trick here is in the previousActionInDag
+                        auto actions = factory->createAll(fa); // The trick here is in the previousActionInDag
                         newActions.insert(newActions.end(), actions.begin(), actions.end());
                       }
                     dfs(subject, currStateId, depth + 1, fa);

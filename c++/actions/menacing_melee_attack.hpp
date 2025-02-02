@@ -34,6 +34,10 @@ namespace enc
     MenacingMeleeAttack(AbilityType abilityType, Combatant &target, MenacingMeleeAttackFactory &factory) : MeleeAttack(abilityType, target, factory)
     {}
 
+    MenacingMeleeAttack(const MenacingMeleeAttack &other) : MeleeAttack(other) {}
+
+    Actoid *clone() const override { return new MenacingMeleeAttack(*this); }
+
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                  const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
 

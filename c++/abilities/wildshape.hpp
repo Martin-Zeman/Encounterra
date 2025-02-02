@@ -40,7 +40,19 @@ namespace enc
   public:
     Wildshape(Combatant *combatant, Combatant *form, WildshapeFactory &factory);
 
+    Wildshape(const Wildshape &other)
+        : Effect(other._factory.getCombatant()) // Init virtual base
+          ,
+          CombatantEffect(other._factory.getCombatant(), std::vector<Combatant *>{other._factory.getCombatant()}),
+          ActionEnablerEffect(other._factory.getCombatant()), Actoid(other._factory), DirectThreat(other), _form(other._form),
+          _factory(other._factory)
+    {
+      _form->setBaseForm(other._factory.getCombatant());
+    }
+
     ~Wildshape() override = default;
+
+    Actoid *clone() const override { return new Wildshape(*this); }
 
     EffectType getEffectType() const override { return EffectType::WILDSHAPE; }
     void activate(const Kwargs &kwargs = {}) override;

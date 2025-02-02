@@ -245,7 +245,7 @@ namespace enc
     Combatant* combatant = _factory.getCombatant();
 
     std::string formPrefix;
-    if(combatant->isWildshaped())
+    if(combatant->isWildshapeForm())
       {
         formPrefix = combatant->getCurrentForm()._name + " ";
       }

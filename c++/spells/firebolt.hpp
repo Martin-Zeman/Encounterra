@@ -76,6 +76,13 @@ namespace enc
           _factory(factory)
     {}
 
+    Firebolt(const Firebolt &other)
+        : Actoid(const_cast<FireboltFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
+          DirectThreat(other), _target(other._target), _factory(other._factory), _rollType(other._rollType)
+    {}
+
+    Actoid *clone() const override { return new Firebolt(*this); }
+
     std::string toString() const override;
 
     std::string shorthandStr() const;

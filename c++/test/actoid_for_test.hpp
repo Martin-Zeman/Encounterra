@@ -9,6 +9,13 @@ namespace enc
   public:
     TestActoid(ActoidFactory &factory, std::string name, ActoidFlags flags = ActoidFlags::DEFAULT) : Actoid(factory, flags), _name(std::move(name)) {}
 
+    TestActoid(const TestActoid &other)
+        : Actoid(const_cast<ActoidFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
+          _name(other._name)
+    {}
+
+    Actoid *clone() const override { return new TestActoid(*this); }
+
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                  const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override
     {

@@ -52,7 +52,14 @@ namespace enc
   public:
     CloudOfDaggers(const Coord &coord, const CloudOfDaggersFactory &factory);
 
+    CloudOfDaggers(const CloudOfDaggers &other)
+        : Actoid(const_cast<ActoidFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
+          LimitedDurationEffect(other), SphericAoe(other), DirectThreat(other), AoeThreat(other), _coord(other._coord), _factory(other._factory)
+    {}
+
     ~CloudOfDaggers() override;
+
+    Actoid *clone() const override { return new CloudOfDaggers(*this); }
 
     std::string toString() const override;
 

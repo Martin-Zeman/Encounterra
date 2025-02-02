@@ -160,7 +160,7 @@ namespace enc
     Color combatantTeam = getTeam(combatant);
     for(int id : _colorToCombatantIds.at(combatantTeam))
       {
-        if(Combatant *ally = _idToCombatant.at(id); ally && ally->isAlive() && !ally->getSwallower() && *ally != combatant)
+        if(Combatant *ally = _idToCombatant.at(id); ally && ally->isAlive() && !ally->getSwallower() && ally != &combatant)
           {
             result.push_back(ally);
           }
@@ -173,7 +173,7 @@ namespace enc
     std::vector<Combatant *> result;
     for(const auto &[id, combatant] : _idToCombatant)
       {
-        if(Combatant *cmbt = combatant; cmbt && cmbt->isAlive() && *cmbt != excludeCombatant)
+        if(Combatant *cmbt = combatant; cmbt && cmbt->isAlive() && cmbt != &excludeCombatant)
           {
             result.push_back(combatant);
           }
@@ -187,7 +187,7 @@ namespace enc
     Color combatantTeam = getTeam(combatant);
     for(int id : _colorToCombatantIds.at(combatantTeam))
       {
-        if(Combatant *ally = _idToCombatant.at(id); ally && ally->isAlive() && *ally != combatant)
+        if(Combatant *ally = _idToCombatant.at(id); ally && ally->isAlive() && ally != &combatant)
           {
             result.push_back(ally);
           }

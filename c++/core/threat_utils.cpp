@@ -359,8 +359,8 @@ namespace enc
     return threatAlongPath;
   }
 
-  PathSearchResult calcThreatForPathWithMistyStep(const CoordVector &path, const Combatant &combatant,
-                                                  const std::unordered_map<AoeEffect*, CoordVector> &effectToCoords)
+  PathSearchResult
+  calcThreatForPathWithMistyStep(const CoordVector &path, Combatant &combatant, const std::unordered_map<AoeEffect *, CoordVector> &effectToCoords)
   {
     auto &battleMap = BattleMap::getInstance();
     auto currCoords = battleMap.getCombatantCoordinates(combatant);
@@ -392,8 +392,8 @@ namespace enc
     stateIdToCoord[0] = currentPos;
 
     // Create movement factories once for the entire path
-    auto moveFactory = std::make_shared<MovementFactory>(combatant, path, AbilityType::STANDARD_MOVEMENT);
-    auto msMoveFactory = std::make_shared<MovementFactory>(combatant, path, AbilityType::STANDARD_MOVEMENT);
+    auto moveFactory = std::make_unique<MovementFactory>(&combatant, path, AbilityType::STANDARD_MOVEMENT);
+    auto msMoveFactory = std::make_unique<MovementFactory>(&combatant, path, AbilityType::STANDARD_MOVEMENT);
 
     for(const auto &increment : path)
       {

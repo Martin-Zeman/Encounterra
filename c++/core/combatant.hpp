@@ -118,6 +118,7 @@ namespace enc
     void setBaseForm(Combatant *form);
     Combatant &getCurrentForm();
     Combatant &getBaseForm();
+    bool isWildshapeForm() const;
     bool isWildshaped() const;
     bool isBaseForm() const;
     Combatant *getSwallower() const { return _swallower; }

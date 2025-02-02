@@ -38,7 +38,7 @@ double getDistToActionSequenceCoord(const std::vector<Actoid *> &sequence, const
       if(action->hasFlag(ActoidFlags::IS_MOVEMENT))
         {
           // Using dynamic_cast since we know it's a movement action
-          if(auto *movement = dynamic_cast<MovementIncrement *>(action.get()))
+          if(auto *movement = dynamic_cast<MovementIncrement *>(action))
             {
               const Coord &increment = movement->getIncrement();
               return distances[increment[0] * battleMap.getGridSize() + increment[1]];
@@ -185,7 +185,7 @@ findBestSequence(Combatant &combatant, const StateMachine &fsm,
 
         for(const auto &action : currentSequence)
           {
-            if(!dynamic_cast<DummyActoid *>(action.get()))
+            if(!dynamic_cast<DummyActoid *>(action))
               { // Skip dummy actions used for depth
                 strippedSequence.push_back(action);
                 if(action->hasFlag(ActoidFlags::IS_ATTACK_MODIFIER))
@@ -299,7 +299,7 @@ findBestSequence(Combatant &combatant, const StateMachine &fsm,
                 for(size_t tIdx = 0; tIdx < sequences[idx].size(); ++tIdx)
                   {
                     const auto &action = sequences[idx][tIdx];
-                    if(auto *dummy = dynamic_cast<DummyActoid *>(action.get()))
+                    if(auto *dummy = dynamic_cast<DummyActoid *>(action))
                       {
                         break;
                       }
@@ -357,7 +357,7 @@ findBestSequence(Combatant &combatant, const StateMachine &fsm,
 
                       if(deltaActionInSequence)
                         {
-                          double deltaThreat = deltaActionInSequence->calculateThreatForAttack(combatant, action.get(), {});
+                          double deltaThreat = deltaActionInSequence->calculateThreatForAttack(combatant, action, {});
                           threatAcc += deltaThreat;
                           sequenceIdxToTransitionStepThreat[idx][deltaActionTIdx] += deltaThreat;
                         }
@@ -373,7 +373,7 @@ findBestSequence(Combatant &combatant, const StateMachine &fsm,
                         {
                           if(auto modifier = std::dynamic_pointer_cast<AttackThreatModifier>(effect))
                             {
-                              threatAcc += modifier->calculateThreatForAttack(combatant, action.get(), {});
+                              threatAcc += modifier->calculateThreatForAttack(combatant, action, {});
                             }
                         }
 
@@ -455,7 +455,7 @@ Actoid * getAction(Combatant &combatant)
   if(!currentForm.getActionPlan().empty())
     {
       auto firstAction = currentForm.getActionPlan().front();
-      if(auto *movement = dynamic_cast<MovementIncrement *>(firstAction.get()))
+      if(auto *movement = dynamic_cast<MovementIncrement *>(firstAction))
         {
           if(currentForm.getMovement() > 0)
             {

@@ -28,6 +28,10 @@ namespace enc
   public:
     MeleeAttack(AbilityType abilityType, Combatant &target, AttackFactory &factory) : Attack(abilityType, target, factory) {}
 
+    MeleeAttack(const MeleeAttack &other) : Attack(other._abilityType, other._target, other._factory) {}
+
+    Actoid *clone() const override { return new MeleeAttack(*this); }
+
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                  const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
     bool equals(const Actoid &other) const override;

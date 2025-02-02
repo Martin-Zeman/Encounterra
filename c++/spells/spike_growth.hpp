@@ -61,6 +61,14 @@ namespace enc
           AoeSphericEffect(factory._combatant, coord, TRANSLATE_RADIUS.at(SpikeGrowthFactory::target)), _coord(coord), _factory(factory)
     {}
 
+    SpikeGrowth(const SpikeGrowth &other)
+        : Effect(other._factory._combatant), AoeEffect(other._factory._combatant),
+          Actoid(const_cast<SpikeGrowthFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
+          LimitedDurationEffect(other), AoeSphericEffect(other), DirectThreat(other), _coord(other._coord), _factory(other._factory)
+    {}
+
+    Actoid *clone() const override { return new SpikeGrowth(*this); }
+
     std::string toString() const override;
 
     std::string shorthandStr() const;

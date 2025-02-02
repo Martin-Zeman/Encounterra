@@ -16,6 +16,41 @@ namespace enc
     _dependencies.resize(2);
   }
 
+  StateMachine::StateMachine(const StateMachine &other)
+      : _states(other._states.size()), _dependencies(other._dependencies), _currentState(other._currentState),
+        _nextAvailableId(other._nextAvailableId), _cachedToposort(other._cachedToposort), _isDagDirty(other._isDagDirty)
+  {
+    // Create a map of old actoid pointers to their new copies
+    std::unordered_map<Actoid *, Actoid *> actoidMap;
+
+    // First, create copies of all unique Actoids
+    for(Actoid *oldActoid : other._ownedActoids)
+      {
+        Actoid *newActoid = oldActoid->clone();
+        actoidMap[oldActoid] = newActoid;
+        _ownedActoids.insert(newActoid);
+      }
+
+    // Now copy the transitions using the new Actoid pointers
+    for(size_t i = 0; i < other._states.size(); ++i)
+      {
+        _states[i].reserve(other._states[i].size());
+        for(const Transition &oldTransition : other._states[i])
+          {
+            Actoid *newAction = actoidMap[oldTransition.action];
+            _states[i].push_back({newAction, oldTransition.destination});
+          }
+      }
+  }
+
+  StateMachine::~StateMachine()
+  {
+    for(Actoid *action : _ownedActoids)
+      {
+        delete action;
+      }
+  }
+
   void StateMachine::addNewState(StateId id)
   {
     if(id == _states.size())
@@ -75,6 +110,7 @@ namespace enc
     _states[origin].push_back({action, dest});
     addDependency(origin, dest);
     _isDagDirty = true;
+    _ownedActoids.insert(action);
   }
 
   void StateMachine::removeTransition(Actoid * action, StateId origin)

@@ -25,13 +25,13 @@ namespace enc
   std::vector<Actoid *> SpikeGrowthFactory::createAll(void *previousActionInDag)
   {
     auto bestCoord = findBestArgs();
-    return {std::make_unique<SpikeGrowth>(bestCoord, *this)};
+    return {new SpikeGrowth(bestCoord, *this)};
   }
 
   Actoid * SpikeGrowthFactory::create(void *target)
   {
     Coord *coord = static_cast<Coord *>(target);
-    return std::make_shared<SpikeGrowth>(*coord, *this);
+    return new SpikeGrowth(*coord, *this);
   }
 
   double SpikeGrowthFactory::calculateThreatToTarget(const Combatant &target, const Kwargs &kwargs) const { return avgRoll(_dmgDice); }

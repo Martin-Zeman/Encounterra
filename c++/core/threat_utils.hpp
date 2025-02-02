@@ -188,7 +188,7 @@ namespace enc
       @param effectToCoords: mapping of AoE effects to their coordinates
       @return: accumulated threat (negative)
    */
-  PathSearchResult calcThreatForPathWithMistyStep(const CoordVector &path, const Combatant &combatant,
-                                                  const std::unordered_map<AoeEffect*, CoordVector> &effectToCoords);
+  PathSearchResult
+  calcThreatForPathWithMistyStep(const CoordVector &path, Combatant &combatant, const std::unordered_map<AoeEffect *, CoordVector> &effectToCoords);
 
 } // namespace enc

@@ -14,6 +14,13 @@ namespace enc
         : Actoid(factory, ActoidFlags::IS_MOVEMENT), _increment(increment), _incursAOO(incursAOO)
     {}
 
+    MovementIncrement(const MovementIncrement &other)
+        : Actoid(const_cast<ActoidFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
+          _increment(other._increment), _incursAOO(other._incursAOO)
+    {}
+
+    Actoid *clone() const override { return new MovementIncrement(*this); }
+
     operator std::string() const { return "(" + std::to_string(_increment[0]) + "," + std::to_string(_increment[1]) + ")"; }
     const Coord &getIncrement() const { return _increment; }
     bool incursAOO() const { return _incursAOO; }
@@ -66,6 +73,12 @@ namespace enc
   {
   public:
     explicit GetUpFromProne(ActoidFactory &factory) : Actoid(factory, ActoidFlags::IS_MOVEMENT) {}
+
+    GetUpFromProne(const GetUpFromProne &other)
+        : Actoid(const_cast<ActoidFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType)
+    {}
+
+    Actoid *clone() const override { return new GetUpFromProne(*this); }
 
     operator std::string() const { return "Get Up from Prone"; }
     std::string shorthandStr() const { return "Get Up from Prone"; }
