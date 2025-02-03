@@ -29,13 +29,19 @@ namespace enc
     for(Combatant *combatant : _combatants)
       {
         // Check for moon & regular wildshape
-        for(const auto &factory : combatant->getBonusActionFactoriesConst())
+        for(ActoidFactory *factory : combatant->getBonusActionFactoriesConst())
           {
             if(factory->getAbilityType() == AbilityType::MOON_WILDSHAPE || factory->getAbilityType() == AbilityType::WILDSHAPE)
               {
-                auto *wildshapeFactory = static_cast<WildshapeFactory *>(factory.get());
-                combatant->setAvailableWildshapeForms(preallocateWildshapeForms(combatant, factory->getAbilityType(), *wildshapeFactory));
-                break;
+                auto *wildshapeFactory = dynamic_cast<WildshapeFactory *>(factory);
+                if (wildshapeFactory)
+                {
+                  combatant->setAvailableWildshapeForms(preallocateWildshapeForms(combatant, factory->getAbilityType(), *wildshapeFactory));
+                  break;
+                }
+                else{
+                  std::cerr << "Error: WildshapeFactory is null\n";
+                }
               }
           }
       }

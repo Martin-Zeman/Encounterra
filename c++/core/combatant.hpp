@@ -242,60 +242,60 @@ namespace enc
       return factory;
     }
 
-    std::shared_ptr<ActoidFactory> addRecklessAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addPreSwallowBite() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addBiteAndSwallow() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addDodge() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addDash() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addDisengage() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addFireball() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addFirebolt() { 
-      auto factory = std::make_shared<FireboltFactory>(_spellToHit, AbilityType::FIREBOLT, this, _spellslots.get());
+    ActoidFactory *addRecklessAttack() { return nullptr; }
+    ActoidFactory *addPreSwallowBite() { return nullptr; }
+    ActoidFactory *addBiteAndSwallow() { return nullptr; }
+    ActoidFactory *addDodge() { return nullptr; }
+    ActoidFactory *addDash() { return nullptr; }
+    ActoidFactory *addDisengage() { return nullptr; }
+    ActoidFactory *addFireball() { return nullptr; }
+    ActoidFactory *addFirebolt() { 
+      auto factory = new FireboltFactory(_spellToHit, AbilityType::FIREBOLT, this, _spellslots.get());
       _actionFactories.emplace_back(factory);
       return factory;
 
      }
-    std::shared_ptr<ActoidFactory> addChaosBolt() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHaste() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHungerOfHadar() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addSpikeGrowth() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addCloudOfDaggers() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHide() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addTwinnedFirebolt() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addTwinnedHaste() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addScorchingRay() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addFaerieFire() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addWildshape() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addPounce() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addConstrict() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addBreakGrapple() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addFlamingSphere() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addWeb() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHoldPerson() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addTwinnedHoldPerson() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addShockingGrasp() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addTwinnedShockingGrasp() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addMagicMissile() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addGrapple() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addGrappleAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addVampiricBite() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addBless() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addRayOfEnfeeblement() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addTwinnedRayOfEnfeeblement() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addSleep() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addShakeAllyAwake() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addThunderwave() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addMenacingMeleeAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addParalyzingMeleeAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addMenacingRangedAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addPrecisionAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addLayOnHands() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addCureWounds() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addAbjureEnemy() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addConicBreathWeapon() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addConicBreathWeaponAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addLineBreathWeapon() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addRayOfFrost() { return nullptr; }
+    ActoidFactory *addChaosBolt() { return nullptr; }
+    ActoidFactory *addHaste() { return nullptr; }
+    ActoidFactory *addHungerOfHadar() { return nullptr; }
+    ActoidFactory *addSpikeGrowth() { return nullptr; }
+    ActoidFactory *addCloudOfDaggers() { return nullptr; }
+    ActoidFactory *addHide() { return nullptr; }
+    ActoidFactory *addTwinnedFirebolt() { return nullptr; }
+    ActoidFactory *addTwinnedHaste() { return nullptr; }
+    ActoidFactory *addScorchingRay() { return nullptr; }
+    ActoidFactory *addFaerieFire() { return nullptr; }
+    ActoidFactory *addWildshape() { return nullptr; }
+    ActoidFactory *addPounce() { return nullptr; }
+    ActoidFactory *addConstrict() { return nullptr; }
+    ActoidFactory *addBreakGrapple() { return nullptr; }
+    ActoidFactory *addFlamingSphere() { return nullptr; }
+    ActoidFactory *addWeb() { return nullptr; }
+    ActoidFactory *addHoldPerson() { return nullptr; }
+    ActoidFactory *addTwinnedHoldPerson() { return nullptr; }
+    ActoidFactory *addShockingGrasp() { return nullptr; }
+    ActoidFactory *addTwinnedShockingGrasp() { return nullptr; }
+    ActoidFactory *addMagicMissile() { return nullptr; }
+    ActoidFactory *addGrapple() { return nullptr; }
+    ActoidFactory *addGrappleAttack() { return nullptr; }
+    ActoidFactory *addVampiricBite() { return nullptr; }
+    ActoidFactory *addBless() { return nullptr; }
+    ActoidFactory *addRayOfEnfeeblement() { return nullptr; }
+    ActoidFactory *addTwinnedRayOfEnfeeblement() { return nullptr; }
+    ActoidFactory *addSleep() { return nullptr; }
+    ActoidFactory *addShakeAllyAwake() { return nullptr; }
+    ActoidFactory *addThunderwave() { return nullptr; }
+    ActoidFactory *addMenacingMeleeAttack() { return nullptr; }
+    ActoidFactory *addParalyzingMeleeAttack() { return nullptr; }
+    ActoidFactory *addMenacingRangedAttack() { return nullptr; }
+    ActoidFactory *addPrecisionAttack() { return nullptr; }
+    ActoidFactory *addLayOnHands() { return nullptr; }
+    ActoidFactory *addCureWounds() { return nullptr; }
+    ActoidFactory *addAbjureEnemy() { return nullptr; }
+    ActoidFactory *addConicBreathWeapon() { return nullptr; }
+    ActoidFactory *addConicBreathWeaponAttack() { return nullptr; }
+    ActoidFactory *addLineBreathWeapon() { return nullptr; }
+    ActoidFactory *addRayOfFrost() { return nullptr; }
 
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -306,45 +306,45 @@ namespace enc
      * Bonus Action abilities
      * ----------------------------------------------------------------------------------------------------------------------------------------------
      */
-    std::shared_ptr<ActoidFactory> addBonusMeleeAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addBonusRangedAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addPamBonusAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addRage() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addTotemRage() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addMistyStep() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addCunningDisengage() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addCunningDash() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addCunningHide() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedFireball() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedFirebolt() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedChaosBolt() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedHaste() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedHungerOfHadar() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedSpikeGrowth() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedCloudOfDaggers() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedScorchingRay() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedFaerieFire() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedBless() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedFlamingSphere() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedHoldPerson() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedRayOfFrost() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addFlamingSphereRam() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addMoonWildshape() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedShockingGrasp() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedMagicMissile() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedRayOfEnfeeblement() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedSleep() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addSecondWind() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHealingWord() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addTwinnedHealingWord() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addShillelagh() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedThunderwave() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addBonusMenacingMeleeAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addBonusMenacingRangedAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addShieldOfFaith() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addQuickenedCureWounds() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addVowOfEnmity() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addAggressive() { return nullptr; }
+    ActoidFactory *addBonusMeleeAttack() { return nullptr; }
+    ActoidFactory *addBonusRangedAttack() { return nullptr; }
+    ActoidFactory *addPamBonusAttack() { return nullptr; }
+    ActoidFactory *addRage() { return nullptr; }
+    ActoidFactory *addTotemRage() { return nullptr; }
+    ActoidFactory *addMistyStep() { return nullptr; }
+    ActoidFactory *addCunningDisengage() { return nullptr; }
+    ActoidFactory *addCunningDash() { return nullptr; }
+    ActoidFactory *addCunningHide() { return nullptr; }
+    ActoidFactory *addQuickenedFireball() { return nullptr; }
+    ActoidFactory *addQuickenedFirebolt() { return nullptr; }
+    ActoidFactory *addQuickenedChaosBolt() { return nullptr; }
+    ActoidFactory *addQuickenedHaste() { return nullptr; }
+    ActoidFactory *addQuickenedHungerOfHadar() { return nullptr; }
+    ActoidFactory *addQuickenedSpikeGrowth() { return nullptr; }
+    ActoidFactory *addQuickenedCloudOfDaggers() { return nullptr; }
+    ActoidFactory *addQuickenedScorchingRay() { return nullptr; }
+    ActoidFactory *addQuickenedFaerieFire() { return nullptr; }
+    ActoidFactory *addQuickenedBless() { return nullptr; }
+    ActoidFactory *addQuickenedFlamingSphere() { return nullptr; }
+    ActoidFactory *addQuickenedHoldPerson() { return nullptr; }
+    ActoidFactory *addQuickenedRayOfFrost() { return nullptr; }
+    ActoidFactory *addFlamingSphereRam() { return nullptr; }
+    ActoidFactory *addMoonWildshape() { return nullptr; }
+    ActoidFactory *addQuickenedShockingGrasp() { return nullptr; }
+    ActoidFactory *addQuickenedMagicMissile() { return nullptr; }
+    ActoidFactory *addQuickenedRayOfEnfeeblement() { return nullptr; }
+    ActoidFactory *addQuickenedSleep() { return nullptr; }
+    ActoidFactory *addSecondWind() { return nullptr; }
+    ActoidFactory *addHealingWord() { return nullptr; }
+    ActoidFactory *addTwinnedHealingWord() { return nullptr; }
+    ActoidFactory *addShillelagh() { return nullptr; }
+    ActoidFactory *addQuickenedThunderwave() { return nullptr; }
+    ActoidFactory *addBonusMenacingMeleeAttack() { return nullptr; }
+    ActoidFactory *addBonusMenacingRangedAttack() { return nullptr; }
+    ActoidFactory *addShieldOfFaith() { return nullptr; }
+    ActoidFactory *addQuickenedCureWounds() { return nullptr; }
+    ActoidFactory *addVowOfEnmity() { return nullptr; }
+    ActoidFactory *addAggressive() { return nullptr; }
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
      */
@@ -354,13 +354,13 @@ namespace enc
      * Reaction abilities
      * ----------------------------------------------------------------------------------------------------------------------------------------------
      */
-    std::shared_ptr<ActoidFactory> addReactionAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addShield() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addPreSwallowBiteReaction() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addUncannyDodge() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addParry() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addRiposte() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addReactionParalyzingMeleeAttack() { return nullptr; }
+    ActoidFactory *addReactionAttack() { return nullptr; }
+    ActoidFactory *addShield() { return nullptr; }
+    ActoidFactory *addPreSwallowBiteReaction() { return nullptr; }
+    ActoidFactory *addUncannyDodge() { return nullptr; }
+    ActoidFactory *addParry() { return nullptr; }
+    ActoidFactory *addRiposte() { return nullptr; }
+    ActoidFactory *addReactionParalyzingMeleeAttack() { return nullptr; }
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
      */
@@ -370,17 +370,17 @@ namespace enc
      * Haste abilities
      * ----------------------------------------------------------------------------------------------------------------------------------------------
      */
-    std::shared_ptr<ActoidFactory> addHasteMeleeAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHasteRangedAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHasteDash() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHasteDisengage() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHasteHide() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHastePreSwallowBite() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHasteBiteAndSwallow() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHasteGrappleAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHasteGrapple() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHasteVampiricBite() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHasteParalyzingMeleeAttack() { return nullptr; }
+    ActoidFactory *addHasteMeleeAttack() { return nullptr; }
+    ActoidFactory *addHasteRangedAttack() { return nullptr; }
+    ActoidFactory *addHasteDash() { return nullptr; }
+    ActoidFactory *addHasteDisengage() { return nullptr; }
+    ActoidFactory *addHasteHide() { return nullptr; }
+    ActoidFactory *addHastePreSwallowBite() { return nullptr; }
+    ActoidFactory *addHasteBiteAndSwallow() { return nullptr; }
+    ActoidFactory *addHasteGrappleAttack() { return nullptr; }
+    ActoidFactory *addHasteGrapple() { return nullptr; }
+    ActoidFactory *addHasteVampiricBite() { return nullptr; }
+    ActoidFactory *addHasteParalyzingMeleeAttack() { return nullptr; }
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
      */
