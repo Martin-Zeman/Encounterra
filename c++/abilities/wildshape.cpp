@@ -309,7 +309,6 @@ namespace enc
   void Wildshape::transferFactories()
   {
     Combatant *initiator = getInitiator();
-    // Transfer eligible factories from original form to wildshape form
     transferFactoryList(initiator->getActionFactoriesConst(), _form->getActionFactories());
     transferFactoryList(initiator->getBonusActionFactoriesConst(), _form->getBonusActionFactories());
     transferFactoryList(initiator->getHasteActionFactoriesConst(), _form->getHasteActionFactories());
@@ -318,42 +317,45 @@ namespace enc
   void Wildshape::restoreFactories()
   {
     Combatant *initiator = getInitiator();
-    // Remove transferred factories from wildshape form
     removeTransferredFactories(_form->getActionFactories());
     removeTransferredFactories(_form->getBonusActionFactories());
     removeTransferredFactories(_form->getHasteActionFactories());
 
-    // Reset combatant pointers in original form's factories
     resetFactoryPointers(initiator->getActionFactoriesConst());
     resetFactoryPointers(initiator->getBonusActionFactoriesConst());
     resetFactoryPointers(initiator->getHasteActionFactoriesConst());
   }
 
-  void Wildshape::transferFactoryList(const std::vector<std::shared_ptr<ActoidFactory>> &sourceFactories,
-                                      std::vector<std::shared_ptr<ActoidFactory>> &targetFactories)
+  void Wildshape::transferFactoryList(const std::vector<ActoidFactory *> &sourceFactories, std::vector<ActoidFactory *> &targetFactories)
   {
     for(const auto &factory : sourceFactories)
       {
         if(factory->hasFlag(FactoryFlags::TRANSITIONS_TO_WILDSHAPE))
           {
-            auto factoryCopy = factory;
+            ActoidFactory *factoryCopy = factory->clone();
             factoryCopy->setCombatant(_form);
-            targetFactories.push_back(std::move(factoryCopy));
+            targetFactories.push_back(factoryCopy);
           }
       }
   }
 
-  void Wildshape::removeTransferredFactories(std::vector<std::shared_ptr<ActoidFactory>> &factories)
+  void Wildshape::removeTransferredFactories(std::vector<ActoidFactory *> &factories)
   {
-    factories.erase(std::remove_if(factories.begin(), factories.end(),
-                                   [](const auto &factory) { return factory->hasFlag(FactoryFlags::TRANSITIONS_TO_WILDSHAPE); }),
-                    factories.end());
+    auto it = std::remove_if(factories.begin(), factories.end(), [](ActoidFactory *factory) {
+      if(factory->hasFlag(FactoryFlags::TRANSITIONS_TO_WILDSHAPE))
+        {
+          delete factory;
+          return true;
+        }
+      return false;
+    });
+    factories.erase(it, factories.end());
   }
 
-  void Wildshape::resetFactoryPointers(const std::vector<std::shared_ptr<ActoidFactory>> &factories)
+  void Wildshape::resetFactoryPointers(const std::vector<ActoidFactory *> &factories)
   {
     Combatant *initiator = getInitiator();
-    for(const auto &factory : factories)
+    for(auto factory : factories)
       {
         factory->setCombatant(initiator);
       }

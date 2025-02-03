@@ -3,7 +3,7 @@
 namespace enc
 {
 
-  explicit BreakGrappleFactory::BreakGrappleFactory(Combatant *combatant)
+  BreakGrappleFactory::BreakGrappleFactory(Combatant *combatant)
       : ActoidFactory("BreakGrappleFactory", "Break Grapple", combatant, AbilityType::BREAK_GRAPPLE)
   {}
 

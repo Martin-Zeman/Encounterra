@@ -58,9 +58,9 @@ namespace enc
 
     for(Combatant *potentialAttacker : potentialAttackers)
       {
-        for(const auto &factory : potentialAttacker->getActionFactoriesConst())
+        for(ActoidFactory *factory : potentialAttacker->getActionFactoriesConst())
           {
-            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
+            if(auto threatFactory = dynamic_cast<DirectThreatFactory *>(factory))
               {
                 if((threatFactory->getFlags() & factoryFlags)
                    && !(threatFactory->getFlags() & static_cast<uint32_t>(FactoryFlags::PREVENT_ENDLESS_RECURSION)))
@@ -74,7 +74,7 @@ namespace enc
 
         for(const auto &factory : potentialAttacker->getBonusActionFactoriesConst())
           {
-            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
+            if(auto threatFactory = dynamic_cast<DirectThreatFactory *>(factory))
               {
                 if((threatFactory->getFlags() & factoryFlags)
                    && !(threatFactory->getFlags() & static_cast<uint32_t>(FactoryFlags::PREVENT_ENDLESS_RECURSION)))
@@ -88,7 +88,7 @@ namespace enc
 
         for(const auto &factory : potentialAttacker->getHasteActionFactoriesConst())
           {
-            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
+            if(auto threatFactory = dynamic_cast<DirectThreatFactory *>(factory))
               {
                 if((threatFactory->getFlags() & factoryFlags)
                    && !(threatFactory->getFlags() & static_cast<uint32_t>(FactoryFlags::PREVENT_ENDLESS_RECURSION)))
@@ -118,7 +118,7 @@ namespace enc
 
         for(const auto &factory : combatant.getActionFactoriesConst())
           {
-            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
+            if(auto threatFactory = dynamic_cast<DirectThreatFactory *>(factory))
               {
                 if((threatFactory->getFlags() & factoryFlags)
                    && !(threatFactory->getFlags() & static_cast<uint32_t>(FactoryFlags::PREVENT_ENDLESS_RECURSION)))
@@ -135,7 +135,7 @@ namespace enc
         minThreat = maxThreat = 0.0;
         for(const auto &factory : combatant.getBonusActionFactoriesConst())
           {
-            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
+            if(auto threatFactory = dynamic_cast<DirectThreatFactory *>(factory))
               {
                 if((threatFactory->getFlags() & factoryFlags)
                    && !(threatFactory->getFlags() & static_cast<uint32_t>(FactoryFlags::PREVENT_ENDLESS_RECURSION)))
@@ -152,7 +152,7 @@ namespace enc
         minThreat = maxThreat = 0.0;
         for(const auto &factory : combatant.getHasteActionFactoriesConst())
           {
-            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
+            if(auto threatFactory = dynamic_cast<DirectThreatFactory *>(factory))
               {
                 if((threatFactory->getFlags() & factoryFlags)
                    && !(threatFactory->getFlags() & static_cast<uint32_t>(FactoryFlags::PREVENT_ENDLESS_RECURSION)))
@@ -180,7 +180,7 @@ namespace enc
       {
         for(const auto &factory : potentialAttacker->getActionFactoriesConst())
           {
-            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
+            if(auto threatFactory = dynamic_cast<DirectThreatFactory *>(factory))
               {
                 if(threatFactory->getFlags() & factoryFlags)
                   {
@@ -192,7 +192,7 @@ namespace enc
 
         for(const auto &factory : potentialAttacker->getBonusActionFactoriesConst())
           {
-            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
+            if(auto threatFactory = dynamic_cast<DirectThreatFactory *>(factory))
               {
                 if(threatFactory->getFlags() & factoryFlags)
                   {
@@ -204,7 +204,7 @@ namespace enc
 
         for(const auto &factory : potentialAttacker->getHasteActionFactoriesConst())
           {
-            if(auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory))
+            if(auto threatFactory = dynamic_cast<DirectThreatFactory *>(factory))
               {
                 if(threatFactory->getFlags() & factoryFlags)
                   {

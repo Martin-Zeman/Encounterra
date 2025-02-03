@@ -75,10 +75,9 @@ namespace enc
     void restoreFactories();
 
     // Helper methods
-    void transferFactoryList(const std::vector<std::shared_ptr<ActoidFactory>> &sourceFactories,
-                             std::vector<std::shared_ptr<ActoidFactory>> &targetFactories);
-    void removeTransferredFactories(std::vector<std::shared_ptr<ActoidFactory>> &factories);
-    void resetFactoryPointers(const std::vector<std::shared_ptr<ActoidFactory>> &factories);
+    void transferFactoryList(const std::vector<ActoidFactory *> &sourceFactories, std::vector<ActoidFactory *> &targetFactories);
+    void removeTransferredFactories(std::vector<ActoidFactory *> &factories);
+    void resetFactoryPointers(const std::vector<ActoidFactory *> &factories);
 
     bool equals(const Actoid &other) const override;
 
