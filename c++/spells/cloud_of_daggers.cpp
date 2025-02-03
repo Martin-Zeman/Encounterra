@@ -33,9 +33,10 @@ namespace enc
   }
 
   CloudOfDaggers::CloudOfDaggers(const Coord &coord, const CloudOfDaggersFactory &factory)
-      : Actoid(const_cast<CloudOfDaggersFactory &>(factory), ActoidFlags::IS_SPELL, factory._abilityType), Effect(factory._combatant),
-        LimitedDurationEffect(factory._combatant, 100), SphericAoe(coord, TRANSLATE_RADIUS.at(CloudOfDaggersFactory::target)), _coord(coord),
-        _factory(factory)
+      : Effect(factory._combatant), AoeEffect(factory._combatant),
+        Actoid(const_cast<CloudOfDaggersFactory &>(factory), ActoidFlags::IS_SPELL, factory._abilityType),
+        LimitedDurationEffect(factory._combatant, 100),
+        AoeSquareEffect(factory._combatant, coord, TRANSLATE_RADIUS.at(CloudOfDaggersFactory::target)), _factory(factory)
   {}
 
   CloudOfDaggers::~CloudOfDaggers() = default;
@@ -44,7 +45,7 @@ namespace enc
   {
     std::string prefix = (_factory._abilityType == AbilityType::QUICKENED_CLOUD_OF_DAGGERS) ? "Quickened " : "";
     std::stringstream ss;
-    ss << _coord;
+    ss << _origin;
     return prefix + "Cloud of Daggers at " + ss.str();
   }
 
@@ -54,13 +55,21 @@ namespace enc
     return prefix + "Cloud of Daggers";
   }
 
+  void CloudOfDaggers::onStartOfTurn(Combatant &combatant) { /*TODO*/ };
+  void CloudOfDaggers::onEndOfTurn(Combatant &combatant) { /*TODO*/ };
+  void CloudOfDaggers::onEnter(Combatant &combatant) { /*TODO*/ };
+  void CloudOfDaggers::onMoveWithin(Combatant &combatant) { /*TODO*/ };
+  void CloudOfDaggers::onExit(Combatant &combatant) { /*TODO*/ };
+
   void CloudOfDaggers::activate(const Kwargs &kwargs) { /*TODO*/ }
   void CloudOfDaggers::deactivate() { /*TODO*/ }
   bool CloudOfDaggers::deactivateForCombatant(Combatant &combatant) { return false; /*TODO*/ }
   bool CloudOfDaggers::isAffecting(const Combatant &combatant) const { return false; /*TODO*/ }
   EffectType CloudOfDaggers::getEffectType() const { return EffectType::CLOUD_OF_DAGGERS; }
 
-    std::optional<CoordVector>
+  const CoordVector &CloudOfDaggers::getAffectedCoords() const { return SquareAoe::getAffectedCoords(); }
+
+  std::optional<CoordVector>
   CloudOfDaggers::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     // TODO
@@ -74,8 +83,8 @@ namespace enc
   {
     size_t h = std::hash<int>{}(static_cast<int>(getAbilityType()));
     h ^= std::hash<int>{}(static_cast<int>(getFlags())) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= std::hash<int>{}(_coord[0]) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= std::hash<int>{}(_coord[1]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(_origin[0]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(_origin[1]) + 0x9e3779b9 + (h << 6) + (h >> 2);
     return h;
   }
 
@@ -83,7 +92,7 @@ namespace enc
   {
     if(auto *cloudOfDaggers = dynamic_cast<const CloudOfDaggers *>(&other))
       {
-        return getAbilityType() == other.getAbilityType() && getFlags() == other.getFlags() && _coord == cloudOfDaggers->_coord;
+        return getAbilityType() == other.getAbilityType() && getFlags() == other.getFlags() && _origin == cloudOfDaggers->_origin;
       }
     return false;
   }

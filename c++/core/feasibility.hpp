@@ -9,6 +9,5 @@ namespace enc
 
   bool checkFeasibilityLight(const Combatant &combatant, ActoidFactory &actoidFactory);
 
-  std::vector<std::shared_ptr<ActoidFactory>>
-  getFeasibleFactories(const std::vector<std::shared_ptr<ActoidFactory>> &factories, const Combatant &combatant);
+  std::vector<ActoidFactory *> getFeasibleFactories(const std::vector<ActoidFactory *> &factories, const Combatant &combatant);
 }

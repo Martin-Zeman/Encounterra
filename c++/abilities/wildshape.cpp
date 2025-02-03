@@ -328,27 +328,20 @@ namespace enc
 
   void Wildshape::transferFactoryList(const std::vector<ActoidFactory *> &sourceFactories, std::vector<ActoidFactory *> &targetFactories)
   {
-    for(const auto &factory : sourceFactories)
+    for(auto *factory : sourceFactories)
       {
         if(factory->hasFlag(FactoryFlags::TRANSITIONS_TO_WILDSHAPE))
           {
-            ActoidFactory *factoryCopy = factory->clone();
-            factoryCopy->setCombatant(_form);
-            targetFactories.push_back(factoryCopy);
+            factory->setCombatant(_form);
+            targetFactories.push_back(factory);
           }
       }
   }
 
   void Wildshape::removeTransferredFactories(std::vector<ActoidFactory *> &factories)
   {
-    auto it = std::remove_if(factories.begin(), factories.end(), [](ActoidFactory *factory) {
-      if(factory->hasFlag(FactoryFlags::TRANSITIONS_TO_WILDSHAPE))
-        {
-          delete factory;
-          return true;
-        }
-      return false;
-    });
+    auto it = std::remove_if(factories.begin(), factories.end(),
+                             [](ActoidFactory *factory) { return factory->hasFlag(FactoryFlags::TRANSITIONS_TO_WILDSHAPE); });
     factories.erase(it, factories.end());
   }
 

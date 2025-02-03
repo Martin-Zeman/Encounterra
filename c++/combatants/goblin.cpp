@@ -28,7 +28,7 @@ namespace enc
                                           DamageType::Piercing,
                                           64 // attackRange
     );
-    setDangerZoneAttack(dynamic_cast<DirectThreatFactory *>(shortbowFactory.get()));
+    setDangerZoneAttack(dynamic_cast<DirectThreatFactory *>(shortbowFactory));
   }
 
   ResourceState Goblin::exportResources()

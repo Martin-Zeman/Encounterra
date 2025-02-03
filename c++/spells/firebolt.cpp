@@ -133,9 +133,9 @@ namespace enc
     BattleMap &battleMap = BattleMap::getInstance();
     auto combatant = factory._combatant;
     Coord currCoord = battleMap.getCombatantCoordinates(*combatant).getRoot();
-    if(auto swallower = combatant->getSwallower())
+    if(Combatant *swallower = combatant->getSwallower())
       {
-        if(*swallower == _target)
+        if(swallower == &_target)
           {
             CoordVector coords = {currCoord};
             return coords;

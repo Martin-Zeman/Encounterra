@@ -12,7 +12,7 @@ namespace enc
 
   std::optional<Coord> MistyStepFactory::getEligibleTargets() const
   {
-    if(_combatant->getSwallowerPtr())
+    if(_combatant->getSwallower())
       {
         return std::nullopt;
       }
@@ -72,7 +72,7 @@ namespace enc
   MistyStep::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     auto combatant = _factory._combatant;
-    if(combatant->getSwallowerPtr())
+    if(combatant->getSwallower())
       {
         return std::nullopt;
       }

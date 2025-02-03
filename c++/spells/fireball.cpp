@@ -57,9 +57,8 @@ namespace enc
     std::vector<Combatant*> affectedCombatants
       = battleMap.getCombatantsAffectedBySphereAoE(*factory._combatant, FireballFactory::target, SpellType::HARMFUL, _coord);
     double acc = 0.0;
-    for(auto weakAff : affectedCombatants)
+    for(Combatant *aff : affectedCombatants)
       {
-        auto aff = weakAff.lock();
         double avgDmg = std::min(static_cast<double>(aff->getCurrentHp()),
                                  meanDmgDcAttack(factory._dc, factory._dmgDice, true, aff->getSavingThrows().at(factory._savingThrow),
                                                  aff->isImmuneTo(FireballFactory::dmgType), aff->isResistantTo(FireballFactory::dmgType)));

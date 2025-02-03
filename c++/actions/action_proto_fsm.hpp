@@ -40,7 +40,7 @@ namespace enc
     }
   };
 
-  std::vector<std::shared_ptr<ActoidFactory>> getAllFeasibleActionFactories(const Combatant &combatant, int depth);
+  std::vector<ActoidFactory *> getAllFeasibleActionFactories(const Combatant &combatant, int depth);
 
   /**
    * Finds the path through the FSM which represents all possible movements and actions for a combatant.

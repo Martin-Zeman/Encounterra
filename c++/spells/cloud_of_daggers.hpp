@@ -6,7 +6,7 @@
 #include "core/resources.hpp"
 #include "actions/action_types.hpp"
 #include "effects/limited_duration_effect.hpp"
-#include "effects/spheric_aoe.hpp"
+#include "effects/aoe_square_effect.hpp"
 
 namespace enc
 {
@@ -47,14 +47,16 @@ namespace enc
     Die _dmgDice;
   };
 
-  class CloudOfDaggers : public Actoid, public LimitedDurationEffect, public SphericAoe, public DirectThreat, public AoeThreat
+  class CloudOfDaggers : public Actoid, public LimitedDurationEffect, public AoeSquareEffect, public DirectThreat
   {
   public:
     CloudOfDaggers(const Coord &coord, const CloudOfDaggersFactory &factory);
 
     CloudOfDaggers(const CloudOfDaggers &other)
-        : Actoid(const_cast<ActoidFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
-          LimitedDurationEffect(other), SphericAoe(other), DirectThreat(other), AoeThreat(other), _coord(other._coord), _factory(other._factory)
+        : Effect(other._initiator), AoeEffect(other._initiator),
+          Actoid(const_cast<CloudOfDaggersFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
+          LimitedDurationEffect(other._initiator, other._turns), AoeSquareEffect(other._initiator, other._origin, other._length),
+          _factory(other._factory)
     {}
 
     ~CloudOfDaggers() override;
@@ -74,17 +76,24 @@ namespace enc
 
     bool equals(const Actoid &other) const override;
 
+    void onStartOfTurn(Combatant &combatant) override;
+    void onEndOfTurn(Combatant &combatant) override;
+    void onEnter(Combatant &combatant) override;
+    void onMoveWithin(Combatant &combatant) override;
+    void onExit(Combatant &combatant) override;
+
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;
     bool deactivateForCombatant(Combatant &combatant) override;
     bool isAffecting(const Combatant &combatant) const override;
     EffectType getEffectType() const override;
 
+    const CoordVector &getAffectedCoords() const override;
+
   protected:
     size_t hash() const override;
 
   private:
-    Coord _coord;
     const CloudOfDaggersFactory &_factory;
   };
 }

@@ -1,4 +1,5 @@
 #include "effects/combatant_effect.hpp"
+#include "core/operator_overloads.hpp"
 #include <algorithm>
 
 namespace enc
@@ -17,7 +18,7 @@ namespace enc
   {
     for(const auto &cbt : _combatants)
       {
-        if(*cbt == combatant)
+        if(cbt == combatant) // TODO: Is a simple pointer comparison enough?
           {
             return true;
           }

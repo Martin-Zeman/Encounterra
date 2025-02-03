@@ -56,12 +56,12 @@ namespace enc
       : Effect(factory._combatant), AoeEffect(factory._combatant),
         Actoid(const_cast<HungerOfHadarFactory &>(factory), ActoidFlags::IS_SPELL, factory._abilityType),
         LimitedDurationEffect(factory._combatant, 10), AoeSphericEffect(factory._combatant, coord, TRANSLATE_RADIUS.at(HungerOfHadarFactory::target)),
-        _coord(coord), _factory(factory)
+        _factory(factory)
   {}
 
   void HungerOfHadar::onStartOfTurn(Combatant &combatant)
   {
-    combatant.applyCondition(std::make_shared<Condition>(Conditions::BLINDED, _factory._combatant, this));
+    combatant.applyCondition(new Condition(Conditions::BLINDED, _factory._combatant, this));
     int damage = rollDice(_factory._dmgDice);
     combatant.receiveDmg(damage, _factory.dmgType);
     BattleMap::getInstance().removeCombatantIfDead(combatant);
@@ -69,7 +69,7 @@ namespace enc
 
   void HungerOfHadar::onEndOfTurn(Combatant &combatant)
   {
-    combatant.applyCondition(std::make_shared<Condition>(Conditions::BLINDED, _factory._combatant, this));
+    combatant.applyCondition(new Condition(Conditions::BLINDED, _factory._combatant, this));
     int damage = rollDice(_factory._dmgDice);
 
     // Temporarily change damage type for acid damage
@@ -79,7 +79,7 @@ namespace enc
 
   void HungerOfHadar::onEnter(Combatant &combatant)
   {
-    combatant.applyCondition(std::make_shared<Condition>(Conditions::BLINDED, _factory._combatant, this));
+    combatant.applyCondition(new Condition(Conditions::BLINDED, _factory._combatant, this));
   }
 
   void HungerOfHadar::onMoveWithin(Combatant &combatant)
@@ -109,7 +109,7 @@ namespace enc
   {
     auto &battleMap = BattleMap::getInstance();
     Teams &teams = Teams::getInstance();
-    auto affected = battleMap.getCombatantsAffectedBySphereAoE(_factory._combatant, HungerOfHadarFactory::target, HungerOfHadarFactory::type, _coord);
+    auto affected = battleMap.getCombatantsAffectedBySphereAoE(*_factory._combatant, HungerOfHadarFactory::target, HungerOfHadarFactory::type, _origin);
 
     double totalThreat = 0.0;
     for(auto *target : affected)
@@ -138,7 +138,7 @@ namespace enc
   {
     std::string prefix = (_factory._abilityType == AbilityType::QUICKENED_HUNGER_OF_HADAR) ? "Quickened " : "";
     std::stringstream ss;
-    ss << _coord;
+    ss << _origin;
     return prefix + "Hunger of Hadar at " + ss.str();
   }
 
@@ -156,7 +156,7 @@ namespace enc
   HungerOfHadar::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     auto combatant = _factory._combatant;
-    if(combatant->getSwallowerPtr())
+    if(combatant->getSwallower())
       {
         return std::nullopt;
       }
@@ -182,8 +182,8 @@ namespace enc
   {
     size_t h = std::hash<int>{}(static_cast<int>(getAbilityType()));
     h ^= std::hash<int>{}(static_cast<int>(getFlags())) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= std::hash<int>{}(_coord[0]) + 0x9e3779b9 + (h << 6) + (h >> 2);
-    h ^= std::hash<int>{}(_coord[1]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(_origin[0]) + 0x9e3779b9 + (h << 6) + (h >> 2);
+    h ^= std::hash<int>{}(_origin[1]) + 0x9e3779b9 + (h << 6) + (h >> 2);
     return h;
   }
 
@@ -191,7 +191,7 @@ namespace enc
   {
     if(auto *hungerOfHadar = dynamic_cast<const HungerOfHadar *>(&other))
       {
-        return getAbilityType() == other.getAbilityType() && getFlags() == other.getFlags() && _coord == hungerOfHadar->_coord;
+        return getAbilityType() == other.getAbilityType() && getFlags() == other.getFlags() && _origin == hungerOfHadar->_origin;
       }
     return false;
   }

@@ -53,8 +53,10 @@ namespace enc
     HungerOfHadar(const Coord &coord, const HungerOfHadarFactory &factory);
 
     HungerOfHadar(const HungerOfHadar &other)
-        : Actoid(const_cast<ActoidFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
-          LimitedDurationEffect(other), AoeSphericEffect(other), DirectThreat(other), _coord(other._coord), _factory(other._factory)
+        : Effect(other._initiator), AoeEffect(other._initiator),
+          Actoid(const_cast<HungerOfHadarFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
+          LimitedDurationEffect(other._initiator, other._turns), AoeSphericEffect(other._initiator, other._origin, other._radius),
+          _factory(other._factory)
     {}
 
     Actoid *clone() const override { return new HungerOfHadar(*this); }
@@ -86,7 +88,6 @@ namespace enc
     size_t hash() const override;
 
   private:
-    Coord _coord;
     const HungerOfHadarFactory &_factory;
   };
 }

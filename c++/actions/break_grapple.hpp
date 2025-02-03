@@ -9,8 +9,7 @@ namespace enc
   class BreakGrappleFactory : public ActoidFactory
   {
   public:
-    explicit BreakGrappleFactory(Combatant *combatant) : ActoidFactory("BreakGrappleFactory", "Break Grapple", combatant, AbilityType::BREAK_GRAPPLE)
-    {}
+    explicit BreakGrappleFactory(Combatant *combatant);
 
     std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override
     {

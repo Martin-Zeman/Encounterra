@@ -8,9 +8,9 @@
 namespace enc
 {
 
-  std::vector<std::shared_ptr<ActoidFactory>> getAllFeasibleActionFactories(Combatant &combatant, int depth)
+  std::vector<ActoidFactory *> getAllFeasibleActionFactories(Combatant &combatant, int depth)
   {
-    std::vector<std::shared_ptr<ActoidFactory>> allActionFactories;
+    std::vector<ActoidFactory*> allActionFactories;
     // Reserve maximum possible size
     allActionFactories.reserve(combatant.getActionFactoriesConst().size() + combatant.getBonusActionFactoriesConst().size()
                                + combatant.getHasteActionFactoriesConst().size());

@@ -5,7 +5,7 @@
 
 namespace enc
 {
-  class AoeSquareEffect : public SquareAoe, public AoeEffect
+  class AoeSquareEffect : public SquareAoe, virtual public AoeEffect
   {
   public:
     AoeSquareEffect(Combatant *initiator, const Coord &origin, int length) : SquareAoe(origin, length), AoeEffect(initiator) {}

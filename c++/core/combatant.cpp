@@ -80,6 +80,15 @@ namespace enc
         delete form;
       }
     _availableWildshapeForms.clear();
+
+    for(Condition *condition : _conditions)
+      {
+        delete condition;
+      }
+    for(ConditionWithDC *condition : _dcConditions)
+      {
+        delete condition;
+      }
   }
 
   std::string Combatant::toString() const { return _name; }
@@ -244,6 +253,7 @@ namespace enc
 
     if(it != _conditions.end())
       {
+        delete *it;
         _conditions.erase(it);
         if(condition == Conditions::SWALLOWED)
           {
