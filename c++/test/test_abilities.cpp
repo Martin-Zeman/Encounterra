@@ -64,11 +64,11 @@ protected:
 TEST_F(AbilityTest, FireboltCalculateThreatToTargetDelta) {
   battleMap->setCombatantCoordinates(*goblin, Coord({5, 0}));
   battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord({0, 0}));
-  teams->addCombatantToTeam(*goblin, Color::RED);
-  teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(goblin, Color::RED);
+  teams->addCombatantToTeam(draconic_sorcerer_lvl_1, Color::BLUE);
 
-  std::shared_ptr<ActoidFactory> actoidFactory = draconic_sorcerer_lvl_1->getActionFactory(AbilityType::FIREBOLT).lock();
-  std::shared_ptr<FireboltFactory> fireboltFactory = std::dynamic_pointer_cast<FireboltFactory>(actoidFactory);
+  ActoidFactory* actoidFactory = draconic_sorcerer_lvl_1->getActionFactory(AbilityType::FIREBOLT);
+  FireboltFactory *fireboltFactory = dynamic_cast<FireboltFactory *>(actoidFactory);
 
   ASSERT_NE(fireboltFactory, nullptr) << "Failed to cast ActoidFactory to FireboltFactory";
 
@@ -76,42 +76,42 @@ TEST_F(AbilityTest, FireboltCalculateThreatToTargetDelta) {
 
   // Test with advantage
   modifiers.set(ThreatModifierType::ROLL_TYPE, RollType::ADVANTAGE);
-  double advantageThreat = fireboltFactory->calculateThreatToTargetDelta(goblin, modifiers);
+  double advantageThreat = fireboltFactory->calculateThreatToTargetDelta(*goblin, modifiers);
   EXPECT_GT(advantageThreat, 0);
 
   // Test with disadvantage
   modifiers.set(ThreatModifierType::ROLL_TYPE, RollType::DISADVANTAGE);
-  double disadvantageThreat = fireboltFactory->calculateThreatToTargetDelta(goblin, modifiers);
+  double disadvantageThreat = fireboltFactory->calculateThreatToTargetDelta(*goblin, modifiers);
   EXPECT_LT(disadvantageThreat, 0);
 
   // Test with flat bonus to hit
   modifiers.clear();
   modifiers.set(ThreatModifierType::TO_HIT_FLAT, 2);
-  double bonusToHitThreat = fireboltFactory->calculateThreatToTargetDelta(goblin, modifiers);
+  double bonusToHitThreat = fireboltFactory->calculateThreatToTargetDelta(*goblin, modifiers);
   EXPECT_GT(bonusToHitThreat, 0);
 
   // Test with a negative flat bonus to hit
   modifiers.set(ThreatModifierType::TO_HIT_FLAT, -2);
-  double negativeBonusToHitThreat = fireboltFactory->calculateThreatToTargetDelta(goblin, modifiers);
+  double negativeBonusToHitThreat = fireboltFactory->calculateThreatToTargetDelta(*goblin, modifiers);
   EXPECT_LT(negativeBonusToHitThreat, 0);
 
   // Test with increased AC
   modifiers.clear();
   modifiers.set(ThreatModifierType::TARGET_AC, 2);
-  double increasedACThreat = fireboltFactory->calculateThreatToTargetDelta(goblin, modifiers);
+  double increasedACThreat = fireboltFactory->calculateThreatToTargetDelta(*goblin, modifiers);
   EXPECT_LT(increasedACThreat, 0);
 
   // Test with multiple modifiers
   modifiers.clear();
   modifiers.set(ThreatModifierType::TO_HIT_FLAT, 2);
   modifiers.set(ThreatModifierType::TARGET_AC, 1);
-  double multiModifierThreatOne = fireboltFactory->calculateThreatToTargetDelta(goblin, modifiers);
+  double multiModifierThreatOne = fireboltFactory->calculateThreatToTargetDelta(*goblin, modifiers);
   // The combined effect should be positive (advantage and +2 to hit outweigh +1 AC)
   EXPECT_GT(multiModifierThreatOne, 0);
 
   // Test a combination of multiple positive effects plus a negative with and overall positive effect
   modifiers.set(ThreatModifierType::ROLL_TYPE, RollType::ADVANTAGE);
-  double multiModifierThreatTwo = fireboltFactory->calculateThreatToTargetDelta(goblin, modifiers);
+  double multiModifierThreatTwo = fireboltFactory->calculateThreatToTargetDelta(*goblin, modifiers);
   EXPECT_GT(multiModifierThreatTwo, multiModifierThreatOne);
 }
 

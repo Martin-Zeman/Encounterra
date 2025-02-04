@@ -50,6 +50,12 @@ namespace
     ASSERT_EQ(transitions.size(), 1);
     ASSERT_EQ(transitions[0].first->toString(), "to_3");
     ASSERT_EQ(transitions[0].second, 3);
+
+    delete to_2;
+    delete to_3;
+    delete to_4;
+    delete to_5;
+    delete to_terminal;
   }
 
   TEST_F(StateMachineTest, RemoveTransition)
@@ -71,6 +77,8 @@ namespace
     auto transitions = fsm.getForwardTransitions(INITIAL_STATE);
     ASSERT_EQ(transitions.size(), 1);
     ASSERT_EQ(transitions[0].first, to_2);
+    delete to_2;
+    delete to_terminal;
   }
 
   TEST_F(StateMachineTest, GetNextStateId)
@@ -91,6 +99,7 @@ namespace
   {
     auto nonexistent = createTestAction("nonexistent");
     ASSERT_FALSE(fsm.triggerTransition(nonexistent));
+    delete nonexistent;
   }
 
   TEST_F(StateMachineTest, ResetState)
@@ -102,6 +111,7 @@ namespace
     ASSERT_EQ(fsm.getCurrentState(), 2);
     fsm.reset();
     ASSERT_EQ(fsm.getCurrentState(), INITIAL_STATE);
+    delete to_2;
   }
 
   TEST_F(StateMachineTest, GetAllStates)
@@ -122,6 +132,9 @@ namespace
     ASSERT_TRUE(std::find(states.begin(), states.end(), TERMINAL_STATE) != states.end());
     ASSERT_TRUE(std::find(states.begin(), states.end(), 2) != states.end());
     ASSERT_TRUE(std::find(states.begin(), states.end(), 3) != states.end());
+    delete to_2;
+    delete to_3;
+    delete to_terminal;
   }
 
   TEST_F(StateMachineTest, BasicToposort)
@@ -152,6 +165,11 @@ namespace
     ASSERT_LT(find_pos(2), find_pos(5));
     ASSERT_LT(find_pos(3), find_pos(4));
     ASSERT_LT(find_pos(5), find_pos(TERMINAL_STATE));
+    delete to_2;
+    delete to_3;
+    delete to_4;
+    delete to_5;
+    delete to_terminal;
   }
 
   TEST_F(StateMachineTest, ToposortWithCycle)
@@ -171,6 +189,10 @@ namespace
     fsm.addTransition(cycle, 4, 2);
 
     ASSERT_THROW(fsm.toposort(), std::runtime_error);
+    delete to_2;
+    delete to_3;
+    delete to_4;
+    delete cycle;
   }
 
   TEST_F(StateMachineTest, ToposortEmptyGraph)
@@ -253,6 +275,10 @@ namespace
     ASSERT_LT(find_pos(0), find_pos(3));
     ASSERT_LT(find_pos(2), find_pos(4));
     ASSERT_LT(find_pos(3), find_pos(4));
+    delete to_2;
+    delete to_3;
+    delete to_4_from_2;
+    delete to_4_from_3;
   }
 
   int main(int argc, char **argv)

@@ -55,6 +55,6 @@ namespace enc
 
     std::optional<Resource *> getResource() override { return std::nullopt; }
 
-    std::shared_ptr<TestActoid> createTestActoid(const std::string &name) { return std::make_shared<TestActoid>(*this, name); }
+    Actoid *createTestActoid(const std::string &name) { return new TestActoid(*this, name); }
   };
 } // namespace enc

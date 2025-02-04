@@ -100,17 +100,17 @@ TEST_F(ResourceTest, UseResourcesSpellslots)
     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(2), 3);
     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(1), 4);
 
-    useResources(draconic_sorcerer_lvl_5, *firebolt);
+    useResources(*draconic_sorcerer_lvl_5, *firebolt);
     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(3), 2);
     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(2), 3);
     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(1), 4);
 
-    useResources(draconic_sorcerer_lvl_5, *fireball);
+    useResources(*draconic_sorcerer_lvl_5, *fireball);
     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(3), 1);
     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(2), 3);
     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(1), 4);
 
-    useResources(draconic_sorcerer_lvl_5, *fireball);
+    useResources(*draconic_sorcerer_lvl_5, *fireball);
     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(3), 0);
     EXPECT_FALSE(draconic_sorcerer_lvl_5->getSpellslots().hasUses(3));
     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(2), 3);

@@ -334,7 +334,7 @@ namespace enc
     return threatAcc;
   }
 
-  std::vector<double> accumulateThreatAlongPath(const CoordVector &path, const Combatant &combatant,
+  std::vector<double> accumulateThreatAlongPath(const CoordVector &path, Combatant &combatant,
                                                 const std::unordered_map<AoeEffect *, CoordVector> &effectToCoords, bool disengaged, bool dodged)
   {
     double threatAcc = 0.0;

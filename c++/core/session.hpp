@@ -18,6 +18,7 @@ namespace enc
   {
   public:
     Session();
+    ~Session();
 
     void addCombatant(Combatant *combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel);
 
@@ -124,7 +125,7 @@ namespace enc
         }
     }
 
-    std::vector<Combatant *> _combatants;
+    std::vector<Combatant *> _combatants; // Session is the owner of Combatants
     std::unordered_map<int, int> _typeCounter;
     int _numSimulations;
     Teams &_teams;

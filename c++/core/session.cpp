@@ -45,6 +45,14 @@ namespace enc
     // Register other combatant types...
   }
 
+  Session::~Session()
+  {
+    for(Combatant *combatant : _combatants)
+      {
+        delete combatant;
+      }
+  }
+
   void Session::addCombatant(Combatant *combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel)
   {
     combatant->setResourceDepletionLevel(resourceDepletionLevel);
