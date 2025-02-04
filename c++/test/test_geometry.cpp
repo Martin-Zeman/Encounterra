@@ -30,15 +30,21 @@ class basicDistanceTests : public ::testing::Test
 {
 protected:
   BattleMap *battle_map;
-  std::unique_ptr<Goblin> test_goblin;
-  std::unique_ptr<DraconicSorcererLvl1> test_draconic_sorcerer_lvl_1;
+  Goblin *test_goblin;
+  DraconicSorcererLvl1 *test_draconic_sorcerer_lvl_1;
 
   void SetUp() override
   {
     BattleMap::resetInstance(); // Reset the singleton instance before each test
     battle_map = &BattleMap::getInstance();
-    test_goblin = std::make_unique<Goblin>(1);
-    test_draconic_sorcerer_lvl_1 = std::make_unique<DraconicSorcererLvl1>(1);
+    test_goblin = new Goblin(1);
+    test_draconic_sorcerer_lvl_1 = new DraconicSorcererLvl1(1);
+  }
+
+  void TearDown() override
+  {
+    delete test_goblin;
+    delete test_draconic_sorcerer_lvl_1;
   }
 };
 

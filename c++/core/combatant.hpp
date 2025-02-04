@@ -524,7 +524,7 @@ namespace enc
     std::unordered_map<SavingThrow, std::vector<Die>> _savingThrowsDiceMod;
     std::unordered_map<SavingThrow, RollType> _savingThrowsRollTypeMod;
     std::unordered_set<DamageType> _dmgTypesTookLastRound;
-    Combatant *_baseForm{this};
+    Combatant *_baseForm{nullptr};
     Combatant *_wildshapeForm{nullptr};
     Combatant *_swallower{nullptr};
     Combatant *_swallowedTarget{nullptr};

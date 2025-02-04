@@ -45,7 +45,7 @@ namespace enc
     delete _disengageFactory;
     delete _getUpFactory;
     delete _breakGrappleFactory;
-    delete _dangerZoneAttack;
+    // delete _dangerZoneAttack; this would lead to double deletion
     delete _aoOFactory;
 
     for(ActoidFactory *factory : _actionFactories)

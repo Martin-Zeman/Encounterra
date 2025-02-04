@@ -1440,7 +1440,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     std::unordered_map<int, Visibility> ret;
     Teams &teams = Teams::getInstance();
 
-    if(combatant.getSwallower())
+    if(!combatant.getSwallower())
       {
         Coords theoreticalCoords(theoreticalRootCoord, combatant.getSize());
         for(Combatant *cmbt : teams.getAliveCombatants(combatant))

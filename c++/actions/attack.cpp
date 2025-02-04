@@ -236,8 +236,8 @@ namespace enc
           {
             maxThreat = threat;
           }
-        return maxThreat;
       }
+    return maxThreat;
   }
 
   std::string Attack::toString() const
