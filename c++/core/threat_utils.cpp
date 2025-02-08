@@ -240,7 +240,7 @@ namespace enc
 
         if(dzFactory && getHopDistanceCoords(enemyPos, coords) + delta <= enemy->getSpeed() + dzFactory->getRange())
           {
-            threatAcc += dzFactory->calculateThreatToTarget(combatant, {{"considerDist", false}});
+            threatAcc += dzFactory->calculateThreatToTarget(combatant, {{"considerDist", false}}) * DZ_CONSTANT;
           }
       }
     return threatAcc;
