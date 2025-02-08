@@ -12,6 +12,7 @@
 #include "combatants/draconic_sorcerer_lvl_5.hpp"
 #include "combatants/bugbear.hpp"
 #include "combatants/wild_heart_barbarian_lvl_3.hpp"
+#include "combatants/wild_heart_barbarian_lvl_5.hpp"
 #include "core/teams.hpp"
 #include "core/types.hpp"
 #include "core/session.hpp"
@@ -41,7 +42,8 @@ namespace
         draconic_sorcerer_lvl_5 = new DraconicSorcererLvl5(1);
         goblin = new Goblin(1);
         bugbear = new Bugbear(1);
-        wild_heart_barbarian = new WildHeartBarbarianLvl3(1);
+        wild_heart_barbarian_lvl_3 = new WildHeartBarbarianLvl3(1);
+        wild_heart_barbarian_lvl_5 = new WildHeartBarbarianLvl5(1);
       }
 
       void TearDown() override
@@ -56,7 +58,8 @@ namespace
     Combatant* draconic_sorcerer_lvl_5;
     Combatant* goblin;
     Combatant* bugbear;
-    Combatant* wild_heart_barbarian;
+    Combatant* wild_heart_barbarian_lvl_3;
+    Combatant* wild_heart_barbarian_lvl_5;
     
     BattleMap* battleMap;
     Teams* teams;
@@ -451,15 +454,15 @@ TEST_F(ThreatUtilsTest, LargeToMediumPassBetweenTwoAooArriveByThird) {
     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
     session->addCombatant(goblin, Color::RED);
     session->addCombatant(bugbear, Color::RED);
-    session->addCombatant(wild_heart_barbarian, Color::RED);
+    session->addCombatant(wild_heart_barbarian_lvl_5, Color::RED);
 
     battleMap->buildBaseAdjacencyMatrix();
     battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{2, 1});
     battleMap->setCombatantCoordinates(*goblin, Coord{1, 4});
     battleMap->setCombatantCoordinates(*bugbear, Coord{4, 4});
-    battleMap->setCombatantCoordinates(*wild_heart_barbarian, Coord{2, 8});
+    battleMap->setCombatantCoordinates(*wild_heart_barbarian_lvl_5, Coord{2, 8});
 
-    auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *wild_heart_barbarian);
+    auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *wild_heart_barbarian_lvl_5);
     std::unordered_map<AoeEffect *, CoordVector> effectToCoords;
     for (AoeEffect * effect : EffectTracker::getInstance().getAoeEffects()) {
         ASSERT_TRUE(effect);
@@ -482,13 +485,13 @@ TEST_F(ThreatUtilsTest, LargeToMediumPassBetweenTwoAooThroughAoeArriveByThird) {
     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
     session->addCombatant(goblin, Color::RED);
     session->addCombatant(bugbear, Color::RED);
-    session->addCombatant(wild_heart_barbarian, Color::RED);
+    session->addCombatant(wild_heart_barbarian_lvl_5, Color::RED);
 
     battleMap->buildBaseAdjacencyMatrix();
     battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{2, 1});
     battleMap->setCombatantCoordinates(*goblin, Coord{1, 4});
     battleMap->setCombatantCoordinates(*bugbear, Coord{4, 4});
-    battleMap->setCombatantCoordinates(*wild_heart_barbarian, Coord{2, 8});
+    battleMap->setCombatantCoordinates(*wild_heart_barbarian_lvl_5, Coord{2, 8});
 
     auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, goblin, &goblin->getSpellslots());
     Coord coord{2, 7};
@@ -496,7 +499,7 @@ TEST_F(ThreatUtilsTest, LargeToMediumPassBetweenTwoAooThroughAoeArriveByThird) {
     auto effect = dynamic_cast<Effect *>(actoid);
     effectTracker->add(std::move(effect));
 
-    auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *wild_heart_barbarian);
+    auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *wild_heart_barbarian_lvl_5);
     std::unordered_map<AoeEffect *, CoordVector> effectToCoords;
     for (AoeEffect * effect : EffectTracker::getInstance().getAoeEffects()) {
         ASSERT_TRUE(effect);
