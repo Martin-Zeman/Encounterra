@@ -188,6 +188,7 @@ namespace enc
     const std::vector<Wildshape *> &getAvailableWildshapeForms() { return _availableWildshapeForms; }
     DirectThreatFactory* getDangerZoneAttack() { return _dangerZoneAttack; }
     void setDangerZoneAttack(DirectThreatFactory *dangerZoneAttack) { _dangerZoneAttack = dangerZoneAttack; }
+    void setAoOFactory(AttackFactory *aoOFactory) { _aoOFactory = aoOFactory; }
     AttackFactory *getAoOFactory() { return _aoOFactory; }
     ActoidFactory *getGetUpFactory() { return _getUpFactory; }
     ActoidFactory *getBreakGrappleFactory() { return _breakGrappleFactory; }
@@ -235,20 +236,28 @@ namespace enc
     }
 
     ActoidFactory *addRangedAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice, int dmgBonus,
-                                   DamageType damageType, int attackRange)
+                                   DamageType damageType, int attackRange, int critRage = 1, Uses &&ammo = Uses())
     {
-      auto factory = new RangedAttackFactory("RangedAttackFactory", name, owner, AbilityType::RANGED_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
+      auto factory = new RangedAttackFactory("RangedAttackFactory", name, owner, AbilityType::RANGED_ATTACK, toHit, dmgDice, dmgBonus, damageType,
+                                             attackRange, critRage, std::move(ammo));
       _actionFactories.emplace_back(factory);
       return factory;
     }
 
-    ActoidFactory *addRecklessAttack() { return nullptr; }
-    ActoidFactory *addPreSwallowBite() { return nullptr; }
-    ActoidFactory *addBiteAndSwallow() { return nullptr; }
-    ActoidFactory *addDodge() { return nullptr; }
-    ActoidFactory *addDash() { return nullptr; }
-    ActoidFactory *addDisengage() { return nullptr; }
-    ActoidFactory *addFireball() { return nullptr; }
+    ActoidFactory *addRecklessAttack() {
+      return nullptr; }
+    ActoidFactory *addPreSwallowBite() {
+      return nullptr; }
+    ActoidFactory *addBiteAndSwallow() {
+      return nullptr; }
+    ActoidFactory *addDodge() {
+      return nullptr; }
+    ActoidFactory *addDash() {
+      return nullptr; }
+    ActoidFactory *addDisengage() {
+      return nullptr; }
+    ActoidFactory *addFireball() {
+      return nullptr; }
     ActoidFactory *addFirebolt() { 
       auto factory = new FireboltFactory(_spellToHit, AbilityType::FIREBOLT, this, _spellslots.get());
       _actionFactories.emplace_back(factory);
@@ -484,8 +493,6 @@ namespace enc
     int _dc;
     int _initBonus;
     int _spellToHit;
-    int _aooFactory = 0;
-    int _pamFactory = 0;
     int _abilityDmgBonus = 0;
     int _currInit = 0;
     bool _hasAction = true;

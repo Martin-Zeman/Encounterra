@@ -46,7 +46,7 @@ namespace enc
     delete _getUpFactory;
     delete _breakGrappleFactory;
     // delete _dangerZoneAttack; this would lead to double deletion
-    delete _aoOFactory;
+    // delete _aoOFactory; this would lead to double deletion
 
     for(ActoidFactory *factory : _actionFactories)
       {
@@ -364,7 +364,7 @@ namespace enc
 
   void Combatant::breakConcentration()
   {
-    std::cout << "Breaking concentration for " << this << std::endl;
+    std::cout << "Breaking concentration for " << _name << std::endl;
 
     if(_concentrationEffect)
       {

@@ -13,22 +13,23 @@ namespace enc
     _instanceId = generateInstanceId();
     _size = Size::SMALL;
 
-    addMeleeAttack("Scimitar", this,
-                   4,                        // toHit
-                   std::vector<Die>{{1, 6}}, // dmgDice
-                   2,                        // dmgBonus
-                   DamageType::Slashing,
-                   1 // attackRange
-    );
-
-    auto shortbowFactory = addRangedAttack("Shortbow", this,
+    auto scimitarFactory = addMeleeAttack("Scimitar", this,
                                           4,                        // toHit
                                           std::vector<Die>{{1, 6}}, // dmgDice
                                           2,                        // dmgBonus
-                                          DamageType::Piercing,
-                                          64 // attackRange
+                                          DamageType::Slashing,
+                                          1 // attackRange
+    );
+
+    auto shortbowFactory = addRangedAttack("Shortbow", this,
+                                           4,                        // toHit
+                                           std::vector<Die>{{1, 6}}, // dmgDice
+                                           2,                        // dmgBonus
+                                           DamageType::Piercing,
+                                           64 // attackRange
     );
     setDangerZoneAttack(dynamic_cast<DirectThreatFactory *>(shortbowFactory));
+    setAoOFactory(dynamic_cast<AttackFactory *>(scimitarFactory));
   }
 
   ResourceState Goblin::exportResources()

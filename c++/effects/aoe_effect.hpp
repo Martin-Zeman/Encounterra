@@ -9,7 +9,7 @@ namespace enc
   class AoeEffect : virtual public Effect, public AoeThreat
   {
   public:
-    explicit AoeEffect(Combatant *initiator) : Effect(initiator) {}
+    explicit AoeEffect(Combatant *initiator) {}
     virtual ~AoeEffect() = default;
 
     // Pure virtual methods specific to AoeEffect

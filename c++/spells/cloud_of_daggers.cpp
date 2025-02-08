@@ -33,10 +33,10 @@ namespace enc
   }
 
   CloudOfDaggers::CloudOfDaggers(const Coord &coord, const CloudOfDaggersFactory &factory)
-      : Effect(factory._combatant), AoeEffect(factory._combatant),
+      : Effect(factory._combatant), // Initialize virtual base first
         Actoid(const_cast<CloudOfDaggersFactory &>(factory), ActoidFlags::IS_SPELL, factory._abilityType),
-        LimitedDurationEffect(factory._combatant, 100),
-        AoeSquareEffect(factory._combatant, coord, TRANSLATE_RADIUS.at(CloudOfDaggersFactory::target)), _factory(factory)
+        LimitedDurationEffect(factory._combatant, 100), AoeEffect(factory._combatant),
+        AoeSquareEffect(factory._combatant, coord, TRANSLATE_BOX.at(CloudOfDaggersFactory::target)), _factory(factory)
   {}
 
   CloudOfDaggers::~CloudOfDaggers() = default;
@@ -60,6 +60,9 @@ namespace enc
   void CloudOfDaggers::onEnter(Combatant &combatant) { /*TODO*/ };
   void CloudOfDaggers::onMoveWithin(Combatant &combatant) { /*TODO*/ };
   void CloudOfDaggers::onExit(Combatant &combatant) { /*TODO*/ };
+
+  double CloudOfDaggers::threatOnEnter(const Combatant &target, const Kwargs &kwargs) const { return avgRoll(_factory._dmgDice); };
+  double CloudOfDaggers::threatOnEndOfTurn(const Combatant &target, const Kwargs &kwargs) const { return avgRoll(_factory._dmgDice); };
 
   void CloudOfDaggers::activate(const Kwargs &kwargs) { /*TODO*/ }
   void CloudOfDaggers::deactivate() { /*TODO*/ }

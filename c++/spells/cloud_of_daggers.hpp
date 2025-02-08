@@ -53,10 +53,10 @@ namespace enc
     CloudOfDaggers(const Coord &coord, const CloudOfDaggersFactory &factory);
 
     CloudOfDaggers(const CloudOfDaggers &other)
-        : Effect(other._initiator), AoeEffect(other._initiator),
+        : Effect(other._initiator), // Initialize virtual base first
           Actoid(const_cast<CloudOfDaggersFactory &>(other._factory), static_cast<ActoidFlags>(other._actoidFlags), other._abilityType),
-          LimitedDurationEffect(other._initiator, other._turns), AoeSquareEffect(other._initiator, other._origin, other._length),
-          _factory(other._factory)
+          LimitedDurationEffect(other._initiator, other._turns), AoeEffect(other._initiator),
+          AoeSquareEffect(other._initiator, other._origin, other._length), _factory(other._factory)
     {}
 
     ~CloudOfDaggers() override;
@@ -81,6 +81,9 @@ namespace enc
     void onEnter(Combatant &combatant) override;
     void onMoveWithin(Combatant &combatant) override;
     void onExit(Combatant &combatant) override;
+
+    double threatOnEnter(const Combatant &target, const Kwargs &kwargs) const override;
+    double threatOnEndOfTurn(const Combatant &target, const Kwargs &kwargs) const override;
 
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;
