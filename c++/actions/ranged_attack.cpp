@@ -98,6 +98,16 @@ namespace enc
     return {};
   }
 
+  double RangedAttack::calculateThreat(const Kwargs &kwargs)
+  {
+    BattleMap &battleMap = BattleMap::getInstance();
+    auto rollType = battleMap.isEnemyAdjacent(*(_factory.getCombatant())) ? RollType::DISADVANTAGE : RollType::STRAIGHT;
+    rollType = battleMap.getCartesianDistanceCombatants(*(_factory.getCombatant()), _target) > _factory.getShortRange() ? RollType::DISADVANTAGE : rollType;
+    Kwargs rollTypeKwargs = kwargs;
+    rollTypeKwargs["roll_type"] = rollType;
+    return _factory.calculateThreatToTarget(_target, rollTypeKwargs);
+  }
+
   size_t RangedAttack::hash() const
   {
     size_t h = std::hash<int>{}(static_cast<int>(getAbilityType()));

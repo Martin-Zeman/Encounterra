@@ -575,6 +575,10 @@ TEST_F(ThreatUtilsTest, RangedAttackWithEnemyAdjacent) {
     EXPECT_GT(threatNoEnemyAdjacent, threatEnemyAdjacent);
 }
 
+/**
+ *  Simple scenario with two combatants starting adjacent. We test that Misty Step lets us avoid the AoO.
+    It tests calc_threat_for_path_with_misty_step as well as decode_ms_path_to_actions.
+ */
 TEST_F(ThreatUtilsTest, CalcThreatForPathWithMistyStepScenario1) {
     session->addCombatant(draconic_sorcerer_lvl_5, Color::BLUE);
     session->addCombatant(bugbear, Color::RED);

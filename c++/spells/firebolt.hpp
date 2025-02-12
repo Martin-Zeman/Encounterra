@@ -57,6 +57,7 @@ namespace enc
 
     std::optional<Resource *> getResource() override { return _resource; }
     int getRange() const override { return static_cast<int>(FireboltFactory::range); }
+    int getShortRange() const override { return static_cast<int>(FireboltFactory::range); }
 
     double calculateThreatToTarget(const Combatant& target, const Kwargs &kwargs) const override;
     double calculateThreatToTargetDelta(const Combatant &target, const ThreatModifiers &modifiers) const override;

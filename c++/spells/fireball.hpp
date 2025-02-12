@@ -36,6 +36,7 @@ namespace enc
     Actoid * create(void *target) override;
 
     int getRange() const override { return static_cast<int>(FireballFactory::range); }
+    int getShortRange() const override { return static_cast<int>(FireballFactory::range); }
 
     std::optional<Resource *> getResource() override { return _resource; }
 

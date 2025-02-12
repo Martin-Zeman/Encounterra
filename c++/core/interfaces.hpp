@@ -176,6 +176,7 @@ namespace enc
 
   public:
     virtual int getRange() const = 0;
+    virtual int getShortRange() const = 0;
     virtual double calculateThreatToTarget(const Combatant& target, const Kwargs &kwargs) const = 0;
     virtual double calculateThreatToTargetDelta(const Combatant& target, const ThreatModifiers &modifiers) const { return 0; }; //  Not always needed
   };

@@ -35,6 +35,8 @@ namespace enc
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                  const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
 
+    double calculateThreat(const Kwargs &kwargs) override;
+
     bool equals(const Actoid &other) const override;
 
   protected:
