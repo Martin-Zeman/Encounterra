@@ -23,6 +23,9 @@
 #include "actions/action_constants.hpp"
 #include "actions/action_plan_strategy.hpp"
 #include "spells/firebolt.hpp"
+#include "spells/spike_growth.hpp"
+#include "spells/hunger_of_hadar.hpp"
+#include "spells/cloud_of_daggers.hpp"
 #include "core/state_machine.hpp"
 
 namespace enc
@@ -266,9 +269,24 @@ namespace enc
      }
     ActoidFactory *addChaosBolt() { return nullptr; }
     ActoidFactory *addHaste() { return nullptr; }
-    ActoidFactory *addHungerOfHadar() { return nullptr; }
-    ActoidFactory *addSpikeGrowth() { return nullptr; }
-    ActoidFactory *addCloudOfDaggers() { return nullptr; }
+    ActoidFactory *addHungerOfHadar()
+    {
+      auto factory = new HungerOfHadarFactory(_dc, AbilityType::HUNGER_OF_HADAR, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    ActoidFactory *addSpikeGrowth()
+    {
+      auto factory = new SpikeGrowthFactory(AbilityType::SPIKE_GROWTH, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    ActoidFactory *addCloudOfDaggers()
+    {
+      auto factory = new CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     ActoidFactory *addHide() { return nullptr; }
     ActoidFactory *addTwinnedFirebolt() { return nullptr; }
     ActoidFactory *addTwinnedHaste() { return nullptr; }

@@ -50,7 +50,7 @@ namespace
       {
         // BattleMap::resetInstance();
         // Teams::resetInstance();
-        // EffectTracker::resetInstance();
+        EffectTracker::resetInstance();
         delete session;
       }
 
@@ -71,9 +71,9 @@ TEST_F(ThreatUtilsTest, MediumToMediumOneFullSpikeGrowth) {
     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
     session->addCombatant(goblin, Color::RED);
 
-    auto sgFactory = SpikeGrowthFactory(AbilityType::SPIKE_GROWTH, goblin, &goblin->getSpellslots());
+    auto *sgFactory = goblin->addSpikeGrowth();
     Coord coord{7, 3};
-    auto actoid = sgFactory.create(&coord);
+    auto actoid = sgFactory->create(&coord);
     auto effect = dynamic_cast<Effect *>(actoid);
     effectTracker->add(effect);
 
@@ -98,9 +98,9 @@ TEST_F(ThreatUtilsTest, MediumToMediumOnePartialSpikeGrowth) {
     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
     session->addCombatant(goblin, Color::RED);
 
-    auto sgFactory = SpikeGrowthFactory(AbilityType::SPIKE_GROWTH, goblin, &goblin->getSpellslots());
+    auto *sgFactory = goblin->addSpikeGrowth();
     Coord coord{7, 6};
-    auto actoid = sgFactory.create(&coord);
+    auto actoid = sgFactory->create(&coord);
     auto effect = dynamic_cast<Effect *>(actoid);
     effectTracker->add(effect);
 
@@ -127,9 +127,9 @@ TEST_F(ThreatUtilsTest, LargeToMediumOneAoe) {
     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
     session->addCombatant(goblin, Color::RED);
 
-    auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, goblin, &goblin->getSpellslots());
+    auto *cloudFactory = goblin->addCloudOfDaggers();
     Coord coord{4, 2};
-    auto actoid = cloudFactory.create(&coord);
+    auto actoid = cloudFactory->create(&coord);
     auto effect = dynamic_cast<Effect *>(actoid);
     effectTracker->add(std::move(effect));
 
@@ -156,9 +156,9 @@ TEST_F(ThreatUtilsTest, LargeToMediumAvoidedAoe) {
     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
     session->addCombatant(goblin, Color::RED);
 
-    auto hungerFactory = HungerOfHadarFactory(15, AbilityType::HUNGER_OF_HADAR, goblin, &goblin->getSpellslots());
+    auto * hungerFactory = goblin->addHungerOfHadar();
     Coord coord{4, 7};
-    auto actoid = hungerFactory.create(&coord);
+    auto actoid = hungerFactory->create(&coord);
     auto effect = dynamic_cast<Effect *>(actoid);
     effectTracker->add(std::move(effect));
 
@@ -184,10 +184,10 @@ TEST_F(ThreatUtilsTest, MediumToMediumTwoOverlappingAoe) {
     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
     session->addCombatant(goblin, Color::RED);
 
-    auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, goblin, &goblin->getSpellslots());
+    auto *cloudFactory = goblin->addCloudOfDaggers();
     Coord coord{7, 3};
-    auto actoid1 = cloudFactory.create(&coord);
-    auto actoid2 = cloudFactory.create(&coord);
+    auto actoid1 = cloudFactory->create(&coord);
+    auto actoid2 = cloudFactory->create(&coord);
     auto effect1 = dynamic_cast<Effect *>(actoid1);
     auto effect2 = dynamic_cast<Effect *>(actoid2);
     effectTracker->add(std::move(effect1));
@@ -216,13 +216,13 @@ TEST_F(ThreatUtilsTest, LargeToMediumTwoOverlappingAoe) {
     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
     session->addCombatant(goblin, Color::RED);
 
-    auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, goblin, &goblin->getSpellslots());
+    auto *cloudFactory = goblin->addCloudOfDaggers();
     
     // Create two overlapping effects that should hit due to combatant's size
     Coord coord1{7, 3};
     Coord coord2{7, 4};
-    auto actoid1 = cloudFactory.create(&coord1);
-    auto actoid2 = cloudFactory.create(&coord2);
+    auto actoid1 = cloudFactory->create(&coord1);
+    auto actoid2 = cloudFactory->create(&coord2);
     auto effect1 = dynamic_cast<Effect *>(actoid1);
     auto effect2 = dynamic_cast<Effect *>(actoid2);
     effectTracker->add(std::move(effect1));
@@ -251,9 +251,9 @@ TEST_F(ThreatUtilsTest, LargeToMediumStartingInsideAoe) {
     session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
     session->addCombatant(goblin, Color::RED);
 
-    auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, goblin, &goblin->getSpellslots());
+    auto *cloudFactory = goblin->addCloudOfDaggers();
     Coord coord{6, 3};
-    auto actoid = cloudFactory.create(&coord);
+    auto actoid = cloudFactory->create(&coord);
     auto effect = dynamic_cast<Effect *>(actoid);
     effectTracker->add(std::move(effect));
 
@@ -493,9 +493,9 @@ TEST_F(ThreatUtilsTest, LargeToMediumPassBetweenTwoAooThroughAoeArriveByThird) {
     battleMap->setCombatantCoordinates(*bugbear, Coord{4, 4});
     battleMap->setCombatantCoordinates(*wild_heart_barbarian_lvl_5, Coord{2, 8});
 
-    auto cloudFactory = CloudOfDaggersFactory(AbilityType::CLOUD_OF_DAGGERS, goblin, &goblin->getSpellslots());
+    auto *cloudFactory = goblin->addCloudOfDaggers();
     Coord coord{2, 7};
-    auto actoid = cloudFactory.create(&coord);
+    auto actoid = cloudFactory->create(&coord);
     auto effect = dynamic_cast<Effect *>(actoid);
     effectTracker->add(std::move(effect));
 
@@ -546,8 +546,8 @@ TEST_F(ThreatUtilsTest, RangedSpellWithEnemyAdjacent) {
     battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{3, 14});
     battleMap->setCombatantCoordinates(*bugbear, Coord{4, 13});
 
-    auto fireboltFactory = FireboltFactory(6, AbilityType::FIREBOLT, draconic_sorcerer_lvl_1, &draconic_sorcerer_lvl_1->getSpellslots());
-    auto firebolt = fireboltFactory.create(bugbear);
+    auto *fireboltFactory = draconic_sorcerer_lvl_1->addFirebolt();
+    auto firebolt = fireboltFactory->create(bugbear);
     auto threatEnemyAdjacent = dynamic_cast<BasicThreat *>(firebolt)->calculateThreat({});
 
     battleMap->moveCombatant(*draconic_sorcerer_lvl_1, Coord{2, 14});
