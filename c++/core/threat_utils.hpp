@@ -23,6 +23,7 @@ namespace enc
   {
     std::vector<double> threat;
     CoordVector path;
+    std::vector<Actoid*> actoids;
   };
 
   struct StateIdPairHash

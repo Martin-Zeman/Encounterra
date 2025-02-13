@@ -33,7 +33,7 @@ namespace enc
     return increments;
   }
 
-  Actoid * MovementFactory::create(void *target)
+  Actoid *MovementFactory::create(void *target)
   {
     if(_path.empty())
       return nullptr;

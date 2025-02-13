@@ -51,6 +51,23 @@ namespace enc
       }
   }
 
+  void StateMachine::releaseActoidOwnership(Actoid *actoid)
+  {
+    if(_ownedActoids.contains(actoid))
+      {
+        _ownedActoids.erase(actoid);
+      }
+  }
+
+  // For multiple actoids:
+  void StateMachine::releaseActoidOwnership(const std::vector<Actoid *> &actoids)
+  {
+    for(Actoid *actoid : actoids)
+      {
+        releaseActoidOwnership(actoid);
+      }
+  }
+
   void StateMachine::addNewState(StateId id)
   {
     if(id == _states.size())
@@ -101,7 +118,7 @@ namespace enc
   //     }
   // }
 
-  void StateMachine::addTransition(Actoid * action, StateId origin, StateId dest)
+  void StateMachine::addTransition(Actoid *action, StateId origin, StateId dest)
   {
     if(origin >= _states.size() || dest >= _states.size())
       {
@@ -113,7 +130,7 @@ namespace enc
     _ownedActoids.insert(action);
   }
 
-  void StateMachine::removeTransition(Actoid * action, StateId origin)
+  void StateMachine::removeTransition(Actoid *action, StateId origin)
   {
     if(origin < _states.size())
       {
@@ -129,7 +146,7 @@ namespace enc
       }
   }
 
-  void StateMachine::removeTransitionFromAllStates(Actoid * action)
+  void StateMachine::removeTransitionFromAllStates(Actoid *action)
   {
     for(StateId originState = 0; originState < _states.size(); ++originState)
       {
@@ -180,7 +197,7 @@ namespace enc
     return _cachedToposort;
   }
 
-  bool StateMachine::triggerTransition(Actoid * action)
+  bool StateMachine::triggerTransition(Actoid *action)
   {
     auto &current_transitions = _states[_currentState];
     auto it = std::find_if(current_transitions.begin(), current_transitions.end(), [&](const Transition &t) { return t.action == action; });

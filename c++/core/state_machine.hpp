@@ -40,6 +40,10 @@ namespace enc
 
     ~StateMachine();
 
+    void releaseActoidOwnership(Actoid *actoid);
+
+    void releaseActoidOwnership(const std::vector<Actoid *> &actoids);
+
     void addNewState(StateId id);
 
     StateId getNextStateId();

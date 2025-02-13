@@ -29,7 +29,7 @@ namespace enc
 
     std::vector<Actoid *> createAll(void *previousActionInDag = nullptr) override;
 
-    Actoid * create(void *target) override;
+    Actoid *create(void *target) override;
 
     std::optional<Resource *> getResource() override { return _resource; }
 

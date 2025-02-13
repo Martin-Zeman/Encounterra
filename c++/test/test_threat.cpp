@@ -598,22 +598,23 @@ TEST_F(ThreatUtilsTest, CalcThreatForPathWithMistyStepScenario1) {
     auto [distances, shortestPaths] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_5);
     draconic_sorcerer_lvl_5->setShortestPathsCache(shortestPaths);
 
-    auto [threat, maxThreatPath] = calcThreatForPathWithMistyStep(path.value(), *draconic_sorcerer_lvl_5, effectToCoords);
+    auto [threat, maxThreatPath, bestPathActoids] = calcThreatForPathWithMistyStep(path.value(), *draconic_sorcerer_lvl_5, effectToCoords);
     EXPECT_DOUBLE_EQ(threat[0], 0.0);
 
-    std::vector<Actoid *> actoids;
     std::shared_ptr<ActoidFactory> msFactory = std::make_shared<MistyStepFactory>(draconic_sorcerer_lvl_5, &draconic_sorcerer_lvl_5->getSpellslots());
 
-    EXPECT_EQ(actoids.size(), 6);
-    EXPECT_TRUE(dynamic_cast<MovementIncrement *>(actoids[0]) != nullptr);
-    EXPECT_TRUE(dynamic_cast<MistyStep *>(actoids[1]) != nullptr);
-    EXPECT_TRUE(dynamic_cast<MovementIncrement *>(actoids[2]) != nullptr);
-    EXPECT_TRUE(dynamic_cast<MovementIncrement *>(actoids[3]) != nullptr);
-    EXPECT_TRUE(dynamic_cast<MovementIncrement *>(actoids[4]) != nullptr);
-    EXPECT_TRUE(dynamic_cast<MovementIncrement *>(actoids[5]) != nullptr);
+    EXPECT_EQ(bestPathActoids.size(), 6);
+    EXPECT_TRUE(dynamic_cast<MovementIncrement *>(bestPathActoids[0]) != nullptr);
+    EXPECT_TRUE(dynamic_cast<MistyStep *>(bestPathActoids[1]) != nullptr);
+    EXPECT_TRUE(dynamic_cast<MovementIncrement *>(bestPathActoids[2]) != nullptr);
+    EXPECT_TRUE(dynamic_cast<MovementIncrement *>(bestPathActoids[3]) != nullptr);
+    EXPECT_TRUE(dynamic_cast<MovementIncrement *>(bestPathActoids[4]) != nullptr);
+    EXPECT_TRUE(dynamic_cast<MovementIncrement *>(bestPathActoids[5]) != nullptr);
 
     // Clean up actions
-    actoids.clear();
+    for (auto actoid : bestPathActoids) {
+        delete actoid;
+    }
 }
 
 

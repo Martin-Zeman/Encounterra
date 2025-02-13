@@ -372,11 +372,9 @@ namespace enc
       }
 
     StateMachine msDAG;
-    msDAG.addNewState(0);
 
     // Maps to track states and threats
     std::unordered_map<StateId, Coord> stateIdToCoord;
-    std::unordered_map<StateId, StateId> stateToMsState;
     std::unordered_map<std::pair<StateId, StateId>, double, PairHash> transitionThreat;
     std::unordered_map<StateId, std::pair<StateId, Actoid *>> maxThreatPredecessor;
 
@@ -392,8 +390,8 @@ namespace enc
     stateIdToCoord[0] = currentPos;
 
     // Create movement factories once for the entire path
-    auto moveFactory = std::make_unique<MovementFactory>(&combatant, path, AbilityType::STANDARD_MOVEMENT);
-    auto msMoveFactory = std::make_unique<MovementFactory>(&combatant, path, AbilityType::STANDARD_MOVEMENT);
+    MovementFactory moveFactory(&combatant, path, AbilityType::STANDARD_MOVEMENT);
+    MovementFactory postMsMoveFactory(&combatant, path, AbilityType::STANDARD_MOVEMENT);
 
     for(const auto &increment : path)
       {
@@ -404,31 +402,30 @@ namespace enc
         waypoints.push_back(currentPos);
 
         // Create states for both regular and post-MS versions
-        StateId newState = msDAG.getNextStateId();   // 1, 3, 5, ...
-        StateId newMsState = msDAG.getNextStateId(); // 2, 4, 6, ...
+        StateId newState = msDAG.getNextStateId();   // 2, 4, 6, ...
+        StateId newPostMsState = msDAG.getNextStateId(); // 3, 5, 7, ...
 
         msDAG.addNewState(newState);
-        msDAG.addNewState(newMsState);
+        msDAG.addNewState(newPostMsState);
 
         stateIdToCoord[newState] = currentPos;
-        stateIdToCoord[newMsState] = currentPos;
-        stateToMsState[newState] = newMsState;
+        stateIdToCoord[newPostMsState] = currentPos;
 
         // Create individual movement actions
-        auto moveAction = moveFactory->create(nullptr);
-        auto msMoveAction = msMoveFactory->create(nullptr);
+        Actoid *moveAction = moveFactory.create(nullptr);
+        Actoid *msMoveAction = postMsMoveFactory.create(nullptr);
 
         if(moveAction && msMoveAction)
           {
             msDAG.addTransition(moveAction, previousState, newState);
-            msDAG.addTransition(msMoveAction, previousMsState, newMsState);
+            msDAG.addTransition(msMoveAction, previousMsState, newPostMsState);
 
             transitionThreat[{previousState, newState}] = currThreat;
-            transitionThreat[{previousMsState, newMsState}] = currThreat;
+            transitionThreat[{previousMsState, newPostMsState}] = currThreat;
           }
 
         previousState = newState;
-        previousMsState = newMsState;
+        previousMsState = newPostMsState;
       }
 
     // Add Misty Step connections
@@ -443,10 +440,10 @@ namespace enc
 
                 if(msAction)
                   {
-                    // For i=0, use state 0 (root), otherwise use pre-MS state (2i-1)
-                    StateId originState = (i == 0) ? 0 : (2 * i - 1);
-                    // For j=0, use state 0 (root), otherwise use post-MS state (2j)
-                    StateId destMsState = (j == 0) ? 0 : (2 * j);
+                    // For i=0, use state 0 (root), otherwise use pre-MS state (2i)
+                    StateId originState = (i == 0) ? 0 : (2 * i);
+                    // For j=0, use state 0 (root), otherwise use post-MS state (2j + 1)
+                    StateId destMsState = (j == 0) ? 0 : (2 * j + 1);
                     msDAG.addTransition(msAction, originState, destMsState);
                   }
               }
@@ -455,15 +452,15 @@ namespace enc
 
     // Find best path using dynamic programming
     auto sortedStates = msDAG.toposort();
-    std::unordered_map<StateId, double> stateThreat;
+    std::unordered_map<StateId, double> stateToThreat;
     const double MINUS_INF = -std::numeric_limits<double>::infinity();
 
     // Initialize threats
     for(const auto &state : sortedStates)
       {
-        stateThreat[state] = MINUS_INF;
+        stateToThreat[state] = MINUS_INF;
       }
-    stateThreat[0] = 0.0;
+    stateToThreat[0] = 0.0;
 
     // Calculate maximum threat path
     for(const auto &state : sortedStates)
@@ -472,11 +469,11 @@ namespace enc
           {
             double threatForTransition = (action->getAbilityType() == AbilityType::MISTY_STEP) ? 0.0 : transitionThreat[{state, targetState}];
 
-            double totalThreat = (stateThreat[state] > MINUS_INF) ? stateThreat[state] + threatForTransition : 0.0;
+            double totalThreat = (stateToThreat[state] > MINUS_INF) ? stateToThreat[state] + threatForTransition : 0.0;
 
-            if(totalThreat > stateThreat[targetState])
+            if(totalThreat > stateToThreat[targetState])
               {
-                stateThreat[targetState] = totalThreat;
+                stateToThreat[targetState] = totalThreat;
                 maxThreatPredecessor[targetState] = {state, action};
               }
           }
@@ -484,20 +481,24 @@ namespace enc
 
     // Reconstruct the best path
     CoordVector bestPath;
+    std::vector<Actoid*> bestActoids;
     StateId currentState = sortedStates.back();
 
     while(maxThreatPredecessor.contains(currentState))
       {
         auto [prevState, action] = maxThreatPredecessor[currentState];
         bestPath.insert(bestPath.begin(), stateIdToCoord[currentState]);
+        bestActoids.insert(bestActoids.begin(), action); 
         currentState = prevState;
       }
 
     // Calculate final threat
-    double threatAcc = stateThreat[sortedStates.back()];
+    double threatAcc = stateToThreat[sortedStates.back()];
     threatAcc -= getThreatForStayingAtCoord({currentPos}, combatant);
 
-    return {{threatAcc}, bestPath};
+    msDAG.releaseActoidOwnership(bestActoids);
+
+    return {{threatAcc}, bestPath, bestActoids};
   }
 
 } // namespace enc

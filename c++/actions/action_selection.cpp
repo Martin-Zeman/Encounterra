@@ -265,7 +265,7 @@ namespace enc
               case MovementThreatType::DODGED: movementThreat = accumulateThreatAlongPath(*pathOpt, combatant, effectToCoords, false, true); break;
 
                 case MovementThreatType::MISTY_STEPPED: {
-                  auto [threat, msPath] = calcThreatForPathWithMistyStep(*pathOpt, combatant, effectToCoords);
+                  auto [threat, msPath, ignored] = calcThreatForPathWithMistyStep(*pathOpt, combatant, effectToCoords);
                   movementThreat = std::move(threat);
                   // Find corresponding Misty Step action
                   for(const auto &[action, nextState] : fsm.getForwardTransitions(0))
