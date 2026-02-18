@@ -40,6 +40,16 @@ print(dmg)
 dmg = nf.mean_dmg_dc_attack(11, [(2, 8)], True, 1, False, False)
 print(dmg)
 
+dmg = nf.mean_dmg_dc_attack(15, [(2, 6), (1, 8)], True, 2, False, False)
+print(f"mean_dmg_dc_attack: {dmg}")
+dmg = nf.mean_dmg_dc_attack(15, [(2, 6), (1, 8)], True, 2, False, True)
+print(f"mean_dmg_dc_attack: {dmg}")
+dmg = nf.mean_dmg_dc_attack(15, [(2, 6), (1, 8)], False, 2, False, False)
+print(f"mean_dmg_dc_attack: {dmg}")
+
+dmg = nf.mean_dmg_auto_hit([(2, 6), (1, 8)], True)
+print(f"mean_dmg_auto_hit: {dmg}")
+
 angle = nf.angle_between_vectors(np.array([-4.,  0.], dtype=np.float64), np.array([-4.5, -0.5], dtype=np.float64))
 print(angle)
 

@@ -143,7 +143,7 @@ class Session:
             logger.error(f"Unknown combatant type: {combatant_type}")
             return
 
-        # TODO use character_type_counter instead
+        # TODO use character_type_counater instead
         match combatant_type:
             case Acolyte.id:
                 self.combatants.append(Acolyte(curr_count))
