@@ -47,7 +47,6 @@ namespace enc
   template <typename CombatantType> void Session::addCombatant(CombatantType* combatant, Color teamColor, ResourceDepletionLevel resourceDepletionLevel)
   {
     // For testing purposes
-    int classId = CombatantType::getStaticClassId();
     combatant->setResourceDepletionLevel(resourceDepletionLevel);
     _teams.addCombatantToTeam(*combatant, teamColor);
     _combatants.emplace_back(std::move(std::unique_ptr<Combatant>(combatant)));
@@ -80,6 +79,7 @@ namespace enc
   template void Session::addCombatant<Ogre>(Ogre*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<StoneGiant>(StoneGiant*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<WildHeartBarbarianLvl3>(WildHeartBarbarianLvl3*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Combatant>(Combatant*, Color, ResourceDepletionLevel);
 
   // Add more explicit instantiations for other combatant types
 }
