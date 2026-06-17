@@ -28,9 +28,10 @@ namespace enc
   private:
     std::shared_ptr<Actoid> handleErrorCase(const std::shared_ptr<Actoid> &action, Combatant *combatant);
     ActionResult resolveByActoidFlags(const std::shared_ptr<Actoid> &action, Combatant *combatant);
-    bool hasAdvantageSavingThrow(SavingThrow savingThrow, Combatant *target, bool isSpellEffect);
-    bool hasDisadvantageSavingThrow(SavingThrow savingThrow, Combatant *target);
-    void resolveDmgSavingThrow(SavingThrow savingThrowType, int dc, const std::string &abilityName, int dmg, DamageType dmgType, Combatant *target,
-                               bool halfOnSuccess = false, bool isSpellEffect = false);
   };
+
+  bool hasAdvantageSavingThrow(SavingThrow savingThrow, Combatant *target, bool isSpellEffect);
+  bool hasDisadvantageSavingThrow(SavingThrow savingThrow, Combatant *target);
+  void resolveDmgSavingThrow(SavingThrow savingThrowType, int dc, const std::string &abilityName, int dmg, DamageType dmgType, Combatant *target,
+                             bool halfOnSuccess = false, bool isSpellEffect = false);
 }

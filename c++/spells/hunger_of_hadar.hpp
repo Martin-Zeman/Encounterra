@@ -63,7 +63,7 @@ namespace enc
     bool deactivateForCombatant(Combatant *combatant) override;
 
     double calculateThreat(const Kwargs &kwargs) override;
-    double calculateThreatDelta(const ThreatModifiers &modifiers) override;
+    double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
     EffectType getEffectType() const override;
 
     const CoordVector &getAffectedCoords() const override;

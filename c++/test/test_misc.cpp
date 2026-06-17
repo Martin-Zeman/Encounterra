@@ -5,29 +5,29 @@ using namespace enc;
 
 namespace
 {
-  TEST(RollTypeTest, AdvantageAndDisadvantage) { EXPECT_EQ(reconcileRollTypes(RollType::ADVANTAGE | RollType::DISADVANTAGE), RollType::STRAIGHT); }
+  TEST(RollTypeTest, AdvantageAndDisadvantage) { EXPECT_EQ(reconcileRollTypes({RollType::ADVANTAGE, RollType::DISADVANTAGE}), RollType::STRAIGHT); }
   TEST(RollTypeTest, MultipleAdvantagesAndDisadvantage)
   {
-    EXPECT_EQ(reconcileRollTypes(RollType::ADVANTAGE | RollType::DISADVANTAGE | RollType::ADVANTAGE), RollType::STRAIGHT);
+    EXPECT_EQ(reconcileRollTypes({RollType::ADVANTAGE, RollType::DISADVANTAGE, RollType::ADVANTAGE}), RollType::STRAIGHT);
   }
   TEST(RollTypeTest, MultipleDisadvantagesAndAdvantage)
   {
-    EXPECT_EQ(reconcileRollTypes(RollType::ADVANTAGE | RollType::DISADVANTAGE | RollType::DISADVANTAGE), RollType::STRAIGHT);
+    EXPECT_EQ(reconcileRollTypes({RollType::ADVANTAGE, RollType::DISADVANTAGE, RollType::DISADVANTAGE}), RollType::STRAIGHT);
   }
 
-  TEST(RollTypeTest, MultipleAdvantages) { EXPECT_EQ(reconcileRollTypes(RollType::ADVANTAGE | RollType::ADVANTAGE), RollType::ADVANTAGE); }
+  TEST(RollTypeTest, MultipleAdvantages) { EXPECT_EQ(reconcileRollTypes({RollType::ADVANTAGE, RollType::ADVANTAGE}), RollType::ADVANTAGE); }
 
-  TEST(RollTypeTest, SingleDisadvantage) { EXPECT_EQ(reconcileRollTypes(RollType::DISADVANTAGE), RollType::DISADVANTAGE); }
+  TEST(RollTypeTest, SingleDisadvantage) { EXPECT_EQ(reconcileRollTypes({RollType::DISADVANTAGE}), RollType::DISADVANTAGE); }
 
-  TEST(RollTypeTest, Straight) { EXPECT_EQ(reconcileRollTypes(RollType::STRAIGHT), RollType::STRAIGHT); }
+  TEST(RollTypeTest, Straight) { EXPECT_EQ(reconcileRollTypes({RollType::STRAIGHT}), RollType::STRAIGHT); }
 
-  TEST(RollTypeTest, AdvantageAndStraight) { EXPECT_EQ(reconcileRollTypes(RollType::ADVANTAGE | RollType::STRAIGHT), RollType::ADVANTAGE); }
+  TEST(RollTypeTest, AdvantageAndStraight) { EXPECT_EQ(reconcileRollTypes({RollType::ADVANTAGE, RollType::STRAIGHT}), RollType::ADVANTAGE); }
 
-  TEST(RollTypeTest, DisadvantageAndStraight) { EXPECT_EQ(reconcileRollTypes(RollType::DISADVANTAGE | RollType::STRAIGHT), RollType::DISADVANTAGE); }
+  TEST(RollTypeTest, DisadvantageAndStraight) { EXPECT_EQ(reconcileRollTypes({RollType::DISADVANTAGE, RollType::STRAIGHT}), RollType::DISADVANTAGE); }
 
   TEST(RollTypeTest, AllTypes)
   {
-    EXPECT_EQ(reconcileRollTypes(RollType::ADVANTAGE | RollType::DISADVANTAGE | RollType::STRAIGHT), RollType::STRAIGHT);
+    EXPECT_EQ(reconcileRollTypes({RollType::ADVANTAGE, RollType::DISADVANTAGE, RollType::STRAIGHT}), RollType::STRAIGHT);
   }
 
   TEST(FetRollTypeDelta, GetRollTypeDeltaStraight)

@@ -105,6 +105,11 @@ namespace enc
     uint32_t getCombatRound();
     void withCombatantPosition(Combatant* combatant, const Coord& temporaryPosition, const std::function<void()>& fn);
     void withCombatantWildshapeReplacement(Actoid &actoid, Combatant *combatant, const Coord &origCoords, const std::function<void(bool)> &fn);
+    // Convenience wrapper: applies the wildshape replacement (if the action belongs to a wildshaped form) for the
+    // duration of fn() and exposes whether a transform is active via isWildshapeActive(). Mirrors the Python
+    // `with replace_combatant_if_action_by_wildshaped(...) as did_transform` block.
+    void withWildshapeIfNeeded(const std::shared_ptr<Actoid> &action, Combatant *combatant, const Coord &origCoords, const std::function<void()> &fn);
+    bool isWildshapeActive() const { return _wildshapeActive; }
     std::optional<Coord> findWildshapedCoordinate(const Combatant *combatant, Size size, const std::optional<Coord> &origCoords = std::nullopt);
     std::vector<Combatant*> getPamEligibleCombatants(Combatant* combatant, const Coord& increment) const;
     std::vector<Combatant*> getAooEligibleCombatants(Combatant* combatant, const Coord& increment) const;
@@ -123,6 +128,7 @@ namespace enc
     // std::unordered_map<std::pair<int, int>, std::unordered_map<const Combatant*, Visibility>, PairHash> _visibilityDictForAllCoords;
     std::unordered_map<Coord, std::unordered_map<const Combatant*, Visibility>> _visibilityDictForAllCoords;
     uint32_t _combatRound = 0U; // this isn't the best place for it
+    bool _wildshapeActive = false; // true while a withWildshapeIfNeeded() callback runs against a transformed form
 
 
     BattleMap(size_t size);

@@ -3,6 +3,8 @@
 #include <iostream>
 #include <unordered_map>
 #include <vector>
+#include <string>
+#include <utility>
 #include <algorithm>
 #include <stdexcept>
 // #include <ranges>
@@ -10,6 +12,19 @@
 namespace enc {
 
   using StateId = int;
+
+  /**
+   * Flattened, index-based representation of the action DAG used by the DFS traversal in action selection.
+   * The start state maps to index 0 and every terminal/nop sink is collapsed onto index 1.
+   * (Counterpart of Python's StateMachineTemplate.get_numba_compatible_data(), minus the numba specifics.)
+   */
+  struct FlattenedDag {
+    std::vector<std::vector<std::pair<int, int>>> dagForward; // [stateIndex] -> list of (transitionIndex, nextStateIndex)
+    size_t numStates;
+    std::unordered_map<size_t, StateId> indexToState;
+    std::unordered_map<size_t, std::string> indexToTransition;
+    std::unordered_map<std::string, std::string> transitionToSimplified; // transitionIndex-as-string -> simplifiedIndex-as-string
+  };
 
   class StateMachine
   {
@@ -27,6 +42,7 @@ namespace enc {
     StateId _nextAvailableId;
     mutable bool _isDagDirty;
     mutable std::vector<StateId> _cachedToposort;
+    mutable std::vector<std::vector<std::pair<int, int>>> _dagForward; // cache populated by getNumbaCompatibleData(), consumed by dfs()
 
 public:
     StateMachine();
@@ -64,6 +80,13 @@ public:
     std::vector<std::pair<std::string, StateId>> getForwardTransitions(StateId state) const;
 
     std::vector<std::string> getAllTransitions() const;
+
+    // Build the flattened DAG representation (start->0, nop sinks->1) and cache it for dfs().
+    FlattenedDag getFlattenedDag() const;
+
+    // Depth-first enumeration of all transition-index sequences from currentState to a nop sink (index 1).
+    // Each returned sequence element is a transition index encoded as a string. Mirrors numba_functions.dfs.
+    std::vector<std::vector<std::string>> dfs(int currentState, size_t maxSequenceLength) const;
     // auto getAllTransitions() const
     //   -> std::ranges::join_view<
     //     std::ranges::transform_view<std::ranges::ref_view<const std::unordered_map<StateId, std::vector<Transition>>>, std::vector<std::string>>>;

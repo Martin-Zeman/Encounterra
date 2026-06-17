@@ -1,9 +1,11 @@
 #pragma once
 
+#include <any>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <deque>
 #include <random>
 #include <iostream>
 #include <functional>
@@ -181,7 +183,15 @@ namespace enc
     const std::vector<std::shared_ptr<Wildshape>> &getAvailableWildshapeForms() { return _availableWildshapeForms; }
     DirectThreatFactory* getDangerZoneAttack() { return _dangerZoneAttack; }
     AttackFactory* getAoOFactory() { return _aoOFactory; }
-    void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &shortestPaths) { *_shortestPathsCache = shortestPaths; }
+    void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &shortestPaths) { _shortestPathsCache = shortestPaths; }
+    std::deque<std::shared_ptr<Actoid>> &getActionPlan() { return _actionPlan; }
+    void setActionPlan(std::deque<std::shared_ptr<Actoid>> plan) { _actionPlan = std::move(plan); }
+    std::deque<std::shared_ptr<Actoid>> calculateActionPlan(const blaze::DynamicVector<int> &distances,
+                                                            const blaze::DynamicMatrix<Coord> &shortestPaths);
+    // Snapshot/restore of resource state during proto-DAG exploration. The base combatant has no special resources to
+    // preserve (mirrors Python's base export_resources()/import_resources() no-ops); specialized combatants override.
+    virtual std::any exportResources() { return {}; }
+    virtual void importResources(const std::any & /*resources*/) {}
     int receiveDmg(int dmg, DamageType dmg_type, int multiplier = 1);
     int receiveCompoundDmg(const std::vector<std::pair<int, DamageType>>& dmg, int multiplier = 1);
     void addResistance(DamageType dmgType);
@@ -511,12 +521,12 @@ namespace enc
     ResourceDepletionLevel _resouceDepletionLevel;
     std::shared_ptr<Spellslots> _spellslots;
     std::unordered_map<AbilityType, std::shared_ptr<Resource>> _resources;
-    std::vector<Actoid> _actionPlan; // TODO: This needs to support movement as well
+    std::deque<std::shared_ptr<Actoid>> _actionPlan; // ordered movement increments / (bonus) actions for the current turn
     int _weaponDmgDealtThisTurn = 0; // This is used for ActionSurge
     int _oneTimeAcbonus = 0; // TODO: Parry may work differently in 2024 (battle master parry reduces dmg, let's wait for monsters)
     std::weak_ptr<Effect> _concentrationEffect;
     std::vector<std::shared_ptr<Wildshape>> _availableWildshapeForms;
-    blaze::DynamicMatrix<Coord> *_shortestPathsCache = nullptr; // TODO: Do I still need this?
+    blaze::DynamicMatrix<Coord> _shortestPathsCache; // TODO: Do I still need this?
     bool _uncannyDodgeActive = false;
 
   protected:

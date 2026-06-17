@@ -275,9 +275,10 @@ namespace enc
     return threatAcc;
   }
 
-  double getAoeAndAooThreatForIncrement(const Coords &currCoordsData, const Coord &increment, Combatant *combatant,
-                                        const std::unordered_map<AoeEffect *, Coords> &effectToCoords, bool disengaged, bool dodged)
+  double getAoeAndAooThreatForIncrement(const CoordVector &currCoordsDataVec, const Coord &increment, Combatant *combatant,
+                                        const std::unordered_map<AoeEffect *, CoordVector> &effectToCoords, bool disengaged, bool dodged)
   {
+    Coords currCoordsData(currCoordsDataVec);
     auto rollType = dodged ? RollType::DISADVANTAGE : RollType::STRAIGHT;
     double threatAcc = 0.0;
     auto &battleMap = BattleMap::getInstance();
@@ -305,8 +306,9 @@ namespace enc
       // Account for AoE
       Coords postIncrementCoords = currCoordsData + increment;
 
-      for(const auto &[effect, affectedCoords] : effectToCoords)
+      for(const auto &[effect, affectedCoordsVec] : effectToCoords)
         {
+          Coords affectedCoords(affectedCoordsVec);
           int preIncrementDist = getHopDistanceCoords(currCoordsData, affectedCoords);
           int postIncrementDist = getHopDistanceCoords(postIncrementCoords, affectedCoords);
 
@@ -329,7 +331,7 @@ namespace enc
   }
 
   std::vector<double> accumulateThreatAlongPath(const CoordVector &path, Combatant *combatant,
-                                                const std::unordered_map<AoeEffect *, Coords> &effectToCoords, bool disengaged, bool dodged)
+                                                const std::unordered_map<AoeEffect *, CoordVector> &effectToCoords, bool disengaged, bool dodged)
   {
     double threatAcc = 0.0;
     auto &battleMap = BattleMap::getInstance();
@@ -341,7 +343,7 @@ namespace enc
     auto currCoordsData = currCoords;
     for(const auto &increment : path)
       {
-        double t = getAoeAndAooThreatForIncrement({currCoordsData}, increment, combatant, effectToCoords, disengaged, dodged);
+        double t = getAoeAndAooThreatForIncrement(currCoordsData.get(), increment, combatant, effectToCoords, disengaged, dodged);
         assert(t <= 0);
         threatAcc += t;
 

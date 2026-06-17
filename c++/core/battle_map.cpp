@@ -1645,6 +1645,25 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
       }
   }
 
+  void BattleMap::withWildshapeIfNeeded(const std::shared_ptr<Actoid> &action, Combatant *combatant, const Coord &origCoords,
+                                        const std::function<void()> &fn)
+  {
+    withCombatantWildshapeReplacement(*action, combatant, origCoords, [&](bool didTransform) {
+      bool previous = _wildshapeActive;
+      _wildshapeActive = didTransform;
+      try
+        {
+          fn();
+        }
+      catch(...)
+        {
+          _wildshapeActive = previous;
+          throw;
+        }
+      _wildshapeActive = previous;
+    });
+  }
+
   std::optional<Coord> BattleMap::findWildshapedCoordinate(const Combatant *combatant, Size size, const std::optional<Coord> &origCoords)
   {
     // Get original position and convert to matrix coordinates

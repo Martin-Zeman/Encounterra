@@ -18,6 +18,13 @@ namespace enc
     const Coord &getIncrement() const { return _increment; }
     bool incursAOO() const { return _incursAOO; }
 
+    std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                                                 const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override
+    {
+      return {};
+    }
+    std::string toString() const override { return static_cast<std::string>(*this); }
+
   private:
     Coord _increment;
     bool _incursAOO;
@@ -59,5 +66,12 @@ namespace enc
 
     operator std::string() const { return "Get Up from Prone"; }
     std::string shorthandStr() const { return "Get Up from Prone"; }
+
+    std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
+                                                 const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override
+    {
+      return {};
+    }
+    std::string toString() const override { return "Get Up from Prone"; }
   };
 }

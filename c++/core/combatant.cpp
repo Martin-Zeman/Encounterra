@@ -1,6 +1,9 @@
 #include "core/combatant.hpp"
 #include "actions/dodge.hpp"
 #include "actions/disengage.hpp"
+#include "actions/action_protodag.hpp"
+#include "actions/action_dag.hpp"
+#include "actions/action_selection.hpp"
 #include "core/rechargeable_factory.hpp"
 #include "effects/effect_tracker.hpp"
 
@@ -524,4 +527,27 @@ void Combatant::removeImmunity(DamageType dmgType) { _immunities.erase(dmgType);
 void Combatant::addVulnerability(DamageType dmgType) { _vulnerabities.insert(dmgType); }
 
 void Combatant::removeVulnerability(DamageType dmgType) { _vulnerabities.erase(dmgType); }
+
+std::deque<std::shared_ptr<Actoid>> Combatant::calculateActionPlan(const blaze::DynamicVector<int> &distances,
+                                                                   const blaze::DynamicMatrix<Coord> &shortestPaths)
+{
+  // Mirrors Python DefaultActionPlanStrategy.calculate_action_plan: build the proto-DAG, expand it into the full
+  // action DAG (with movement), find the highest-threat path and translate it back to concrete actions.
+  ProtoDagResult proto = generateProtoDag(this);
+  ActionStateMachineResult dagResult =
+    buildActionStateMachine(this, proto.fsm, proto.transitionNameToActoid, distances, shortestPaths);
+
+  std::optional<BestSequenceResult> best =
+    findBestSequence(this, *dagResult.stateMachine, proto.transitionNameToActoid, *dagResult.transitionToEligibleCoords,
+                     *dagResult.movementTransToCoordAndType, distances, shortestPaths);
+  if(!best.has_value())
+    {
+      return {};
+    }
+
+  std::vector<std::shared_ptr<Actoid>> actions =
+    translateSequenceToActions(this, distances, shortestPaths, proto.transitionNameToActoid,
+                               *dagResult.movementTransToCoordAndType, best->sequence, best->msPathMap);
+  return std::deque<std::shared_ptr<Actoid>>(actions.begin(), actions.end());
+}
 }

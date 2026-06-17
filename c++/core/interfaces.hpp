@@ -142,6 +142,20 @@ namespace enc
     virtual double calculateThreatDelta(const ThreatModifiers &modifiers) const { return 0; };
   };
 
+  /**
+   * Ability that directly modifies the threat of another attack ability. This is a more specialized variant of the
+   * ThreatModifier. Mirrors Python's threat_interfaces.AttackThreatModifier(Actoid, Threat).
+   */
+  class AttackThreatModifier : public Actoid, public Threat
+  {
+  public:
+    explicit AttackThreatModifier(ActoidFactory &factory, ActoidFlags flags = ActoidFlags::DEFAULT, AbilityType abilityType = AbilityType::NOP)
+        : Actoid(factory, flags | ActoidFlags::IS_ATTACK_MODIFIER, abilityType)
+    {}
+    virtual ~AttackThreatModifier() = default;
+    double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override { return 0; };
+  };
+
   class AoeThreat : public Threat
   {
   public:

@@ -52,7 +52,7 @@ namespace enc
   }
 
   void resolveDmgSavingThrow(SavingThrow savingThrowType, int dc, const std::string &abilityName, int dmg, DamageType dmgType, Combatant *target,
-                             bool halfOnSuccess = false, bool isSpellEffect = false)
+                             bool halfOnSuccess, bool isSpellEffect)
   {
     auto stBonus = target->getSavingThrow(savingThrowType);
 

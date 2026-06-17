@@ -239,6 +239,140 @@ namespace enc
     return result;
   }
 
+  FlattenedDag StateMachine::getFlattenedDag() const
+  {
+    // Build the state index map. Mirrors the Python single-nop model: the start state (id 0) is index 0
+    // and every terminal sink (no outgoing transitions, e.g. the nop states created in build_action_dag) is
+    // collapsed onto a single nop index 1. All remaining interior states get indices starting at 2.
+    std::vector<StateId> sortedStates = getAllStates();
+    std::sort(sortedStates.begin(), sortedStates.end());
+
+    auto isTerminal = [&](StateId s) {
+      auto it = _states.find(s);
+      return it == _states.end() || it->second.empty();
+    };
+
+    std::unordered_map<StateId, size_t> stateToIndex;
+    std::unordered_map<size_t, StateId> indexToState;
+    stateToIndex[0] = 0;
+    indexToState[0] = 0;
+    size_t nextIndex = 2; // 0 = start, 1 = nop sink
+    for(StateId s : sortedStates)
+      {
+        if(s == 0)
+          {
+            continue;
+          }
+        if(isTerminal(s))
+          {
+            stateToIndex[s] = 1; // collapse all terminal/nop sinks onto the single nop index
+          }
+        else
+          {
+            stateToIndex[s] = nextIndex;
+            indexToState[nextIndex] = s;
+            ++nextIndex;
+          }
+      }
+    size_t numStates = nextIndex; // start + nop + interior states
+
+    std::unordered_map<std::string, size_t> transitionToIndex;
+    std::unordered_map<size_t, std::string> indexToTransition;
+    std::unordered_map<std::string, size_t> simplifiedTransitions;
+    std::unordered_map<std::string, std::string> transitionToSimplified;
+
+    std::vector<std::vector<std::pair<int, int>>> dagForward(numStates);
+
+    for(StateId s : sortedStates)
+      {
+        auto it = _states.find(s);
+        if(it == _states.end())
+          {
+            continue;
+          }
+        size_t srcIdx = stateToIndex[s];
+        if(srcIdx == 1)
+          {
+            continue; // nop sink has no outgoing transitions
+          }
+        for(const auto &transition : it->second)
+          {
+            size_t tIdx;
+            auto tiIt = transitionToIndex.find(transition.name);
+            if(tiIt == transitionToIndex.end())
+              {
+                tIdx = transitionToIndex.size();
+                transitionToIndex[transition.name] = tIdx;
+                indexToTransition[tIdx] = transition.name;
+
+                // Simplified name drops a trailing "_X" level designator (mirrors the Python optimization).
+                std::string shortened = transition.name;
+                if(shortened.size() >= 2 && shortened[shortened.size() - 2] == '_')
+                  {
+                    shortened = shortened.substr(0, shortened.size() - 2);
+                  }
+                size_t simpIdx;
+                auto sIt = simplifiedTransitions.find(shortened);
+                if(sIt == simplifiedTransitions.end())
+                  {
+                    simpIdx = simplifiedTransitions.size();
+                    simplifiedTransitions[shortened] = simpIdx;
+                  }
+                else
+                  {
+                    simpIdx = sIt->second;
+                  }
+                transitionToSimplified[std::to_string(tIdx)] = std::to_string(simpIdx);
+              }
+            else
+              {
+                tIdx = tiIt->second;
+              }
+            size_t destIdx = stateToIndex.count(transition.destination) ? stateToIndex[transition.destination] : 1;
+            dagForward[srcIdx].emplace_back(static_cast<int>(tIdx), static_cast<int>(destIdx));
+          }
+      }
+
+    _dagForward = dagForward; // cache for dfs()
+    return FlattenedDag{std::move(dagForward), numStates, std::move(indexToState), std::move(indexToTransition),
+                        std::move(transitionToSimplified)};
+  }
+
+  std::vector<std::vector<std::string>> StateMachine::dfs(int currentState, size_t maxSequenceLength) const
+  {
+    std::vector<std::vector<std::string>> sequences;
+    std::vector<std::pair<int, std::vector<std::string>>> stack;
+    stack.emplace_back(currentState, std::vector<std::string>{});
+
+    while(!stack.empty())
+      {
+        auto [state, sequence] = std::move(stack.back());
+        stack.pop_back();
+
+        if(state == 1) // nop sink: a complete path
+          {
+            sequences.push_back(std::move(sequence));
+            continue;
+          }
+
+        if(state < 0 || static_cast<size_t>(state) >= _dagForward.size())
+          {
+            continue;
+          }
+
+        for(const auto &[transition, nextState] : _dagForward[state])
+          {
+            if(sequence.size() < maxSequenceLength)
+              {
+                std::vector<std::string> newSequence = sequence;
+                newSequence.push_back(std::to_string(transition));
+                stack.emplace_back(nextState, std::move(newSequence));
+              }
+          }
+      }
+    return sequences;
+  }
+
   // auto StateMachine::getAllTransitions() const
   //   -> std::ranges::join_view<
   //     std::ranges::transform_view<std::ranges::ref_view<const std::unordered_map<StateId, std::vector<Transition>>>, std::vector<std::string>>>

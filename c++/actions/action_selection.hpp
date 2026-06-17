@@ -130,6 +130,11 @@ namespace enc
       :param transition_name_to_ms_path: dictionary mapping of transition names to paths that may include a Misty Step (can be empty)
       :return: list of the following types: np.array, action, bonus action
    */
+  std::vector<std::shared_ptr<Actoid>>
+  translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
+                             const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
+                             const MovementTransitionMap &movementTransitionToCoordAndType, const std::vector<std::string> &sequence,
+                             const TransitionToMsPath &transitionNameToMsPath);
 
   // PriorityTransitionsResult
   // getPostTransitionsOfAllPriorityTransitions(const std::unique_ptr<StateMachine> &protoDag,

@@ -21,7 +21,7 @@ namespace enc
   std::vector<std::shared_ptr<Actoid>> HungerOfHadarFactory::createAll(void *previousActionInDag)
   {
     auto &battleMap = BattleMap::getInstance();
-    auto [coord, _, _] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range),
+    auto [coord, ignoredScore, ignoredValid] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range),
                                                                     TRANSLATE_RADIUS.at(HungerOfHadarFactory::target));
     return {std::make_shared<HungerOfHadar>(coord, *this)};
   }
@@ -46,7 +46,7 @@ namespace enc
   double HungerOfHadarFactory::calculateMaxThreat() const
   {
     auto &battleMap = BattleMap::getInstance();
-    auto [coord, _, _] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range),
+    auto [coord, ignoredScore, ignoredValid] = battleMap.findBestPlacementHarmfulCircular(_combatant, static_cast<int>(HungerOfHadarFactory::range),
                                                                     TRANSLATE_RADIUS.at(HungerOfHadarFactory::target));
     HungerOfHadar effect(coord, *this);
     return effect.calculateThreat({});
@@ -126,7 +126,7 @@ namespace enc
     return totalThreat;
   }
 
-  double HungerOfHadar::calculateThreatDelta(const ThreatModifiers &modifiers)
+  double HungerOfHadar::calculateThreatDelta(const ThreatModifiers &modifiers) const
   {
     return 0.0; // Not relevant for this ability
   }
@@ -161,8 +161,8 @@ namespace enc
 
     if(!_factory._combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
       {
-        return getFreeCoordsInCartesianRange(Coords(_origin), distances, _factory._combatant->getSize(),
-                                                  HungerOfHadarFactory::range, _factory._combatant->_instanceId);
+        return battleMap.getFreeCoordsInCartesianRange(Coords(_origin), distances, _factory._combatant->getSize(),
+                                                  static_cast<int>(HungerOfHadarFactory::range), _factory._combatant->_instanceId);
       }
 
     const Coords &combatantPos = battleMap.getCombatantCoordinates(*_factory._combatant);

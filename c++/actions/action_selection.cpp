@@ -1,5 +1,6 @@
 #include "actions/action_selection.hpp"
 #include "actions/movement.hpp"
+#include "actions/break_grapple.hpp"
 #include "core/battle_map.hpp"
 #include "core/geometry.hpp"
 #include "effects/effect_tracker.hpp"
@@ -395,7 +396,7 @@ findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unord
     }
 
     // Get all sequences
-    auto [dagForward, numStates, indexToState, indexToTransition, transitionToSimplified] = dag.getNumbaCompatibleData();
+    auto [dagForward, numStates, indexToState, indexToTransition, transitionToSimplified] = dag.getFlattenedDag();
     size_t maxSequenceLength = numStates * 2;
     
     auto allSequences = dag.dfs(0, maxSequenceLength);
@@ -461,7 +462,7 @@ findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unord
         }
 
         for (size_t idx : ids) {
-            sequenceToThreat[idx] = {std::move(movementThreat), 0.0};
+            sequenceToThreat[idx] = {movementThreat, 0.0};
         }
     }
 
@@ -507,18 +508,25 @@ findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unord
                                             combatant->getMovement()) ? 1.0 : infeasibilityMultiplier;
                                         firstFeasibilityCheckDone = true;
                                     } else {
-                                        auto remainingDist = ThreatUtils::getHopDistanceCoords(eligibleCoords, {coord});
+                                        auto remainingDist = getHopDistanceCoords(Coords(eligibleCoords), Coords(CoordVector{coord}));
                                         feasibilityMultiplier = remainingDist <= combatant->getMovement() - 
                                             distances[coord[0] * battleMap.getGridSize() + coord[1]] ? 1.0 : infeasibilityMultiplier;
                                     }
                                 }
                             }
 
-                            double threat = action->calculateThreat(!battleMap.isWildshapeActive(), sequenceToThreat[idx][0]);
+                            // Mirrors Python action.calculate_threat(consider_dist=..., movement_threat=...).
+                            Kwargs threatKwargs;
+                            threatKwargs["considerDist"] = !battleMap.isWildshapeActive();
+                            threatKwargs["movement_threat"] = sequenceToThreat[idx].first;
+                            double threat = 0.0;
+                            if (auto *threatIface = dynamic_cast<Threat *>(action.get())) {
+                                threat = threatIface->calculateThreat(threatKwargs);
+                            }
                             threatAcc += threat;
 
                             if (deltaAction) {
-                                double deltaThreat = deltaAction->calculateThreatForAttack(combatant, action);
+                                double deltaThreat = deltaAction->calculateThreatForAttack(combatant, action.get(), {});
                                 threatAcc += deltaThreat;
                                 sequenceIdxToTransitionStepThreat[idx][deltaActionTIdx] += deltaThreat;
                             }
@@ -530,7 +538,7 @@ findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unord
 
                             for (const auto& existingEffect : effectTracker.getAffectingCombatant(combatant)) {
                                 if (auto existingMod = std::dynamic_pointer_cast<AttackThreatModifier>(existingEffect)) {
-                                    threatAcc += existingMod->calculateThreatForAttack(combatant, action);
+                                    threatAcc += existingMod->calculateThreatForAttack(combatant, action.get(), {});
                                 }
                             }
 
@@ -547,9 +555,11 @@ findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unord
                 }
 
                 auto& threat = sequenceToThreat[idx];
-                threat[1] = threatAcc * feasibilityMultiplier;
+                threat.second = threatAcc * feasibilityMultiplier;
                 // Small bias towards current position prevents oscillations
-                threat[0] += (coord == currentCoords) ? 0.01 : 0.0;
+                if (!threat.first.empty()) {
+                    threat.first.back() += (coord == currentCoords.getRoot()) ? 0.01 : 0.0;
+                }
             }
         });
     }
@@ -557,13 +567,18 @@ findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unord
     // Sort sequences by total threat
     std::vector<size_t> sortedSequences(sequences.size());
     std::iota(sortedSequences.begin(), sortedSequences.end(), 0);
-    
+
+    auto sequenceScore = [&](size_t idx) {
+        auto it = sequenceToThreat.find(idx);
+        if (it == sequenceToThreat.end() || it->second.first.empty() || it->second.second <= 0) {
+            return -std::numeric_limits<double>::infinity();
+        }
+        return it->second.first.back() + it->second.second;
+    };
+
     std::sort(sortedSequences.begin(), sortedSequences.end(),
         [&](size_t a, size_t b) {
-            const auto& threatA = sequenceToThreat[a];
-            const auto& threatB = sequenceToThreat[b];
-            return (threatA[1] > 0 ? threatA[0] + threatA[1] : -std::numeric_limits<double>::infinity()) >
-                   (threatB[1] > 0 ? threatB[0] + threatB[1] : -std::numeric_limits<double>::infinity());
+            return sequenceScore(a) > sequenceScore(b);
         });
 
     auto [nearestAndMinimizedSequence, maxThreat] = getNearestAndMinimize(
@@ -574,10 +589,15 @@ findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unord
         return std::nullopt;
     }
 
+    std::array<double, 2> maxThreatArr{
+        maxThreat.first.empty() ? 0.0 : maxThreat.first.back(),
+        maxThreat.second
+    };
+
     return BestSequenceResult{
         std::move(nearestAndMinimizedSequence),
         std::move(transitionNameToMsPath),
-        maxThreat
+        maxThreatArr
     };
 }
 
@@ -590,9 +610,9 @@ std::shared_ptr<Actoid> getAction(Combatant* combatant) {
     combatant = combatant->getCurrentForm();
 
     // Check if we need to break grapple
-    if (auto grappleCond = needsToBreakOutOfGrapple(combatant)) {
+    if (auto grappleCond = combatant->needsToBreakOutOfGrapple()) {
         if (combatant->hasAction()) {
-            return BreakGrappleFactory(grappleCond).create();
+            return BreakGrappleFactory(*grappleCond).create();
         }
     }
 

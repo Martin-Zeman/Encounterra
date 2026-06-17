@@ -1,4 +1,5 @@
 #include <gtest/gtest.h>
+#include <algorithm>
 #include "core/state_machine.hpp" // Assume this is the header for our StateMachine class
 
 using namespace enc;
@@ -118,7 +119,8 @@ TEST_F(StateMachineTest, RemoveStateAndTransition) {
 
     // Verify that transitions to the removed state are also removed
     auto transitions = fsm.getForwardTransitions(0);
-    ASSERT_TRUE(std::find(transitions.begin(), transitions.end(), "to_1") == transitions.end());
+    ASSERT_TRUE(std::none_of(transitions.begin(), transitions.end(),
+                             [](const std::pair<std::string, StateId> &t) { return t.first == "to_1"; }));
 }
 
 TEST_F(StateMachineTest, GetNextStateId) {
