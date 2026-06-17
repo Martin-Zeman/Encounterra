@@ -237,11 +237,14 @@ TEST_F(StateMachineTest, ToposortAfterStateRemoval)
   // Check size
   ASSERT_EQ(sorted.size(), 4); // 0, -1, 2, 4
 
-  // Verify 2 and 4 are no longer connected in ordering
+  // After removing the middle state, the chain 0 -> 2 -> 3 -> 4 leaves only the
+  // edge 0 -> 2 (the 2 -> 3 and 3 -> 4 edges are gone with state 3). State 4 is
+  // now disconnected, so its position relative to 2 is unconstrained.
   auto find_pos = [&sorted](StateId id) { return std::find(sorted.begin(), sorted.end(), id) - sorted.begin(); };
 
-  ASSERT_LT(find_pos(0), find_pos(2));
-  ASSERT_LT(find_pos(2), find_pos(4));
+  ASSERT_LT(find_pos(0), find_pos(2)); // surviving edge 0 -> 2 preserved
+  ASSERT_TRUE(std::find(sorted.begin(), sorted.end(), 2) != sorted.end()); // 2 is present
+  ASSERT_TRUE(std::find(sorted.begin(), sorted.end(), 4) != sorted.end()); // 4 is present (disconnected)
   ASSERT_TRUE(std::find(sorted.begin(), sorted.end(), 3) == sorted.end()); // 3 is gone
 }
 

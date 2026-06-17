@@ -1673,13 +1673,19 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     // Create accessibility matrix
     MapMatrix mapAccessibilityMatrix(_size, _size, 0);
 
-    // Get accessible coordinates from shortest paths
-    // Note: This part needs adaptation since we're not using the Python cache
-    // Instead, we'll use whatever coordinate calculation method you have
-    auto accessibleCoords = getFreeCoordsInHopRange(getCombatantCoordinates(*combatant));
-    for(const auto &coord : accessibleCoords)
+    // Mark every reachable cell from the combatant's shortest-paths cache as accessible.
+    // The cache is indexed by battle-map coordinate (x, y); an entry of {-1, -1} means the
+    // cell is unreachable (mirrors Python: combatant.shortest_paths_cache[..., 0] != -1).
+    const blaze::DynamicMatrix<Coord> &shortestPathsCache = combatant->getShortestPathsCache();
+    for(size_t x = 0; x < shortestPathsCache.rows(); ++x)
       {
-        mapAccessibilityMatrix(_size - coord[1] - 1, coord[0]) = 1;
+        for(size_t y = 0; y < shortestPathsCache.columns(); ++y)
+          {
+            if(shortestPathsCache(x, y)[0] != -1)
+              {
+                mapAccessibilityMatrix(_size - y - 1, x) = 1;
+              }
+          }
       }
 
     // Mark current position as accessible
