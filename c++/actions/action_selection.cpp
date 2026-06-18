@@ -396,7 +396,7 @@ findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unord
     }
 
     // Get all sequences
-    auto [dagForward, numStates, indexToState, indexToTransition, transitionToSimplified] = dag.getFlattenedDag();
+    auto [dagForward, numStates, indexToState, indexToTransition, transitionToSimplified, indexToActoid] = dag.getFlattenedDag();
     size_t maxSequenceLength = numStates * 2;
     
     auto allSequences = dag.dfs(0, maxSequenceLength);

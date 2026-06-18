@@ -16,27 +16,6 @@
 #include "core/threat_utils.hpp"
 #include "core/state_machine.hpp"
 
-struct TransitionSet {
-    std::set<std::string> transitions;
-    
-    bool operator==(const TransitionSet& other) const {
-        return transitions == other.transitions;
-    }
-};
-
-namespace std {
-    template<>
-    struct hash<TransitionSet> {
-        size_t operator()(const TransitionSet& ts) const {
-            size_t hash = 0;
-            for (const auto& str : ts.transitions) {
-                hash ^= std::hash<std::string>{}(str) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
-            }
-            return hash;
-        }
-    };
-}
-
 namespace enc
 {
 

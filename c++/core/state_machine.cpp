@@ -78,7 +78,21 @@ namespace enc
   {
     if(_states.find(origin) != _states.end() && _states.find(dest) != _states.end())
       {
-        _states[origin].push_back({name, origin, dest});
+        _states[origin].push_back({name, nullptr, origin, dest});
+        addDependency(origin, dest);
+        _isDagDirty = true;
+      }
+    else
+      {
+        throw std::runtime_error("Origin or destination state does not exist");
+      }
+  }
+
+  void StateMachine::addTransition(Actoid *action, const std::string &name, StateId origin, StateId dest)
+  {
+    if(_states.find(origin) != _states.end() && _states.find(dest) != _states.end())
+      {
+        _states[origin].push_back({name, action, origin, dest});
         addDependency(origin, dest);
         _isDagDirty = true;
       }
@@ -278,6 +292,7 @@ namespace enc
 
     std::unordered_map<std::string, size_t> transitionToIndex;
     std::unordered_map<size_t, std::string> indexToTransition;
+    std::unordered_map<size_t, Actoid *> indexToActoid;
     std::unordered_map<std::string, size_t> simplifiedTransitions;
     std::unordered_map<std::string, std::string> transitionToSimplified;
 
@@ -304,6 +319,7 @@ namespace enc
                 tIdx = transitionToIndex.size();
                 transitionToIndex[transition.name] = tIdx;
                 indexToTransition[tIdx] = transition.name;
+                indexToActoid[tIdx] = transition.action;
 
                 // Simplified name drops a trailing "_X" level designator (mirrors the Python optimization).
                 std::string shortened = transition.name;
@@ -335,7 +351,7 @@ namespace enc
 
     _dagForward = dagForward; // cache for dfs()
     return FlattenedDag{std::move(dagForward), numStates, std::move(indexToState), std::move(indexToTransition),
-                        std::move(transitionToSimplified)};
+                        std::move(transitionToSimplified), std::move(indexToActoid)};
   }
 
   std::vector<std::vector<std::string>> StateMachine::dfs(int currentState, size_t maxSequenceLength) const

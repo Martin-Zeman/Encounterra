@@ -69,14 +69,39 @@ namespace enc
       return result;
     }
 
-    // Builds the hashable state footprint (the set of available action string representations). A state in the FSM is
-    // uniquely identified by this set; using TransitionSet (with its std::hash specialization) keeps the DFS dedup on
-    // the hash-based hot path rather than ordered-tree comparisons.
-    TransitionSet actionsToSet(const std::vector<std::shared_ptr<Actoid>> &actions)
+    // Builds the hashable state footprint. A state in the FSM is uniquely identified by the set of actions available
+    // within it, now keyed by each action's value-based identity hash (Actoid::getHash()) instead of its string
+    // representation. The optional depthMarker disambiguates two identical consecutive action sets (protection against
+    // three consecutive attacks), mirroring the previous "insert std::to_string(depth)" trick.
+    struct ActionFootprint
     {
-      TransitionSet footprint;
+      std::set<std::size_t> actionHashes;
+      int depthMarker = -1; // -1 == no depth disambiguation
+
+      bool isEmpty() const { return actionHashes.empty() && depthMarker == -1; }
+
+      bool operator==(const ActionFootprint &other) const
+      {
+        return depthMarker == other.depthMarker && actionHashes == other.actionHashes;
+      }
+    };
+
+    struct ActionFootprintHash
+    {
+      std::size_t operator()(const ActionFootprint &fp) const
+      {
+        std::size_t hash = std::hash<int>{}(fp.depthMarker);
+        for(std::size_t ah : fp.actionHashes)
+          hash ^= ah + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+        return hash;
+      }
+    };
+
+    ActionFootprint actionsToFootprint(const std::vector<std::shared_ptr<Actoid>> &actions)
+    {
+      ActionFootprint footprint;
       for(const auto &action : actions)
-        footprint.transitions.insert(action->toString());
+        footprint.actionHashes.insert(action->getHash());
       return footprint;
     }
   } // namespace
@@ -113,8 +138,8 @@ namespace enc
     using AfToA = std::unordered_map<ActoidFactory *, Fas>;
 
     // Hash-keyed footprint maps for the performance-critical state dedup.
-    std::unordered_map<TransitionSet, StateId> stateFootprintToStateName;
-    std::unordered_set<TransitionSet> visited;
+    std::unordered_map<ActionFootprint, StateId, ActionFootprintHash> stateFootprintToStateName;
+    std::unordered_set<ActionFootprint, ActionFootprintHash> visited;
 
     // The StateMachine constructor already provides the initial state (0) and the nop sink (-1).
     constexpr StateId NOP_STATE = -1;
@@ -151,19 +176,19 @@ namespace enc
         // A state is defined by the set of (bonus) actions available within it. Two identical consecutive action sets
         // are distinguished by appending the depth (protection against three consecutive attacks).
         const bool sameAsPrevious = previousFas.has_value() && previousFas.value() == fas;
-        TransitionSet stateFootprint = actionsToSet(fas);
+        ActionFootprint stateFootprint = actionsToFootprint(fas);
         if(sameAsPrevious)
-          stateFootprint.transitions.insert(std::to_string(depth));
+          stateFootprint.depthMarker = depth;
 
         const std::string actionTakenName =
           (actionTaken ? actionTaken->toString() : std::string("None")) + "_" + std::to_string(depth);
         if(actionTaken)
           transitionNameToActoid[actionTakenName] = actionTaken;
 
-        if(stateFootprint.transitions.empty())
+        if(stateFootprint.isEmpty())
           {
             // No more actions available -> connect to the nop sink.
-            fsm.addTransition(actionTakenName, previousState, NOP_STATE);
+            fsm.addTransition(actionTaken.get(), actionTakenName, previousState, NOP_STATE);
           }
         else if(visited.find(stateFootprint) == visited.end())
           {
@@ -173,7 +198,7 @@ namespace enc
             if(actionTaken)
               {
                 fsm.addNewState(currState);
-                fsm.addTransition(actionTakenName, previousState, currState);
+                fsm.addTransition(actionTaken.get(), actionTakenName, previousState, currState);
               }
             for(const auto &fa : fas)
               {
@@ -211,7 +236,7 @@ namespace enc
           }
         else
           {
-            fsm.addTransition(actionTakenName, previousState, stateFootprintToStateName[stateFootprint]);
+            fsm.addTransition(actionTaken.get(), actionTakenName, previousState, stateFootprintToStateName[stateFootprint]);
           }
       };
 

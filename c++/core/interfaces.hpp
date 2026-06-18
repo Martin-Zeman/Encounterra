@@ -1,7 +1,10 @@
 #pragma once
 
+#include <cstddef>
+#include <functional>
 #include <memory>
 #include <optional>
+#include <string>
 #include <vector>
 #include <limits>
 #include <blaze/Math.h>
@@ -48,10 +51,33 @@ namespace enc
       = 0;
     virtual std::string toString() const = 0;
 
+    /**
+     * Value-based identity for an actoid, replacing the string transition names previously used to key the action DAG.
+     * Two actoids that represent the same action (same effect on the same target/coords) must compare equal and share a
+     * hash. Defaults are derived from toString() so existing behaviour is preserved; subclasses may override hash()/
+     * equals() with cheaper field-based implementations.
+     */
+    virtual bool equals(const Actoid &other) const { return toString() == other.toString(); }
+
+    /// Memoised hash. The first call computes hash(); subsequent calls return the cached value.
+    std::size_t getHash() const
+    {
+      if(!_cachedHash)
+        {
+          _cachedHash = hash();
+        }
+      return *_cachedHash;
+    }
+
   protected:
     ActoidFactory &_factory;
     uint32_t _actoidFlags;
     AbilityType _abilityType;
+
+    virtual std::size_t hash() const { return std::hash<std::string>{}(toString()); }
+
+  private:
+    mutable std::optional<std::size_t> _cachedHash;
   };
 
   enum class FactoryFlags : uint32_t

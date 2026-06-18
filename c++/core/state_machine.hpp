@@ -13,6 +13,8 @@ namespace enc {
 
   using StateId = int;
 
+  class Actoid;
+
   /**
    * Flattened, index-based representation of the action DAG used by the DFS traversal in action selection.
    * The start state maps to index 0 and every terminal/nop sink is collapsed onto index 1.
@@ -24,6 +26,7 @@ namespace enc {
     std::unordered_map<size_t, StateId> indexToState;
     std::unordered_map<size_t, std::string> indexToTransition;
     std::unordered_map<std::string, std::string> transitionToSimplified; // transitionIndex-as-string -> simplifiedIndex-as-string
+    std::unordered_map<size_t, Actoid *> indexToActoid; // transitionIndex -> owning actoid (nullptr for the None sentinel)
   };
 
   class StateMachine
@@ -32,6 +35,7 @@ namespace enc {
 
     struct Transition {
         std::string name;
+        Actoid *action; // identity of the action this transition represents (nullptr for the None sentinel)
         StateId origin;
         StateId destination;
     };
@@ -62,6 +66,10 @@ public:
     // std::vector<std::string> getAvailableTransitionsInState(StateId state) const;
 
     void addTransition(const std::string& name, StateId origin, StateId dest);
+
+    // Actoid-aware overload: records the action's identity alongside its (legacy) string name so downstream consumers
+    // can be migrated off string transition names incrementally.
+    void addTransition(Actoid* action, const std::string& name, StateId origin, StateId dest);
 
     void removeTransition(const std::string& transitionName, StateId origin);
 
