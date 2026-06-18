@@ -28,15 +28,19 @@ message ("CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
 # sudo apt-get install libssl-dev
 find_package(OpenSSL REQUIRED)
 
-# Set default blaze_DIR to local copy (needed due to permission restrictions on /usr/local/share/blaze/cmake/)
-# Use absolute path to parent directory of c++
-get_filename_component(REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}" DIRECTORY)
-if(NOT blaze_DIR)
+# Try to find blaze - first attempt system paths, then fallback to local copy if system is inaccessible
+find_package(blaze QUIET)
+
+if(NOT blaze_FOUND)
+    message(STATUS "System blaze not found, attempting local .blaze-cmake copy...")
+    get_filename_component(REPO_ROOT "${CMAKE_CURRENT_SOURCE_DIR}" DIRECTORY)
     set(blaze_DIR "${REPO_ROOT}/.blaze-cmake" CACHE PATH "Path to blaze CMake config" FORCE)
-    message(STATUS "Setting default blaze_DIR to: ${blaze_DIR}")
+    message(STATUS "Using local blaze configuration: ${blaze_DIR}")
+    find_package(blaze REQUIRED)
+else()
+    message(STATUS "Found system blaze installation")
 endif()
 
-find_package(blaze REQUIRED)
 find_package(LAPACK REQUIRED)
 
 #----GOOGLETEST BUILD----

@@ -14,7 +14,6 @@ Actoids are created by factories. Both the factories and actoids inherit from va
 ## Python Implementation
 
 The Python implementation uses poetry as the dependency manager.
----
 
 ### Important Files
 
@@ -38,6 +37,68 @@ The Python implementation uses poetry as the dependency manager.
 | `simulator/abilities/*.py` | Manages individual abilities, On-hit triggers and their effects. |
 | `simulator/combatants/*.py` | Manages individual combatants. |
 | `simulator/effects/*.py` | Manages all different types of long lasting effects including AoEs. |
+
+### Installing Dependencies and Running
+
+#### Prerequisites
+
+- Python 3.8 or later
+- Poetry (dependency manager): `pip install poetry`
+
+#### Setup
+
+```bash
+cd Encounterra
+poetry install
+```
+
+This installs all dependencies listed in `pyproject.toml` into a virtual environment.
+
+#### Run Simulation
+
+```bash
+poetry run python main.py
+```
+
+This runs the combat simulation with the combatants, teams, and encounter parameters defined in `main.py`.
+
+#### Run Tests
+
+```bash
+poetry run pytest
+```
+
+For verbose output:
+
+```bash
+poetry run pytest -v
+```
+
+Run specific test files:
+
+```bash
+poetry run pytest simulator/test_combatant.py -v
+```
+
+#### Working with Poetry
+
+To add new dependencies:
+
+```bash
+poetry add package_name
+```
+
+To update dependencies:
+
+```bash
+poetry update
+```
+
+To activate the virtual environment:
+
+```bash
+poetry shell
+```
 
 ---
 
@@ -67,6 +128,53 @@ The C++ implementation is a work in progress. For matrix operations, it uses the
 | `abilities/*.cpp/.hpp` | Manages individual abilities, On-hit triggers and their effects. |
 | `combatants/*.cpp/.hpp` | Manages individual combatants. |
 | `effects/*.cpp/.hpp` | Manages all different types of long lasting effects including AoEs. |
+
+### Building and Running
+
+#### Prerequisites
+
+- CMake 3.22.1 or later
+- C++20 compatible compiler (GCC, Clang, or MSVC)
+- Blaze 3.x library (`/usr/local/include/blaze/`)
+- LAPACK/BLAS libraries (`liblapack-dev`, `libblas-dev`)
+- OpenSSL development files (`libssl-dev`)
+- GTest (included as submodule in `c++/googletest`)
+
+**Note**: The Blaze CMake configuration at `/usr/local/share/blaze/cmake/` has restrictive permissions. The build system uses a local copy at `.blaze-cmake/` as a workaround. Do not delete this directory.
+
+#### Build Steps
+
+```bash
+cd c++/build
+cmake ..
+make -j$(nproc)
+```
+
+The first `cmake ..` automatically detects and configures the Blaze library using the local `.blaze-cmake/` directory. Subsequent builds can simply run `make -j$(nproc)` to compile.
+
+#### Run Tests
+
+```bash
+cd c++/build
+./bin/test_encounterra
+```
+
+Or run specific test suites:
+
+```bash
+./bin/test_encounterra --gtest_filter="ThreatUtilsTest.*"
+```
+
+#### Clean Build
+
+```bash
+cd c++/build
+rm -rf *
+cmake ..
+make -j$(nproc)
+```
+
+---
 
 ## Migration Note
 
