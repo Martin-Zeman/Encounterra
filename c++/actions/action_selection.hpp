@@ -19,12 +19,15 @@
 namespace enc
 {
 
-  using MovementTransitionMap = std::unordered_map<std::string, std::pair<Coord, MovementThreatType>>;
-  using TransitionToEligibleCoords = std::unordered_map<std::string, CoordVector>;
+  // Action/movement transitions are identified by their owning Actoid* (pointer identity into the proto/synthetic
+  // actoid pools), replacing the legacy string transition names.
+  using MovementTransitionMap = std::unordered_map<Actoid *, std::pair<Coord, MovementThreatType>>;
+  using TransitionToEligibleCoords = std::unordered_map<Actoid *, CoordVector>;
   using SequenceToThreat = std::unordered_map<size_t, std::pair<std::vector<double>, double>>; // first part is the movement component of the threat, second is the action component
   using TransitionStepThreat = std::unordered_map<size_t, std::unordered_map<size_t, double>>;
   using CoordToSequenceIds = std::unordered_map<std::pair<Coord, MovementThreatType>, std::vector<size_t>>;
-  using TransitionToMsPath = std::unordered_map<std::string, std::vector<std::string>>;
+  // Maps a Misty Step movement transition (by actoid identity) to its serialized movement path.
+  using TransitionToMsPath = std::unordered_map<Actoid *, std::vector<std::string>>;
 
 //   struct DagBuildResult
 //   {
@@ -41,20 +44,19 @@ namespace enc
 
   struct BestSequenceResult
   {
-    std::vector<std::string> sequence;
+    std::vector<Actoid *> sequence;
     TransitionToMsPath msPathMap;
     std::array<double, 2> maxThreat;
   };
 
   std::vector<std::vector<std::string>> pruneSequences(const std::vector<std::vector<std::string>> &sequences,
-                                                       const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
-                                                       const std::unordered_map<size_t, std::string> &indexToTransition,
+                                                       const std::unordered_map<size_t, Actoid *> &indexToActoid,
                                                        const std::unordered_map<std::string, std::string> &transitionToSimplified);
 
   CoordToSequenceIds
-  createCoordToSequenceMapping(const std::vector<std::vector<std::string>> &sequences, const MovementTransitionMap &movementTransitionToCoordAndType);
+  createCoordToSequenceMapping(const std::vector<std::vector<Actoid *>> &sequences, const MovementTransitionMap &movementTransitionToCoordAndType);
 
-  double getDistToActionSequenceCoord(const std::vector<std::string> &sequence, const blaze::DynamicVector<int> &distances);
+  double getDistToActionSequenceCoord(const std::vector<Actoid *> &sequence, const blaze::DynamicVector<int> &distances);
 
   /**
    *  Filters, minimizes, and sorts action sequences to find the one with maximum threat while maintaining minimum distance.
@@ -79,11 +81,10 @@ namespace enc
       :return: A tuple of the action sequence with maximum threat and more distant coordinate requirement after
       minimization and the maximum threat.
    */
-  std::pair<std::vector<std::string>, std::pair<std::vector<double>, double>>
-  getNearestAndMinimize(std::vector<std::vector<std::string>> &sequences, const std::vector<size_t> &sortedSequences,
+  std::pair<std::vector<Actoid *>, std::pair<std::vector<double>, double>>
+  getNearestAndMinimize(std::vector<std::vector<Actoid *>> &sequences, const std::vector<size_t> &sortedSequences,
                         const SequenceToThreat &sequenceToThreat, const blaze::DynamicVector<int> &distances,
-                        const TransitionStepThreat &sequenceIdxToTransitionStepThreat,
-                        const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction);
+                        const TransitionStepThreat &sequenceIdxToTransitionStepThreat);
 
   /**
    *     A helper function which decodes an action which represents movement with the possibility of including Misty Step into a sequence of
@@ -111,8 +112,8 @@ namespace enc
    */
   std::vector<std::shared_ptr<Actoid>>
   translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
-                             const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
-                             const MovementTransitionMap &movementTransitionToCoordAndType, const std::vector<std::string> &sequence,
+                             const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToActoid,
+                             const MovementTransitionMap &movementTransitionToCoordAndType, const std::vector<Actoid *> &sequence,
                              const TransitionToMsPath &transitionNameToMsPath);
 
   // PriorityTransitionsResult
@@ -155,7 +156,8 @@ namespace enc
       to special Misty Step paths
    */
   std::optional<BestSequenceResult>
-  findBestSequence(Combatant *combatant, const StateMachine &dag, const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToAction,
+  findBestSequence(Combatant *combatant, const StateMachine &dag,
+                   const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToActoid,
                    const TransitionToEligibleCoords &transitionToEligibleCoords, const MovementTransitionMap &movementTransitionToCoordAndType,
                    const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
                    double infeasibilityMultiplier = 0.5);

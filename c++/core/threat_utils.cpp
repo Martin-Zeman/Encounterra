@@ -4,11 +4,14 @@
 #include "core/teams.hpp"
 #include "core/state_machine.hpp"
 #include "core/combatant.hpp"
+#include "actions/dummy_actoid.hpp"
+#include "actions/dummy_actoid_factory.hpp"
 #include "effects/effect_tracker.hpp"
 #include "spells/misty_step.hpp"
 #include <numeric>
 #include <algorithm>
 #include <cmath>
+#include <memory>
 
 namespace enc
 {
@@ -507,6 +510,17 @@ calcThreatForPathWithMistyStep(const CoordVector &path, Combatant *combatant,
     
     // Create state machine for path analysis
     StateMachine msDAG;
+
+    // The msDAG transitions are identified by Actoid pointer identity; we use DummyActoid sentinels whose toString()
+    // preserves the coordinate-encoded transition name (consumed downstream as the Misty Step movement path). The pool
+    // keeps them alive while msDAG holds raw non-owning pointers.
+    std::vector<std::shared_ptr<Actoid>> msActoidPool;
+    auto makeMsActoid = [&](const std::string &name) -> Actoid * {
+      auto actoid = std::make_shared<DummyActoid>(DummyActoidFactory::getInstance(), name);
+      Actoid *raw = actoid.get();
+      msActoidPool.push_back(std::move(actoid));
+      return raw;
+    };
     
     // Convert initial coordinates to state ID and add it
     StateId initialState = msDAG.getNextStateId();
@@ -552,8 +566,8 @@ calcThreatForPathWithMistyStep(const CoordVector &path, Combatant *combatant,
         std::string transitionName = "m_to_" + newCoordStr;
         std::string msTransitionName = "m_to_ms_" + newCoordStr;
 
-        msDAG.addTransition(transitionName, previousState, newState);
-        msDAG.addTransition(msTransitionName, previousMsState, newMsState);
+        msDAG.addTransition(makeMsActoid(transitionName), previousState, newState);
+        msDAG.addTransition(makeMsActoid(msTransitionName), previousMsState, newMsState);
 
         // Calculate threats for transitions
         double currThreat = getAoeAndAooThreatForIncrement({coords[coords.size() - 2]}, increment, combatant, effectToCoords, false, false);
@@ -575,7 +589,7 @@ calcThreatForPathWithMistyStep(const CoordVector &path, Combatant *combatant,
                 std::string destCoord = coordToString({coords[j]});
                 std::string transitionName = "ms_to_ms_" + destCoord;
                 
-                msDAG.addTransition(transitionName, 
+                msDAG.addTransition(makeMsActoid(transitionName),
                                   coordToStateId[originCoord], 
                                   coordToStateId["ms_" + destCoord]);
             }
@@ -600,9 +614,10 @@ calcThreatForPathWithMistyStep(const CoordVector &path, Combatant *combatant,
     // Calculate maximum threat path
     for(const auto &state : sortedStates)
     {
-        auto transitions = msDAG.getForwardTransitions(state);
-        for(const auto &[transitionName, _] : transitions)
+        auto transitions = msDAG.getForwardActoidTransitions(state);
+        for(const auto &[transitionAction, _] : transitions)
         {
+            const std::string transitionName = transitionAction ? transitionAction->toString() : std::string("None");
             StateId targetState = msDAG.getCurrentState();  // Need to add a method to get destination state
             
             double threatForTransition = transitionName.starts_with("ms") ? 0.0 : transitionToThreat[transitionName];

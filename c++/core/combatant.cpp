@@ -535,7 +535,7 @@ std::deque<std::shared_ptr<Actoid>> Combatant::calculateActionPlan(const blaze::
   // action DAG (with movement), find the highest-threat path and translate it back to concrete actions.
   ProtoDagResult proto = generateProtoDag(this);
   ActionStateMachineResult dagResult =
-    buildActionStateMachine(this, proto.fsm, proto.transitionNameToActoid, distances, shortestPaths);
+    buildActionStateMachine(this, proto.fsm, distances, shortestPaths);
 
   std::optional<BestSequenceResult> best =
     findBestSequence(this, *dagResult.stateMachine, proto.transitionNameToActoid, *dagResult.transitionToEligibleCoords,

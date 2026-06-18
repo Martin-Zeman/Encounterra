@@ -1,12 +1,13 @@
-#include <set>
+#include <algorithm>
 #include "actions/action_dag.hpp"
+#include "actions/movement.hpp"
+#include "actions/dummy_actoid.hpp"
+#include "actions/dummy_actoid_factory.hpp"
+#include "core/combatant.hpp"
 #include "core/state_machine.hpp"
 
 namespace enc
 {
-
-  const std::regex regexMovementPattern("([msdchio]+)_\\((\\d+), (\\d+)\\)");
-  const std::regex regexMsMovementPattern("[mschdio_]+\\((\\d+), (\\d+)\\)");
 
   const std::unordered_map<AbilityType, PriorityActionInfo> PRIORITY_ACTIONS
     = {{AbilityType::DODGE, {"do_", MovementThreatType::DODGED}}, {AbilityType::DISENGAGE, {"di_", MovementThreatType::DISENGAGED}}};
@@ -17,70 +18,73 @@ namespace enc
        {AbilityType::RAGE, {"m_", MovementThreatType::STANDARD}},
        {AbilityType::AGGRESSIVE, {"m_", MovementThreatType::STANDARD}}};
 
-  std::unordered_map<std::string, std::vector<std::pair<std::string, StateId>>>
-  getPostTransitionsOfPriorityTransitions(StateMachine &stateMachine, const TransitionNameToActoid &transitionNameToActoid,
-                                          const std::unordered_map<AbilityType, PriorityActionInfo> &priorityActions)
+  namespace
   {
-    std::unordered_map<std::string, std::vector<std::pair<std::string, StateId>>> postPriorityTransitions;
+    // Creates a synthetic movement actoid carrying the target coordinate, owns it in the pool and returns the raw pointer.
+    Actoid *makeMovementActoid(const Coord &coord, MovementThreatType type, std::vector<std::shared_ptr<Actoid>> &pool, ActoidFactory &factory)
+    {
+      bool incursAOO = (type == MovementThreatType::STANDARD);
+      auto actoid = std::make_shared<MovementIncrement>(coord, incursAOO, factory);
+      Actoid *raw = actoid.get();
+      pool.push_back(std::move(actoid));
+      return raw;
+    }
 
-    for(const auto &transition : stateMachine.getAllTransitions())
+    // Creates a synthetic sentinel actoid (e.g. "dummy"/"nop"), owns it in the pool and returns the raw pointer.
+    Actoid *makeSentinelActoid(const std::string &name, std::vector<std::shared_ptr<Actoid>> &pool)
+    {
+      auto actoid = std::make_shared<DummyActoid>(DummyActoidFactory::getInstance(), name);
+      Actoid *raw = actoid.get();
+      pool.push_back(std::move(actoid));
+      return raw;
+    }
+  } // namespace
+
+  std::unordered_map<Actoid *, std::vector<std::pair<Actoid *, StateId>>>
+  getPostTransitionsOfPriorityTransitions(StateMachine &stateMachine, const std::unordered_map<AbilityType, PriorityActionInfo> &priorityActions)
+  {
+    std::unordered_map<Actoid *, std::vector<std::pair<Actoid *, StateId>>> postPriorityTransitions;
+
+    for(const auto &[action, dest] : stateMachine.getForwardActoidTransitions(0))
       {
-        if(transition == "None_0")
+        if(!action)
           {
-            break;
+            continue;
           }
-
-        auto actoid = transitionNameToActoid.at(transition);
-        if(priorityActions.find(actoid->getAbilityType()) != priorityActions.end())
+        if(priorityActions.find(action->getAbilityType()) != priorityActions.end())
           {
-            std::vector<std::pair<std::string, StateId>> postTransitions;
+            std::vector<std::pair<Actoid *, StateId>> postTransitions;
 
-            if(stateMachine.triggerTransition(transition))
+            if(stateMachine.triggerTransition(action))
               {
-                try
+                for(const auto &ft : stateMachine.getCurrentForwardTransitions())
                   {
-                    auto forwardTrans = stateMachine.getForwardTransitions(stateMachine.getCurrentState());
-                    for(const auto &ft : forwardTrans)
+                    if(ft.first && !ft.first->hasFlag(ActoidFlags::IS_PRIORITY))
                       {
-                        if(!transitionNameToActoid.at(ft.first)->hasFlag(ActoidFlags::IS_PRIORITY))
-                          {
-                            postTransitions.push_back(ft);
-                          }
+                        postTransitions.push_back(ft);
                       }
-                  }
-                catch(const std::out_of_range &)
-                  {
-                    // Handle case when target state is nop
                   }
                 stateMachine.reset();
               }
-            postPriorityTransitions[transition] = postTransitions;
+            postPriorityTransitions[action] = postTransitions;
           }
       }
     return postPriorityTransitions;
   }
 
-  PostTransitionResult
-  getPostTransitionsOfAllPriorityTransitions(StateMachine &protoStateMachine, const TransitionNameToActoid &transitionNameToActoid)
+  PostTransitionResult getPostTransitionsOfAllPriorityTransitions(StateMachine &protoStateMachine)
   {
-    auto postPriorityActionTransitions = getPostTransitionsOfPriorityTransitions(protoStateMachine, transitionNameToActoid, PRIORITY_ACTIONS);
-    auto postPriorityBonusActionTransitions
-      = getPostTransitionsOfPriorityTransitions(protoStateMachine, transitionNameToActoid, PRIORITY_BONUS_ACTIONS);
+    auto postPriorityActionTransitions = getPostTransitionsOfPriorityTransitions(protoStateMachine, PRIORITY_ACTIONS);
+    auto postPriorityBonusActionTransitions = getPostTransitionsOfPriorityTransitions(protoStateMachine, PRIORITY_BONUS_ACTIONS);
 
-    for(const auto &[priorityTransition, _] : postPriorityActionTransitions)
+    for(const auto &[priorityAction, _] : postPriorityActionTransitions)
       {
-        for(const auto &originState : protoStateMachine.getAllStates())
-          {
-            protoStateMachine.removeTransition(priorityTransition, originState);
-          }
+        protoStateMachine.removeTransitionFromAllStates(priorityAction);
       }
 
-    for(const auto &[priorityTransition, _] : postPriorityBonusActionTransitions)
+    for(const auto &[priorityAction, _] : postPriorityBonusActionTransitions)
       {
-        for(const auto &originState : protoStateMachine.getAllStates())
-          {
-            protoStateMachine.removeTransition(priorityTransition, originState);
-          }
+        protoStateMachine.removeTransitionFromAllStates(priorityAction);
       }
 
     return {postPriorityActionTransitions, postPriorityBonusActionTransitions};
@@ -88,32 +92,24 @@ namespace enc
 
   MovementStatesResult createMovementStates(StateMachine &stateMachine, const TransitionToEligibleCoords &transitionToEligibleCoords)
   {
-    std::unordered_map<Coord, std::set<std::string>> coordToTransitions;
+    std::unordered_map<Coord, std::unordered_set<Actoid *>> coordToEligibleTransitions;
 
-    for(const auto &[transitionName, coords] : transitionToEligibleCoords)
+    for(const auto &[transition, coords] : transitionToEligibleCoords)
       {
         for(const auto &coord : coords)
           {
-            coordToTransitions[coord].insert(transitionName);
+            coordToEligibleTransitions[coord].insert(transition);
           }
       }
 
-    std::unordered_map<std::string, StateId> eligibleTransitionsToState;
-    std::unordered_map<Coord, std::string> coordToEligibleTransitions;
+    std::unordered_map<std::unordered_set<Actoid *>, StateId, ActoidSetHash, ActoidSetEqual> eligibleTransitionsToState;
 
-    for(const auto &[coord, transitions] : coordToTransitions)
+    for(const auto &[coord, transitions] : coordToEligibleTransitions)
       {
-        std::string transitionKey;
-        for(const auto &t : transitions)
-          {
-            transitionKey += t + ";";
-          }
-        coordToEligibleTransitions[coord] = transitionKey;
-
-        if(eligibleTransitionsToState.find(transitionKey) == eligibleTransitionsToState.end())
+        if(eligibleTransitionsToState.find(transitions) == eligibleTransitionsToState.end())
           {
             StateId newState = stateMachine.getNextStateId();
-            eligibleTransitionsToState[transitionKey] = newState;
+            eligibleTransitionsToState[transitions] = newState;
             stateMachine.addNewState(newState);
           }
       }
@@ -121,163 +117,173 @@ namespace enc
     return {eligibleTransitionsToState, coordToEligibleTransitions};
   }
 
-  std::vector<std::pair<std::string, StateId>>
-  getPostMistyStepTransitions(StateMachine &stateMachine, const TransitionNameToActoid &transitionNameToActoid)
+  std::vector<std::pair<Actoid *, StateId>> getPostMistyStepTransitions(StateMachine &stateMachine)
   {
-    stateMachine.triggerTransition("Misty Step to 0, 0_1");
-    std::vector<std::pair<std::string, StateId>> msPostTransitions;
+    auto initialTransitions = stateMachine.getForwardActoidTransitions(0);
+    auto msIt = std::find_if(initialTransitions.begin(), initialTransitions.end(),
+                             [](const auto &t) { return t.first && t.first->getAbilityType() == AbilityType::MISTY_STEP; });
 
-    try
+    if(msIt == initialTransitions.end())
       {
-        auto forwardTrans = stateMachine.getForwardTransitions(stateMachine.getCurrentState());
-        for(const auto &pt : forwardTrans)
+        return {};
+      }
+
+    std::vector<std::pair<Actoid *, StateId>> msPostTransitions;
+    if(stateMachine.triggerTransition(msIt->first))
+      {
+        for(const auto &pt : stateMachine.getCurrentForwardTransitions())
           {
-            if(!transitionNameToActoid.at(pt.first)->hasFlag(ActoidFlags::IS_PRIORITY))
+            if(pt.first && !pt.first->hasFlag(ActoidFlags::IS_PRIORITY))
               {
                 msPostTransitions.push_back(pt);
               }
           }
-      }
-    catch(const std::out_of_range &)
-      {
-        // Handle case when no transitions found
+        stateMachine.reset();
       }
 
-    stateMachine.reset();
-    stateMachine.removeTransition("Misty Step to 0, 0_1", 0);
+    stateMachine.removeTransition(msIt->first, 0);
     return msPostTransitions;
   }
 
-  void
-  buildMistyStepTransitions(StateMachine &stateMachine, const std::vector<std::pair<std::string, StateId>> &msPostTransitions,
-                            const TransitionToEligibleCoords &transitionToEligibleCoords, MovementTransToCoordAndType &movementTransToCoordAndType)
+  void buildMistyStepTransitions(StateMachine &stateMachine, const std::vector<std::pair<Actoid *, StateId>> &msPostTransitions,
+                                 const TransitionToEligibleCoords &transitionToEligibleCoords, MovementTransToCoordAndType &movementTransToCoordAndType,
+                                 std::vector<std::shared_ptr<Actoid>> &syntheticActoids, ActoidFactory &movementFactory)
   {
     auto [eligibleTransitionsToState, coordToEligibleTransitions] = createMovementStates(stateMachine, transitionToEligibleCoords);
 
-    for(const auto &mspt : msPostTransitions)
+    for(const auto &[action, destState] : msPostTransitions)
       {
-        try
+        auto it = transitionToEligibleCoords.find(action);
+        if(it == transitionToEligibleCoords.end())
           {
-            const auto &coords = transitionToEligibleCoords.at(mspt.first);
-            for(const auto &coord : coords)
-              {
-                StateId postMsState = eligibleTransitionsToState.at(coordToEligibleTransitions.at(coord));
-                std::string movementTransitionName = "ms_" + std::to_string(coord[0]) + "_" + std::to_string(coord[1]);
-
-                movementTransToCoordAndType[movementTransitionName] = {coord, MovementThreatType::MISTY_STEPPED};
-
-                stateMachine.addTransition(movementTransitionName, 0, postMsState);
-                stateMachine.addTransition(mspt.first, postMsState, mspt.second);
-              }
+            continue;
           }
-        catch(const std::out_of_range &)
+        for(const auto &coord : it->second)
           {
-            // Handle case when coordinates not available
+            const auto &transitions = coordToEligibleTransitions.at(coord);
+            StateId postMsState = eligibleTransitionsToState.at(transitions);
+
+            Actoid *msAction = makeMovementActoid(coord, MovementThreatType::MISTY_STEPPED, syntheticActoids, movementFactory);
+            movementTransToCoordAndType[msAction] = {coord, MovementThreatType::MISTY_STEPPED};
+
+            stateMachine.addTransition(msAction, 0, postMsState);
+            stateMachine.addTransition(action, postMsState, destState);
           }
       }
   }
 
   void buildPriorityTransitions(StateMachine &stateMachine,
-                                const std::unordered_map<std::string, std::vector<std::pair<std::string, StateId>>> &postPriorityTransitions,
-                                const TransitionToEligibleCoords &transitionToEligibleCoords,
-                                MovementTransToCoordAndType &movementTransToCoordAndType, const TransitionNameToActoid &transitionNameToActoid,
-                                const std::unordered_map<AbilityType, PriorityActionInfo> &priorityActionDict)
+                                const std::unordered_map<Actoid *, std::vector<std::pair<Actoid *, StateId>>> &postPriorityTransitions,
+                                const TransitionToEligibleCoords &transitionToEligibleCoords, MovementTransToCoordAndType &movementTransToCoordAndType,
+                                const std::unordered_map<AbilityType, PriorityActionInfo> &priorityActionDict,
+                                std::vector<std::shared_ptr<Actoid>> &syntheticActoids, ActoidFactory &movementFactory)
   {
     auto [eligibleTransitionsToState, coordToEligibleTransitions] = createMovementStates(stateMachine, transitionToEligibleCoords);
 
     std::vector<StateId> newlyAddedStates;
 
-    for(const auto &[transition, postTransitions] : postPriorityTransitions)
+    for(const auto &[priorityAction, postTransitions] : postPriorityTransitions)
       {
         if(postTransitions.empty())
           {
             StateId nopState = stateMachine.getNextStateId();
             stateMachine.addNewState(nopState);
-            stateMachine.addTransition(transition, 0, nopState);
+            stateMachine.addTransition(priorityAction, 0, nopState);
             continue;
           }
 
-        std::string actionType = transition.substr(0, transition.find(" "));
+        const auto &priorityInfo = priorityActionDict.at(priorityAction->getAbilityType());
+
         StateId newPrioState = stateMachine.getNextStateId();
-
-        const auto &priorityInfo = priorityActionDict.at(transitionNameToActoid.at(transition)->getAbilityType());
-        const auto &prefix = priorityInfo.prefix;
-
         stateMachine.addNewState(newPrioState);
         newlyAddedStates.push_back(newPrioState);
-        stateMachine.addTransition(transition, 0, newPrioState);
+        stateMachine.addTransition(priorityAction, 0, newPrioState);
 
-        for(const auto &postTransition : postTransitions)
+        for(const auto &[postAction, destState] : postTransitions)
           {
-            try
+            auto it = transitionToEligibleCoords.find(postAction);
+            if(it == transitionToEligibleCoords.end())
               {
-                const auto &coords = transitionToEligibleCoords.at(postTransition.first);
-                for(const auto &coord : coords)
-                  {
-                    StateId postPtState = eligibleTransitionsToState.at(coordToEligibleTransitions.at(coord));
-                    std::string movementTransitionName = prefix + std::to_string(coord[0]) + "_" + std::to_string(coord[1]);
-
-                    movementTransToCoordAndType[movementTransitionName] = {coord, priorityInfo.threatType};
-
-                    stateMachine.addTransition(movementTransitionName, newPrioState, postPtState);
-                    stateMachine.addTransition(postTransition.first, postPtState, postTransition.second);
-                  }
+                continue;
               }
-            catch(const std::out_of_range &)
+            for(const auto &coord : it->second)
               {
-                // Handle case when coordinates not available
+                const auto &transitions = coordToEligibleTransitions.at(coord);
+                StateId postPtState = eligibleTransitionsToState.at(transitions);
+
+                Actoid *moveAction = makeMovementActoid(coord, priorityInfo.threatType, syntheticActoids, movementFactory);
+                movementTransToCoordAndType[moveAction] = {coord, priorityInfo.threatType};
+
+                stateMachine.addTransition(moveAction, newPrioState, postPtState);
+                stateMachine.addTransition(postAction, postPtState, destState);
               }
           }
       }
 
-    // Connect unconnected states to NOP
     for(const auto &newState : newlyAddedStates)
       {
-        auto forwardTrans = stateMachine.getForwardTransitions(newState);
-        if(forwardTrans.empty())
+        if(stateMachine.getForwardActoidTransitions(newState).empty())
           {
             StateId nopState = stateMachine.getNextStateId();
             stateMachine.addNewState(nopState);
-            stateMachine.addTransition("dummy", newState, nopState);
+            Actoid *dummy = makeSentinelActoid("dummy", syntheticActoids);
+            stateMachine.addTransition(dummy, newState, nopState);
           }
       }
   }
 
-  ActionStateMachineResult
-  buildActionStateMachine(Combatant *combatant, const StateMachine &protoStateMachine, const TransitionNameToActoid &transitionNameToActoid,
-                          const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
+  ActionStateMachineResult buildActionStateMachine(Combatant *combatant, const StateMachine &protoStateMachine,
+                                                   const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
-    auto [postPriorityActionTransitions, postPriorityBonusActionTransitions]
-      = getPostTransitionsOfAllPriorityTransitions(const_cast<StateMachine &>(protoStateMachine), transitionNameToActoid);
+    // Work on a private copy of the proto FSM: getPostTransitions* / getPostMistyStep mutate it.
+    StateMachine protoCopy = protoStateMachine;
 
-    std::vector<std::pair<std::string, StateId>> msPostTransitions;
-    TransitionToEligibleCoords msTransitionToEligibleCoords;
+    auto [postPriorityActionTransitions, postPriorityBonusActionTransitions] = getPostTransitionsOfAllPriorityTransitions(protoCopy);
 
-    const auto &transitionNames = protoStateMachine.getAllTransitions();
-    if(std::find(transitionNames.begin(), transitionNames.end(), "Misty Step to 0, 0_1") != transitionNames.end())
+    std::vector<std::pair<Actoid *, StateId>> msPostTransitions;
+    {
+      auto initialTransitions = protoCopy.getForwardActoidTransitions(0);
+      bool hasMistyStep = std::any_of(initialTransitions.begin(), initialTransitions.end(),
+                                      [](const auto &t) { return t.first && t.first->getAbilityType() == AbilityType::MISTY_STEP; });
+      if(hasMistyStep)
+        {
+          msPostTransitions = getPostMistyStepTransitions(protoCopy);
+        }
+    }
+
+    ActionStateMachineResult result;
+    result.stateMachine = std::make_unique<StateMachine>(protoCopy);
+    result.movementTransToCoordAndType = std::make_unique<MovementTransToCoordAndType>();
+    result.transitionToEligibleCoords = std::make_unique<TransitionToEligibleCoords>();
+    result.movementFactory = std::make_shared<MovementFactory>(combatant, CoordVector{}, AbilityType::STANDARD_MOVEMENT);
+
+    StateMachine &stateMachine = *result.stateMachine;
+    MovementTransToCoordAndType &movementTransToCoordAndType = *result.movementTransToCoordAndType;
+    TransitionToEligibleCoords &transitionToEligibleCoords = *result.transitionToEligibleCoords;
+
+    auto allTransitions = stateMachine.getAllActoidTransitions();
+    if(allTransitions.empty())
       {
-        msPostTransitions = getPostMistyStepTransitions(const_cast<StateMachine &>(protoStateMachine), transitionNameToActoid);
+        return result;
       }
 
-    auto stateMachine = std::make_unique<StateMachine>(protoStateMachine);
-    auto movementTransToCoordAndType = std::make_unique<MovementTransToCoordAndType>();
-    auto transitionToEligibleCoords = std::make_unique<TransitionToEligibleCoords>();
-
-    if(transitionNames.empty() || transitionNames[0] == "None_0")
+    // Compute eligible coordinates for each (unique) action transition.
+    for(Actoid *action : allTransitions)
       {
-        return {std::move(stateMachine), std::move(movementTransToCoordAndType), std::move(transitionToEligibleCoords)};
-      }
-
-    // Get eligible coordinates for each transition
-    for(const auto &transitionName : transitionNames)
-      {
+        if(!action || dynamic_cast<DummyActoid *>(action))
+          {
+            continue;
+          }
+        if(transitionToEligibleCoords.find(action) != transitionToEligibleCoords.end())
+          {
+            continue;
+          }
         try
           {
-            auto actoid = transitionNameToActoid.at(transitionName);
-            auto eligibleCoords = actoid->getEligibleCoords(distances, shortestPaths);
+            auto eligibleCoords = action->getEligibleCoords(distances, shortestPaths);
             if(eligibleCoords)
               {
-                (*transitionToEligibleCoords)[transitionName] = *eligibleCoords;
+                transitionToEligibleCoords[action] = *eligibleCoords;
               }
           }
         catch(const std::out_of_range &)
@@ -286,54 +292,46 @@ namespace enc
           }
       }
 
-    // Remove transitions without eligible coordinates
-    for(const auto &transitionName : transitionNames)
+    // Remove transitions without eligible coordinates from the initial state.
+    for(const auto &[action, dest] : stateMachine.getForwardActoidTransitions(0))
       {
-        try
+        if(!action || dynamic_cast<DummyActoid *>(action))
           {
-            if(transitionName == "None_0" || transitionName == "dummy" || transitionName == "nop")
-              {
-                continue;
-              }
-
-            const auto &coords = transitionToEligibleCoords->at(transitionName);
-            if(coords.empty())
-              {
-                stateMachine->removeTransition(transitionName, 0);
-              }
+            continue;
           }
-        catch(const std::out_of_range &)
+        auto it = transitionToEligibleCoords.find(action);
+        if(it == transitionToEligibleCoords.end() || it->second.empty())
           {
-            stateMachine->removeTransition(transitionName, 0);
+            stateMachine.removeTransition(action, 0);
           }
       }
 
-    // Handle Misty Step transitions if present
+    // Misty Step transitions (preserves the original behaviour of supplying an empty eligible-coords map here).
     if(!msPostTransitions.empty())
       {
-        buildMistyStepTransitions(*stateMachine, msPostTransitions, msTransitionToEligibleCoords, *movementTransToCoordAndType);
+        TransitionToEligibleCoords msTransitionToEligibleCoords;
+        buildMistyStepTransitions(stateMachine, msPostTransitions, msTransitionToEligibleCoords, movementTransToCoordAndType, result.syntheticActoids,
+                                  *result.movementFactory);
       }
 
-    // Build priority transitions
-    buildPriorityTransitions(*stateMachine, postPriorityActionTransitions, *transitionToEligibleCoords, *movementTransToCoordAndType,
-                             transitionNameToActoid, PRIORITY_ACTIONS);
-    buildPriorityTransitions(*stateMachine, postPriorityBonusActionTransitions, *transitionToEligibleCoords, *movementTransToCoordAndType,
-                             transitionNameToActoid, PRIORITY_BONUS_ACTIONS);
+    buildPriorityTransitions(stateMachine, postPriorityActionTransitions, transitionToEligibleCoords, movementTransToCoordAndType, PRIORITY_ACTIONS,
+                             result.syntheticActoids, *result.movementFactory);
+    buildPriorityTransitions(stateMachine, postPriorityBonusActionTransitions, transitionToEligibleCoords, movementTransToCoordAndType,
+                             PRIORITY_BONUS_ACTIONS, result.syntheticActoids, *result.movementFactory);
 
-    // Connect any remaining unconnected states to NOP
-    auto allStates = stateMachine->getAllStates();
-    for(const auto &state : allStates)
+    // Connect any remaining unconnected states to a fresh NOP sink.
+    for(const auto &state : stateMachine.getAllStates())
       {
-        auto forwardTrans = stateMachine->getForwardTransitions(state);
-        if(forwardTrans.empty())
+        if(stateMachine.getForwardActoidTransitions(state).empty())
           {
-            StateId nopState = stateMachine->getNextStateId();
-            stateMachine->addNewState(nopState);
-            stateMachine->addTransition("nop", state, nopState);
+            StateId nopState = stateMachine.getNextStateId();
+            stateMachine.addNewState(nopState);
+            Actoid *nop = makeSentinelActoid("nop", result.syntheticActoids);
+            stateMachine.addTransition(nop, state, nopState);
           }
       }
 
-    return {std::move(stateMachine), std::move(movementTransToCoordAndType), std::move(transitionToEligibleCoords)};
+    return result;
   }
 
 } // namespace enc

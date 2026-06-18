@@ -65,29 +65,33 @@ public:
 
     // std::vector<std::string> getAvailableTransitionsInState(StateId state) const;
 
-    void addTransition(const std::string& name, StateId origin, StateId dest);
-
-    // Actoid-aware overload: records the action's identity alongside its (legacy) string name so downstream consumers
-    // can be migrated off string transition names incrementally.
+    // Actoid-aware overload: records the action's identity alongside a descriptive string name (used only for the
+    // flattened-DAG debug/simplification path and the None sentinel). Transition identity is the Actoid pointer.
     void addTransition(Actoid* action, const std::string& name, StateId origin, StateId dest);
 
-    void removeTransition(const std::string& transitionName, StateId origin);
+    // Actoid-identity transition API. Transitions are matched by pointer identity (the same Actoid* registered when the
+    // transition was added). The derived string name (action->toString(), or "None") is still stored for the
+    // flattened-DAG path.
+    void addTransition(Actoid* action, StateId origin, StateId dest);
+
+    void removeTransition(Actoid* action, StateId origin);
+
+    void removeTransitionFromAllStates(Actoid* action);
+
+    bool triggerTransition(Actoid* action);
+
+    // Forward transitions from a state / the current state, and all transitions, keyed by Actoid identity.
+    std::vector<std::pair<Actoid*, StateId>> getForwardActoidTransitions(StateId state) const;
+
+    std::vector<std::pair<Actoid*, StateId>> getCurrentForwardTransitions() const;
+
+    std::vector<Actoid*> getAllActoidTransitions() const;
 
     void reset();
-
-    bool triggerTransition(const std::string& transitionName);
 
     std::vector<StateId> getAllStates() const;
 
     std::vector<StateId> toposort() const;
-
-    // Get the destination state for a given transition from a given state
-    StateId getTransitionDestination(StateId state, const std::string &transitionName) const;
-
-    // Get all forward transitions from a state (as pairs of transition name and destination state)
-    std::vector<std::pair<std::string, StateId>> getForwardTransitions(StateId state) const;
-
-    std::vector<std::string> getAllTransitions() const;
 
     // Build the flattened DAG representation (start->0, nop sinks->1) and cache it for dfs().
     FlattenedDag getFlattenedDag() const;
