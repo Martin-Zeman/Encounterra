@@ -42,17 +42,25 @@ The Python implementation uses poetry as the dependency manager.
 
 #### Prerequisites
 
-- Python 3.8 or later
+- Python 3.11 or later (up to 3.12.x)
 - Poetry (dependency manager): `pip install poetry`
 
 #### Setup
 
 ```bash
 cd Encounterra
-poetry install
+poetry install --no-root
 ```
 
 This installs all dependencies listed in `pyproject.toml` into a virtual environment.
+
+If you want the environment in the project directory (recommended), run:
+
+```bash
+poetry config virtualenvs.in-project true --local
+```
+
+This creates `.venv/` in the repository root.
 
 #### Run Simulation
 
@@ -140,7 +148,7 @@ The C++ implementation is a work in progress. For matrix operations, it uses the
 - OpenSSL development files (`libssl-dev`)
 - GTest (included as submodule in `c++/googletest`)
 
-**Note**: The Blaze CMake configuration at `/usr/local/share/blaze/cmake/` has restrictive permissions. The build system uses a local copy at `.blaze-cmake/` as a workaround. Do not delete this directory.
+**Note**: The build first tries the system Blaze installation. If it is unavailable or inaccessible (for example due to permissions on `/usr/local/share/blaze/cmake/`), it automatically falls back to the local `.blaze-cmake/` copy. Do not delete this directory.
 
 #### Build Steps
 
@@ -156,14 +164,16 @@ The first `cmake ..` automatically detects and configures the Blaze library usin
 
 ```bash
 cd c++/build
-./bin/test_encounterra
+./test/test_encounterra
 ```
 
 Or run specific test suites:
 
 ```bash
-./bin/test_encounterra --gtest_filter="ThreatUtilsTest.*"
+./test/test_encounterra --gtest_filter="ThreatUtilsTest.*"
 ```
+
+Depending on the active CMake output layout, the binary may also be at `./bin/test_encounterra`.
 
 #### Clean Build
 
