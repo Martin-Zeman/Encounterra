@@ -6,7 +6,7 @@
 #include "core/resources.hpp"
 #include "actions/action_types.hpp"
 #include "effects/limited_duration_effect.hpp"
-#include "effects/spheric_aoe.hpp"
+#include "effects/aoe_square_effect.hpp"
 
 namespace enc
 {
@@ -47,25 +47,42 @@ namespace enc
     Die _dmgDice;
   };
 
-  class CloudOfDaggers : public Actoid, public LimitedDurationEffect, public SphericAoe, public DirectThreat, public AoeThreat
+  class CloudOfDaggers : public Actoid, public LimitedDurationEffect, public AoeSquareEffect, public DirectThreat, public AoeThreat
   {
   public:
-    CloudOfDaggers(const Coord &coord, const CloudOfDaggersFactory &factory, RollType)
-        : Actoid(const_cast<CloudOfDaggersFactory &>(factory), ActoidFlags::IS_SPELL, factory._abilityType),
-          LimitedDurationEffect(factory._combatant, 100), SphericAoe(coord, TRANSLATE_RADIUS.at(CloudOfDaggersFactory::target)), _coord(coord),
-          _factory(factory)
+    CloudOfDaggers(const Coord &coord, const CloudOfDaggersFactory &factory)
+        : Effect(factory._combatant),    // Explicitly construct the virtual base
+          Actoid(const_cast<CloudOfDaggersFactory &>(factory), ActoidFlags::IS_SPELL, factory._abilityType),
+          LimitedDurationEffect(factory._combatant, 10),
+          AoeSquareEffect(factory._combatant, coord, TRANSLATE_BOX.at(CloudOfDaggersFactory::target)), _coord(coord), _factory(factory)
     {}
 
     std::string toString() const override;
 
     std::string shorthandStr() const;
 
+    EffectType getEffectType() const override { return EffectType::CLOUD_OF_DAGGERS; }
+
     double calculateThreat(const Kwargs &kwargs) override;
-    // double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                         const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
+    void activate(const Kwargs &kwargs = {}) override;
+    void deactivate() override;
+    bool deactivateForCombatant(Combatant *combatant) override;
+    void onEnter(Combatant *combatant) override;
+    void onMoveWithin(Combatant *combatant) override;
+    void onExit(Combatant *combatant) override;
+    void onStartOfTurn(Combatant *combatant) override;
+    void onEndOfTurn(Combatant *combatant) override;
+
+    double threatOnEnter(Combatant *target, const Kwargs & kwargs) const override;
+    double threatOnStartOfTurn(Combatant *target, const Kwargs & kwargs) const override;
+    double threatOnMoveWithin(Combatant *target, const Kwargs & kwargs) const override;
+    double threatOnEndOfTurn(Combatant *target, const Kwargs & kwargs) const override;
+
+    const CoordVector &getAffectedCoords() const override { return SquareAoe::getAffectedCoords(); }
 
   private:
     Coord _coord;

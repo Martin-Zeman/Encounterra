@@ -19,13 +19,13 @@ namespace enc
     BattleMap &battleMap = BattleMap::getInstance();
     auto [coord, maxScore, affectedCombatants]
       = battleMap.findBestPlacementHarmfulSquare(_combatant, static_cast<int>(CloudOfDaggersFactory::range), 1);
-    return {std::make_shared<CloudOfDaggers>(coord, *this, RollType::STRAIGHT)};
+    return {std::make_shared<CloudOfDaggers>(coord, *this)};
   }
 
   std::shared_ptr<Actoid> CloudOfDaggersFactory::create(void *target)
   {
     Coord *coord = static_cast<Coord *>(target);
-    return std::make_shared<CloudOfDaggers>(*coord, *this, RollType::STRAIGHT);
+    return std::make_shared<CloudOfDaggers>(*coord, *this);
   }
 
   double CloudOfDaggersFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const { return avgRoll(_dmgDice); }
@@ -40,7 +40,7 @@ namespace enc
     BattleMap &battleMap = BattleMap::getInstance();
     auto [coord, maxScore, affectedCombatants]
       = battleMap.findBestPlacementHarmfulSquare(_combatant, static_cast<int>(CloudOfDaggersFactory::range), 1);
-    return CloudOfDaggers(coord, *this, RollType::STRAIGHT).calculateThreat(Kwargs());
+    return CloudOfDaggers(coord, *this).calculateThreat(Kwargs());
   }
 
   std::string CloudOfDaggers::toString() const
@@ -100,4 +100,50 @@ namespace enc
     return std::nullopt;
   }
 
+  void CloudOfDaggers::activate(const Kwargs &kwargs)
+  {
+    _factory._combatant->setConcentrationEffect(Effect::shared_from_this());
+  }
+
+  void CloudOfDaggers::deactivate() { _factory._combatant->breakConcentration(); }
+
+  bool CloudOfDaggers::deactivateForCombatant(Combatant *combatant)
+  {
+    assert(false);
+    return false;
+  }
+
+  void CloudOfDaggers::onEnter(Combatant *combatant)
+  {
+    int damage = rollDice(_factory._dmgDice);
+    combatant->receiveDmg(damage, CloudOfDaggersFactory::dmgType);
+    BattleMap::getInstance().removeCombatantIfDead(*combatant);
+  }
+
+  void CloudOfDaggers::onMoveWithin(Combatant * /*combatant*/) {}
+
+  void CloudOfDaggers::onExit(Combatant * /*combatant*/) {}
+
+  void CloudOfDaggers::onStartOfTurn(Combatant *combatant)
+  {
+    int damage = rollDice(_factory._dmgDice);
+    combatant->receiveDmg(damage, CloudOfDaggersFactory::dmgType);
+    BattleMap::getInstance().removeCombatantIfDead(*combatant);
+  }
+
+  void CloudOfDaggers::onEndOfTurn(Combatant * /*combatant*/) {}
+
+  double CloudOfDaggers::threatOnEnter(Combatant * /*target*/, const Kwargs & /*kwargs*/) const
+  {
+    return avgRoll(_factory._dmgDice);
+  }
+
+  double CloudOfDaggers::threatOnStartOfTurn(Combatant * /*target*/, const Kwargs & /*kwargs*/) const
+  {
+    return avgRoll(_factory._dmgDice);
+  }
+
+  double CloudOfDaggers::threatOnMoveWithin(Combatant * /*target*/, const Kwargs & /*kwargs*/) const { return 0.0; }
+
+  double CloudOfDaggers::threatOnEndOfTurn(Combatant * /*target*/, const Kwargs & /*kwargs*/) const { return 0.0; }
 } // namespace enc

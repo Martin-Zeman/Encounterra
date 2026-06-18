@@ -29,6 +29,9 @@ namespace enc
         instance.reset();
     }
 
+    // For test teardown: clear effects without calling deactivate (factories may be destroyed).
+    void clearEffects() { _effects.clear(); }
+
     std::weak_ptr<Effect> add(std::shared_ptr<Effect> effect);
 
     void remove(const std::shared_ptr<Effect> &effect);

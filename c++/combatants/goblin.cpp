@@ -20,13 +20,14 @@ namespace enc
                    1 // attackRange
     );
 
-    auto javelinFactory = addRangedAttack("Shortbow", this,
+    auto shortbowFactory = addRangedAttack("Shortbow", this,
                                           4,                        // toHit
                                           std::vector<Die>{{1, 6}}, // dmgDice
                                           2,                        // dmgBonus
                                           DamageType::Piercing,
                                           64 // attackRange
     );
+    setDangerZoneAttack(static_cast<DirectThreatFactory*>(shortbowFactory.get()));
   }
 
   Goblin::Goblin(const std::string &name) : Combatant(CombatantType::MONSTER, Monster::HUMANOID, _classLevel, name, 7, 15, 2, 0, 30, 0)
@@ -42,12 +43,13 @@ namespace enc
                    1 // attackRange
     );
 
-    auto javelinFactory = addRangedAttack("Shortbow", this,
+    auto shortbowFactory = addRangedAttack("Shortbow", this,
                                           4,                        // toHit
                                           std::vector<Die>{{1, 6}}, // dmgDice
                                           2,                        // dmgBonus
                                           DamageType::Piercing,
                                           64 // attackRange
     );
+    setDangerZoneAttack(static_cast<DirectThreatFactory*>(shortbowFactory.get()));
   }
 }

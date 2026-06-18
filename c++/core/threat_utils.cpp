@@ -249,7 +249,7 @@ namespace enc
     std::unordered_map<AoeEffect *, Coords> effectToCoords;
     for(const auto &effect : effectTracker.getAoeEffects())
       {
-        effectToCoords.at(effect.get()) = Coords(effect->getAffectedCoords());
+        effectToCoords.emplace(effect.get(), Coords(effect->getAffectedCoords()));
       }
 
     // Process AoE effects

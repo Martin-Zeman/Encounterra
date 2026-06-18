@@ -44,6 +44,13 @@ namespace
         wild_heart_barbarian = new WildHeartBarbarianLvl3(1);
       }
 
+      void TearDown() override
+      {
+        // Clear effects without calling deactivate — test-body factories are
+        // stack-local and are destroyed when TestBody() returns (before TearDown).
+        EffectTracker::getInstance().clearEffects();
+      }
+
     Combatant* draconic_sorcerer_lvl_1;
     Combatant* draconic_sorcerer_lvl_5;
     Combatant* goblin;

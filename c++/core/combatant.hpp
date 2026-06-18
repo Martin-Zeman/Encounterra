@@ -181,7 +181,12 @@ namespace enc
     std::vector<std::shared_ptr<ActoidFactory>> &getHasteActionFactories() { return _hasteActionFactories; }
     void setAvailableWildshapeForms(std::vector<std::shared_ptr<Wildshape>> wildshapeForms) { _availableWildshapeForms = wildshapeForms; }
     const std::vector<std::shared_ptr<Wildshape>> &getAvailableWildshapeForms() { return _availableWildshapeForms; }
-    DirectThreatFactory* getDangerZoneAttack() { return _dangerZoneAttack; }
+    DirectThreatFactory *getDangerZoneAttack() { 
+      return _dangerZoneAttack;
+    }
+    void setDangerZoneAttack(DirectThreatFactory* factory) {
+      _dangerZoneAttack = factory;
+    }
     AttackFactory* getAoOFactory() { return _aoOFactory; }
     void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &shortestPaths) { _shortestPathsCache = shortestPaths; }
     const blaze::DynamicMatrix<Coord> &getShortestPathsCache() const { return _shortestPathsCache; }
