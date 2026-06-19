@@ -247,13 +247,13 @@ namespace enc
         formPrefix = std::string(_factory.getCombatant()->getCurrentForm()->_name) + " ";
       }
     std::string hastedPrefix = (_abilityType > AbilityType::HASTE_ACTION_DELIMITER && _abilityType < AbilityType::PASSIVE_DELIMITER) ? "Hasted " : "";
-    return formPrefix + hastedPrefix + _factory._name + " on " + _target._name;
+    return formPrefix + hastedPrefix + _factory._abilityName + " on " + _target._name;
   }
 
   std::string Attack::shorthandStr() const
   {
     std::string hastedPrefix = (_abilityType > AbilityType::HASTE_ACTION_DELIMITER && _abilityType < AbilityType::PASSIVE_DELIMITER) ? "Hasted " : "";
-    return hastedPrefix + _factory._name;
+    return hastedPrefix + _factory._abilityName;
   }
 
   double Attack::calculateThreat(const Kwargs &kwargs) { return _factory.calculateThreatToTarget(&_target, kwargs); }

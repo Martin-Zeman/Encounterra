@@ -287,10 +287,10 @@ TEST_F(ThreatUtilsTest, MediumToMediumPassByOneAoo) {
 
     // battleMap->clearCaches();
     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
-    EXPECT_NEAR(threat.back(), -5.95 - 5.95 * DZ_CONSTANT - 2.925 * DZ_CONSTANT, 0.01);
+    EXPECT_NEAR(threat.back(), -5.125 - 5.125 * DZ_CONSTANT - 2.925 * DZ_CONSTANT, 0.01);
 
     auto disengagedThreat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
-    EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT - 5.95 * DZ_CONSTANT, 0.01);
+    EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT - 5.125 * DZ_CONSTANT, 0.01);
 }
 
 TEST_F(ThreatUtilsTest, MediumToMediumPassByTwoAoo) {
@@ -317,10 +317,10 @@ TEST_F(ThreatUtilsTest, MediumToMediumPassByTwoAoo) {
     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
-    EXPECT_NEAR(threat.back(), 2 * -5.95 - 2 * 5.95 * DZ_CONSTANT - 2.925 * DZ_CONSTANT, 0.001);
+    EXPECT_NEAR(threat.back(), 2 * -5.125 - 2 * 5.125 * DZ_CONSTANT - 2.925 * DZ_CONSTANT, 0.001);
 
     auto disengagedThreat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
-    EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT - 2 * 5.95 * DZ_CONSTANT, 0.001);
+    EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT - 2 * 5.125 * DZ_CONSTANT, 0.001);
 }
 
 TEST_F(ThreatUtilsTest, MediumSteppingAwayFromMediumAoo) {
@@ -372,10 +372,10 @@ TEST_F(ThreatUtilsTest, LargeToMediumPassByTwoAoo) {
     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
-    EXPECT_NEAR(threat.back(), 2 * -5.95 - 2 * 5.95 * DZ_CONSTANT - 2.925 * DZ_CONSTANT, 0.01);
+    EXPECT_NEAR(threat.back(), 2 * -5.125 - 2 * 5.125 * DZ_CONSTANT - 2.925 * DZ_CONSTANT, 0.01);
 
     auto threatDisengaged = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
-    EXPECT_NEAR(threatDisengaged.back(), -2.925 * DZ_CONSTANT - 2 * 5.95 * DZ_CONSTANT, 0.01);
+    EXPECT_NEAR(threatDisengaged.back(), -2.925 * DZ_CONSTANT - 2 * 5.125 * DZ_CONSTANT, 0.01);
 }
 
 TEST_F(ThreatUtilsTest, LargeSteppingAwayFromHugeAoo) {
@@ -427,10 +427,10 @@ TEST_F(ThreatUtilsTest, LargeSteppingAwayFromTwoMediumAoo) {
     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
-    EXPECT_NEAR(threat.back(), -2.925 - 2.925 * DZ_CONSTANT - 5.95 - 5.95 * DZ_CONSTANT, 0.001);
+    EXPECT_NEAR(threat.back(), -2.925 - 2.925 * DZ_CONSTANT - 5.125 - 5.125 * DZ_CONSTANT, 0.001);
 
     auto disengagedThreat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
-    EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT - 5.95 * DZ_CONSTANT, 0.001);
+    EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT - 5.125 * DZ_CONSTANT, 0.001);
 }
 
 TEST_F(ThreatUtilsTest, LargeToMediumPassBetweenTwoAooArriveByThird) {
@@ -457,10 +457,10 @@ TEST_F(ThreatUtilsTest, LargeToMediumPassBetweenTwoAooArriveByThird) {
     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
-    EXPECT_NEAR(threat.back(), -2.925 - 2.925 * DZ_CONSTANT - 5.95 - 5.95 * DZ_CONSTANT - 7.149 * DZ_CONSTANT, 0.001);
+    EXPECT_NEAR(threat.back(), -2.925 - 2.925 * DZ_CONSTANT - 5.125 - 5.125 * DZ_CONSTANT - 7.149 * DZ_CONSTANT, 0.001);
 
     auto disengagedThreat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
-    EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT - 5.95 * DZ_CONSTANT - 7.149 * DZ_CONSTANT, 0.001);
+    EXPECT_NEAR(disengagedThreat.back(), -2.925 * DZ_CONSTANT - 5.125 * DZ_CONSTANT - 7.149 * DZ_CONSTANT, 0.001);
 }
 
 TEST_F(ThreatUtilsTest, LargeToMediumPassBetweenTwoAooThroughAoeArriveByThird) {
@@ -493,10 +493,10 @@ TEST_F(ThreatUtilsTest, LargeToMediumPassBetweenTwoAooThroughAoeArriveByThird) {
     draconic_sorcerer_lvl_1->setShortestPathsCache(shortestPaths);
 
     auto threat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords);
-    EXPECT_NEAR(threat.back(), -2.925 - 2.925 * DZ_CONSTANT - 5.95 - 5.95 * DZ_CONSTANT - 20.0 - 7.149 * DZ_CONSTANT, 0.001);
+    EXPECT_NEAR(threat.back(), -2.925 - 2.925 * DZ_CONSTANT - 5.125 - 5.125 * DZ_CONSTANT - 20.0 - 7.149 * DZ_CONSTANT, 0.001);
 
     auto disengagedThreat = accumulateThreatAlongPath(path.value(), draconic_sorcerer_lvl_1, effectToCoords, true);
-    EXPECT_NEAR(disengagedThreat.back(), -20.0 - 2.925 * DZ_CONSTANT - 5.95 * DZ_CONSTANT - 7.149 * DZ_CONSTANT, 0.001);
+    EXPECT_NEAR(disengagedThreat.back(), -20.0 - 2.925 * DZ_CONSTANT - 5.125 * DZ_CONSTANT - 7.149 * DZ_CONSTANT, 0.001);
 }
 
 TEST_F(ThreatUtilsTest, MediumGettingOutOfDangerZone) {
@@ -507,7 +507,9 @@ TEST_F(ThreatUtilsTest, MediumGettingOutOfDangerZone) {
     battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{12, 1});
     battleMap->setCombatantCoordinates(*bugbear, Coord{14, 1});
 
-    auto path = battleMap->getPathToCoord(*draconic_sorcerer_lvl_1, Coord{6, 1});
+    // The Bugbear Warrior has reach 10 ft. (range 2), so its danger zone reaches
+    // speed(6) + 2 = 8 hops. Move to {5,1} (9 hops away) to be clear of the zone.
+    auto path = battleMap->getPathToCoord(*draconic_sorcerer_lvl_1, Coord{5, 1});
     std::unordered_map<AoeEffect*, CoordVector> effectToCoords;
     for (const auto& effect : EffectTracker::getInstance().getAoeEffects()) {
         effectToCoords[effect.get()] = effect->getAffectedCoords();
@@ -576,7 +578,10 @@ TEST_F(ThreatUtilsTest, CalcThreatForPathWithMistyStepScenario1) {
     draconic_sorcerer_lvl_5->setShortestPathsCache(shortestPaths);
 
     auto [threat, maxThreatPath] = calcThreatForPathWithMistyStep(path.value(), draconic_sorcerer_lvl_5, effectToCoords);
-    EXPECT_DOUBLE_EQ(threat[0], 0.0);
+    // The misty step skips every opportunity attack, so the only residual cost is the
+    // bugbear's danger zone at the destination {0,14}: with the Bugbear Warrior's 10 ft
+    // reach (range 2) the zone spans speed(6) + 2 = 8 hops, which just reaches the corner.
+    EXPECT_DOUBLE_EQ(threat[0], -5.125 * DZ_CONSTANT);
 
     std::vector<std::shared_ptr<Actoid>> actoids;
     std::shared_ptr<ActoidFactory> msFactory = std::make_shared<MistyStepFactory>(draconic_sorcerer_lvl_5, &draconic_sorcerer_lvl_5->getSpellslots());

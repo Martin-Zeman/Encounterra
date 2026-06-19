@@ -193,3 +193,4 @@ Most of the python files have their direct equivalent in C++. However, a few key
 - In C++ the multiple inheritance has to deal with the diamond problem by using virtual inheritance. This is not an issue in python.
 - Most test from Python have been migrated but some are still in progress. Even though the testing framework is also different (GTest vs pytest) the test files try to be direct equivalents.
 - The `simulator/utils/state_machine_template.py` has been replaced by a much leaner `c++/core/state_machine.cpp/.hpp`
+- The python implementation is written based on 2014 version of the 5e rules whereas the c++ implementation is based on 2024 version. This means some mechanics (such as grappling etc.), class names and abilities have changed. 
