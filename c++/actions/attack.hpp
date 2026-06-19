@@ -38,6 +38,7 @@ namespace enc
     double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const override;
     double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const override;
     double calculateMaxThreat() const override;
+    int getRange() const override { return _attackRange; }
     bool usesDex() { return _usesDex; }
     bool isTwoHanded() { return _twoHanded; }
 

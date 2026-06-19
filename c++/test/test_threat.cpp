@@ -12,6 +12,7 @@
 #include "combatants/draconic_sorcerer_lvl_5.hpp"
 #include "combatants/bugbear.hpp"
 #include "combatants/wild_heart_barbarian_lvl_3.hpp"
+#include "combatants/wild_heart_barbarian_lvl_5.hpp"
 #include "core/teams.hpp"
 #include "core/types.hpp"
 #include "core/session.hpp"
@@ -41,7 +42,7 @@ namespace
         draconic_sorcerer_lvl_5 = new DraconicSorcererLvl5(1);
         goblin = new Goblin(1);
         bugbear = new Bugbear(1);
-        wild_heart_barbarian = new WildHeartBarbarianLvl3(1);
+        wild_heart_barbarian = new WildHeartBarbarianLvl5(1);
       }
 
       void TearDown() override

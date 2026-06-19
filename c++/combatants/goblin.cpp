@@ -27,6 +27,13 @@ namespace enc
                                           DamageType::Piercing,
                                           64 // attackRange
     );
+    addReactionAttack("Scimitar", this,
+                      4,                        // toHit
+                      std::vector<Die>{{1, 6}}, // dmgDice
+                      2,                        // dmgBonus
+                      DamageType::Slashing,
+                      1 // attackRange
+    );
     setDangerZoneAttack(static_cast<DirectThreatFactory*>(shortbowFactory.get()));
   }
 
@@ -49,6 +56,13 @@ namespace enc
                                           2,                        // dmgBonus
                                           DamageType::Piercing,
                                           64 // attackRange
+    );
+    addReactionAttack("Scimitar", this,
+                      4,                        // toHit
+                      std::vector<Die>{{1, 6}}, // dmgDice
+                      2,                        // dmgBonus
+                      DamageType::Slashing,
+                      1 // attackRange
     );
     setDangerZoneAttack(static_cast<DirectThreatFactory*>(shortbowFactory.get()));
   }

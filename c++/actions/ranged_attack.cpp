@@ -33,6 +33,22 @@ namespace enc
     return std::make_shared<RangedAttack>(AbilityType::RANGED_ATTACK, *static_cast<Combatant *>(target), *this);
   }
 
+  double RangedAttack::calculateThreat(const Kwargs &kwargs)
+  {
+    RangedAttackFactory &factory = dynamic_cast<RangedAttackFactory &>(_factory);
+    BattleMap &battleMap = BattleMap::getInstance();
+
+    RollType rollType = battleMap.isEnemyAdjacent(*factory._combatant) ? RollType::DISADVANTAGE : RollType::STRAIGHT;
+    if(battleMap.getCartesianDistanceCombatants(*factory._combatant, _target) > factory._shortRange)
+      {
+        rollType = RollType::DISADVANTAGE;
+      }
+
+    Kwargs newKwargs = kwargs;
+    newKwargs["roll_type"] = rollType;
+    return factory.calculateThreatToTarget(&_target, newKwargs);
+  }
+
   std::optional<CoordVector>
   RangedAttack::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {

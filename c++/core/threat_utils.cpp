@@ -615,11 +615,10 @@ calcThreatForPathWithMistyStep(const CoordVector &path, Combatant *combatant,
     for(const auto &state : sortedStates)
     {
         auto transitions = msDAG.getForwardActoidTransitions(state);
-        for(const auto &[transitionAction, _] : transitions)
+        for(const auto &[transitionAction, targetState] : transitions)
         {
             const std::string transitionName = transitionAction ? transitionAction->toString() : std::string("None");
-            StateId targetState = msDAG.getCurrentState();  // Need to add a method to get destination state
-            
+
             double threatForTransition = transitionName.starts_with("ms") ? 0.0 : transitionToThreat[transitionName];
             double totalThreat = (stateThreat[state] > MINUS_INF) ? stateThreat[state] + threatForTransition : 0.0;
 
@@ -646,7 +645,7 @@ calcThreatForPathWithMistyStep(const CoordVector &path, Combatant *combatant,
     }
 
     // Calculate final threat
-    threatAcc += stateThreat[sortedStates.back()];
+    threatAcc += stateThreat[previousMsState];
     Coord finalCoord = currentPos;
     threatAcc -= getThreatForStayingAtCoord({finalCoord}, combatant);
 

@@ -351,6 +351,20 @@ namespace enc
      * ----------------------------------------------------------------------------------------------------------------------------------------------
      */
     std::shared_ptr<ActoidFactory> addReactionAttack() { return nullptr; }
+
+    //! Adds a melee reaction attack (e.g. opportunity attack). Mirrors the Python
+    //! `add_ability(Reaction.REACTION_ATTACK, ...)` which sets both the AoO factory and
+    //! the default danger-zone attack to this reaction.
+    std::shared_ptr<ActoidFactory> addReactionAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice,
+                                                     int dmgBonus, DamageType damageType, int attackRange)
+    {
+      auto factory = std::make_shared<MeleeAttackFactory>("MeleeAttackFactory", name, owner, AbilityType::MELEE_ATTACK, toHit, dmgDice, dmgBonus,
+                                                          damageType, attackRange);
+      _reactionFactories.emplace_back(factory);
+      _aoOFactory = static_cast<AttackFactory *>(factory.get());
+      _dangerZoneAttack = static_cast<DirectThreatFactory *>(factory.get());
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addShield() { return nullptr; }
     std::shared_ptr<ActoidFactory> addPreSwallowBiteReaction() { return nullptr; }
     std::shared_ptr<ActoidFactory> addUncannyDodge() { return nullptr; }
