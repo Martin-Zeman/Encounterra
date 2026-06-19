@@ -5,6 +5,9 @@
 
 namespace enc
 {
+  class Attack;
+  class MovementIncrement;
+
   class ActionResolver
   {
   public:
@@ -28,6 +31,8 @@ namespace enc
   private:
     std::shared_ptr<Actoid> handleErrorCase(const std::shared_ptr<Actoid> &action, Combatant *combatant);
     ActionResult resolveByActoidFlags(const std::shared_ptr<Actoid> &action, Combatant *combatant);
+    ActionResult resolveAttack(Attack *attack, Combatant *target, Combatant *attacker);
+    bool requestMovement(Combatant *movingCombatant, MovementIncrement *movement);
   };
 
   bool hasAdvantageSavingThrow(SavingThrow savingThrow, Combatant *target, bool isSpellEffect);

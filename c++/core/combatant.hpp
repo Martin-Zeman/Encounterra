@@ -194,10 +194,12 @@ namespace enc
     void setActionPlan(std::deque<std::shared_ptr<Actoid>> plan) { _actionPlan = std::move(plan); }
     std::deque<std::shared_ptr<Actoid>> calculateActionPlan(const blaze::DynamicVector<int> &distances,
                                                             const blaze::DynamicMatrix<Coord> &shortestPaths);
-    // Snapshot/restore of resource state during proto-DAG exploration. The base combatant has no special resources to
-    // preserve (mirrors Python's base export_resources()/import_resources() no-ops); specialized combatants override.
-    virtual std::any exportResources() { return {}; }
-    virtual void importResources(const std::any & /*resources*/) {}
+    // Snapshot/restore of resource state during proto-DAG exploration. The base implementation preserves the action
+    // economy (action/bonus/reaction/haste flags, movement, spell-slot usage) and every action factory's ammo, so that
+    // the speculative useResources() calls made while exploring the DAG don't permanently drain the combatant
+    // (mirrors Python's per-combatant export_resources()/import_resources()). Specialized combatants may override.
+    virtual std::any exportResources();
+    virtual void importResources(const std::any &resources);
     int receiveDmg(int dmg, DamageType dmg_type, int multiplier = 1);
     int receiveCompoundDmg(const std::vector<std::pair<int, DamageType>>& dmg, int multiplier = 1);
     void addResistance(DamageType dmgType);

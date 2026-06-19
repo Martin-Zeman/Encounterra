@@ -41,6 +41,11 @@ namespace enc
     int getRange() const override { return _attackRange; }
     bool usesDex() { return _usesDex; }
     bool isTwoHanded() { return _twoHanded; }
+    int getToHit() const { return _toHit; }
+    const std::vector<Die> &getDmgDice() const { return _dmgDice; }
+    int getDmgBonus() const { return _dmgBonus; }
+    DamageType getDmgType() const { return _dmgType; }
+    int getCritRange() const { return _critRange; }
 
   protected:
     int _toHit;
@@ -60,6 +65,11 @@ namespace enc
 
   class Attack : public Actoid, public DirectThreat
   {
+  public:
+    Combatant &getTarget() const { return _target; }
+    AttackFactory &getAttackFactory() const { return _factory; }
+    void setRollType(RollType rollType) { _rollType = rollType; }
+
   protected:
     Attack(AbilityType abilityType, Combatant &target, AttackFactory &factory, RollType rollType = RollType::STRAIGHT)
         : Actoid(const_cast<AttackFactory &>(factory), ActoidFlags::IS_ATTACK_LIKE, abilityType), _target(target), _factory(factory),

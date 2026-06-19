@@ -3,6 +3,8 @@
 #include "core/types.hpp"
 #include "core/feasibility.hpp"
 #include "actions/dodge.hpp"
+#include "actions/attack.hpp"
+#include "actions/movement.hpp"
 
 namespace enc
 {
@@ -157,10 +159,136 @@ namespace enc
     return nullptr;
   }
 
+  ActionResult ActionResolver::resolveAttack(Attack *attack, Combatant *target, Combatant *attacker)
+  {
+    auto &battleMap = BattleMap::getInstance();
+    AttackFactory &factory = attack->getAttackFactory();
+
+    // Minimal port of resolve_attack: no advantage/disadvantage conditions are evaluated yet, so the roll is straight.
+    std::unordered_set<RollType> types;
+    RollType finalModifier = reconcileRollTypes(types);
+
+    Die d20{1, 20};
+    int rolled;
+    if(finalModifier == RollType::ADVANTAGE)
+      {
+        rolled = std::max(rollDice(d20), rollDice(d20));
+      }
+    else if(finalModifier == RollType::DISADVANTAGE)
+      {
+        rolled = std::min(rollDice(d20), rollDice(d20));
+      }
+    else
+      {
+        rolled = rollDice(d20);
+      }
+
+    std::cout << attacker->_name << " attacks " << target->_name << " with " << factory._name << std::endl;
+
+    int multiplier = 1;
+    if(rolled == 1)
+      {
+        std::cout << "Natural 1 rolled!" << std::endl;
+        return ActionResult::MISS;
+      }
+    else if(rolled >= 21 - factory.getCritRange())
+      {
+        multiplier = 2;
+      }
+
+    if(rolled + factory.getToHit() >= target->getAC())
+      {
+        int dmgDiceSum = rollDiceMulti(factory.getDmgDice());
+        int baseDmg = multiplier * dmgDiceSum + factory.getDmgBonus();
+        if(baseDmg < 0)
+          {
+            baseDmg = 0;
+          }
+        std::cout << "The attack " << (multiplier == 2 ? "CRITS" : "hits") << " " << target->_name << " for " << baseDmg << " damage"
+                  << std::endl;
+        std::vector<std::pair<int, DamageType>> compoundDmg = {{baseDmg, factory.getDmgType()}};
+        attack->setRollType(finalModifier);
+        target->receiveCompoundDmg(compoundDmg, multiplier);
+        battleMap.removeCombatantIfDead(*target);
+        return ActionResult::HIT;
+      }
+
+    std::cout << "The attack misses " << target->_name << std::endl;
+    return ActionResult::MISS;
+  }
+
+  bool ActionResolver::requestMovement(Combatant *movingCombatant, MovementIncrement *movement)
+  {
+    auto &battleMap = BattleMap::getInstance();
+
+    if(movement->incursAOO())
+      {
+        auto aooCandidates = battleMap.getAooEligibleCombatants(movingCombatant, movement->getIncrement());
+        for(auto *candidate : aooCandidates)
+          {
+            AttackFactory *aooFactory = candidate->getAoOFactory();
+            if(aooFactory && candidate->hasReaction() && movingCombatant->isAlive())
+              {
+                candidate->setHasReaction(false);
+                auto aoo = aooFactory->create(movingCombatant);
+                resolveAction(aoo, candidate);
+              }
+          }
+      }
+
+    if(movingCombatant->isAlive())
+      {
+        battleMap.moveCombatantByIncrement(*movingCombatant, movement->getIncrement());
+        return true;
+      }
+    return false;
+  }
+
   ActionResult ActionResolver::resolveByActoidFlags(const std::shared_ptr<Actoid> &action, Combatant *combatant)
   {
-    // TODO:
-    return ActionResult::MISS;
+    switch(action->getAbilityType())
+      {
+      case AbilityType::MELEE_ATTACK:
+      case AbilityType::RANGED_ATTACK:
+      case AbilityType::BONUS_MELEE_ATTACK:
+      case AbilityType::BONUS_RANGED_ATTACK:
+      case AbilityType::HASTE_MELEE_ATTACK:
+      case AbilityType::HASTE_RANGED_ATTACK:
+      case AbilityType::REACTION_ATTACK:
+        {
+          auto *attack = dynamic_cast<Attack *>(action.get());
+          if(!attack)
+            {
+              return ActionResult::MISS;
+            }
+          return resolveAttack(attack, &attack->getTarget(), combatant);
+        }
+
+      case AbilityType::STANDARD_MOVEMENT:
+      case AbilityType::DISENGAGED_MOVEMENT:
+        {
+          auto *movement = dynamic_cast<MovementIncrement *>(action.get());
+          if(!movement)
+            {
+              return ActionResult::MISS;
+            }
+          if(!requestMovement(combatant, movement))
+            {
+              return ActionResult::MISS;
+            }
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::DODGE:
+      case AbilityType::DISENGAGE:
+        // Minimal: the defensive effect is not applied yet, but the action is consumed by the planner.
+        std::cout << combatant->_name << " takes the " << action->toString() << " action" << std::endl;
+        return ActionResult::OTHER;
+
+      default:
+        std::cerr << "resolveByActoidFlags: unhandled action " << action->toString() << " (treating as no-op)" << std::endl;
+        return ActionResult::OTHER;
+      }
   }
 
 ActionResult ActionResolver::resolveAction(const std::shared_ptr<Actoid>& action, Combatant* combatant) 

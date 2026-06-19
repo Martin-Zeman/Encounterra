@@ -5,6 +5,7 @@
 #include "actions/dummy_actoid_factory.hpp"
 #include "core/combatant.hpp"
 #include "core/state_machine.hpp"
+#include "core/battle_map.hpp"
 
 namespace enc
 {
@@ -232,11 +233,15 @@ namespace enc
       }
   }
 
+  // In the pythonv version this is in action_selector.py 
   ActionStateMachineResult buildActionStateMachine(Combatant *combatant, const StateMachine &protoStateMachine,
                                                    const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
     // Work on a private copy of the proto FSM: getPostTransitions* / getPostMistyStep mutate it.
     StateMachine protoCopy = protoStateMachine;
+
+    // Precompute the visibility of every reachable coord towards each enemy, mirroring Python's build_action_dag.
+    BattleMap::getInstance().calcVisibilityDictForAllCoords(combatant, shortestPaths);
 
     auto [postPriorityActionTransitions, postPriorityBonusActionTransitions] = getPostTransitionsOfAllPriorityTransitions(protoCopy);
 
@@ -305,6 +310,58 @@ namespace enc
             stateMachine.removeTransition(action, 0);
           }
       }
+
+    // Prepend STANDARD movement to each (non-priority, non-Misty-Step) action transition originating at state 0.
+    {
+      auto [eligibleTransitionsToState, coordToEligibleTransitions] = createMovementStates(stateMachine, transitionToEligibleCoords);
+
+      // One shared movement actoid per target coord (mirrors Python's per-coord "m_(x,y)" transition name).
+      std::unordered_map<Coord, Actoid *> coordToMovementActoid;
+
+      for(const auto &[action, coords] : transitionToEligibleCoords)
+        {
+          if(!action || action->getAbilityType() == AbilityType::MISTY_STEP)
+            {
+              continue;
+            }
+
+          // Resolve the action's original destination from state 0 in the proto FSM.
+          StateId dest = 0;
+          bool found = false;
+          for(const auto &[protoAction, protoDest] : protoCopy.getForwardActoidTransitions(0))
+            {
+              if(protoAction == action)
+                {
+                  dest = protoDest;
+                  found = true;
+                  break;
+                }
+            }
+          if(!found)
+            {
+              continue; // Action originates from a state other than 0.
+            }
+
+          for(const auto &coord : coords)
+            {
+              const auto &transitions = coordToEligibleTransitions.at(coord);
+              StateId movementState = eligibleTransitionsToState.at(transitions);
+
+              auto mit = coordToMovementActoid.find(coord);
+              if(mit == coordToMovementActoid.end())
+                {
+                  Actoid *moveAction = makeMovementActoid(coord, MovementThreatType::STANDARD, result.syntheticActoids, *result.movementFactory);
+                  coordToMovementActoid[coord] = moveAction;
+                  movementTransToCoordAndType[moveAction] = {coord, MovementThreatType::STANDARD};
+                  stateMachine.addTransition(moveAction, 0, movementState);
+                }
+
+              stateMachine.addTransition(action, movementState, dest);
+            }
+
+          stateMachine.removeTransition(action, 0); // Remove the original direct transition.
+        }
+    }
 
     // Misty Step transitions (preserves the original behaviour of supplying an empty eligible-coords map here).
     if(!msPostTransitions.empty())

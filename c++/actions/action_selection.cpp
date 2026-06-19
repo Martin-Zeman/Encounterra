@@ -178,21 +178,29 @@ getNearestAndMinimize(std::vector<std::vector<Actoid *>> &sequences, const std::
     for (size_t idx : minDistSequences) {
         auto& sequence = sequences[idx];
         std::vector<Actoid *> newSequence;
-        
+
+        auto outerIt = sequenceIdxToTransitionStepThreat.find(idx);
         for (size_t tIdx = 0; tIdx < sequence.size(); ++tIdx) {
             bool shouldKeep = false;
-            try {
-                auto stepThreatIt = sequenceIdxToTransitionStepThreat.at(idx).find(tIdx);
-                if (stepThreatIt != sequenceIdxToTransitionStepThreat.at(idx).end() && 
-                    stepThreatIt->second > 0) {
-                    shouldKeep = true;
-                } else if (sequence[tIdx] && sequence[tIdx]->hasFlag(ActoidFlags::IS_PRIORITY)) {
-                    shouldKeep = true;
+            bool hasStepThreat = false;
+            double stepThreat = 0.0;
+            if (outerIt != sequenceIdxToTransitionStepThreat.end()) {
+                auto innerIt = outerIt->second.find(tIdx);
+                if (innerIt != outerIt->second.end()) {
+                    hasStepThreat = true;
+                    stepThreat = innerIt->second;
                 }
-            } catch (const std::out_of_range&) {
-                shouldKeep = true;  // Keep movement transitions
             }
-            
+
+            if (!hasStepThreat) {
+                // Movement / dummy transitions are never scored; Python keeps these via a KeyError -> append.
+                shouldKeep = true;
+            } else if (stepThreat > 0) {
+                shouldKeep = true;
+            } else if (sequence[tIdx] && sequence[tIdx]->hasFlag(ActoidFlags::IS_PRIORITY)) {
+                shouldKeep = true;
+            }
+
             if (shouldKeep) {
                 newSequence.push_back(sequence[tIdx]);
             }
@@ -586,9 +594,13 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
         });
     }
 
-    // Sort sequences by total threat
-    std::vector<size_t> sortedSequences(sequences.size());
-    std::iota(sortedSequences.begin(), sortedSequences.end(), 0);
+    // Sort sequences by total threat. Only sequences that received a threat score are considered
+    // (mirrors Python's `sorted(sequence_to_threat, ...)`, which iterates the dict's keys).
+    std::vector<size_t> sortedSequences;
+    sortedSequences.reserve(sequenceToThreat.size());
+    for (const auto& [idx, _] : sequenceToThreat) {
+        sortedSequences.push_back(idx);
+    }
 
     auto sequenceScore = [&](size_t idx) {
         auto it = sequenceToThreat.find(idx);

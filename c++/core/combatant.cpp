@@ -6,6 +6,7 @@
 #include "actions/action_selection.hpp"
 #include "core/rechargeable_factory.hpp"
 #include "effects/effect_tracker.hpp"
+#include "core/resources.hpp"
 
 namespace enc
 {
@@ -114,6 +115,73 @@ namespace enc
 
   Combatant *Combatant::getCurrentForm() { return _currentWildshapeForm == nullptr ? _originalForm : _currentWildshapeForm; }
   Combatant *Combatant::getOriginalForm() { return _originalForm; }
+
+  namespace
+  {
+    // Snapshot of the resource state preserved across speculative proto-DAG exploration.
+    struct ResourceSnapshot
+    {
+      bool hasAction;
+      bool hasBonusAction;
+      bool hasReaction;
+      bool hasHasteAction;
+      bool alreadyUsedSpellslotThisTurn;
+      int movement;
+      std::vector<std::pair<Resource *, int>> resourceUses; // factory resource -> current uses
+    };
+
+    void collectFactoryResources(const std::vector<std::shared_ptr<ActoidFactory>> &factories, std::vector<std::pair<Resource *, int>> &out)
+    {
+      for(const auto &factory : factories)
+        {
+          if(!factory)
+            {
+              continue;
+            }
+          if(auto resource = factory->getResource())
+            {
+              out.emplace_back(*resource, (*resource)->getUses());
+            }
+        }
+    }
+  } // namespace
+
+  std::any Combatant::exportResources()
+  {
+    ResourceSnapshot snapshot;
+    snapshot.hasAction = _hasAction;
+    snapshot.hasBonusAction = _hasBonusAction;
+    snapshot.hasReaction = _hasReaction;
+    snapshot.hasHasteAction = _hasHasteAction;
+    snapshot.alreadyUsedSpellslotThisTurn = _alreadyUsedSpellslotThisTurn;
+    snapshot.movement = _movement;
+    collectFactoryResources(_actionFactories, snapshot.resourceUses);
+    collectFactoryResources(_bonusActionFactories, snapshot.resourceUses);
+    collectFactoryResources(_hasteActionFactories, snapshot.resourceUses);
+    return snapshot;
+  }
+
+  void Combatant::importResources(const std::any &resources)
+  {
+    if(!resources.has_value())
+      {
+        return;
+      }
+    const auto &snapshot = std::any_cast<const ResourceSnapshot &>(resources);
+    _hasAction = snapshot.hasAction;
+    _hasBonusAction = snapshot.hasBonusAction;
+    _hasReaction = snapshot.hasReaction;
+    _hasHasteAction = snapshot.hasHasteAction;
+    _alreadyUsedSpellslotThisTurn = snapshot.alreadyUsedSpellslotThisTurn;
+    _movement = snapshot.movement;
+    for(const auto &[resource, uses] : snapshot.resourceUses)
+      {
+        if(auto *asUses = dynamic_cast<Uses *>(resource))
+          {
+            asUses->setResource(uses);
+          }
+      }
+  }
 
   bool Combatant::isAffectedBy(Conditions condition) const
   {
