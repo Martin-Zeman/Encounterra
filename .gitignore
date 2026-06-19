@@ -10,3 +10,4 @@ actions_*
 simulator_*
 *.so
 /c++/build
+/c++/build-release
