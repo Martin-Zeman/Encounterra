@@ -3,10 +3,12 @@
 #include "core/session.hpp"
 #include "core/round_manager.hpp"
 #include "core/types.hpp"
+#include "core/logger.hpp"
 #include "combatants/goblin.hpp"
 #include "combatants/bugbear_warrior.hpp"
 #include "effects/effect_tracker.hpp"
 
+#include <chrono>
 #include <iostream>
 #include <vector>
 
@@ -47,7 +49,18 @@ int main()
 
     std::vector<Combatant *> combatants = {bugbearWarrior, goblinRed1, goblinRed2, goblinRed3};
     RoundManager roundManager(combatants, 50);
-    roundManager.simulateN(1);
+
+    // Benchmark: run 100 iterations with all combat narration suppressed.
+    constexpr int iterations = 100;
+    Logger::setLevel(LogLevel::NONE);
+    const auto start = std::chrono::steady_clock::now();
+    roundManager.simulateN(iterations);
+    const auto end = std::chrono::steady_clock::now();
+    Logger::setLevel(LogLevel::INFO); // restore output so we can print the result
+
+    const double seconds = std::chrono::duration<double>(end - start).count();
+    std::cout << "--- C++ simulation (" << iterations << " iterations) took "
+              << seconds << " seconds ---\n";
 
     return 0;
 }

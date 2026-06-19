@@ -10,6 +10,7 @@
 #include <numeric>
 #include <limits>
 #include <algorithm>
+#include <cstdint>
 #include <iostream>
 
 // Hash for CoordToSequenceIds
@@ -35,56 +36,97 @@ namespace {
     const std::regex REGEX_MS_MOVEMENT_PATTERN(R"([mschdio_]+\((\d+), (\d+)\))");
 }
 
-std::vector<std::vector<std::string>> pruneSequences(const std::vector<std::vector<std::string>> &sequences,
-                                                     const std::unordered_map<size_t, Actoid *> &indexToActoid,
-                                                     const std::unordered_map<std::string, std::string> &transitionToSimplified)
+std::vector<std::vector<int>> pruneSequences(std::vector<std::vector<int>> sequences,
+                                             const std::vector<Actoid *> &indexToActoid,
+                                             const std::vector<int> &transitionToSimplified)
 {
-  std::set<std::string> sequenceSets;
-  std::vector<std::vector<std::string>> prunedSequences;
-
-  for(const auto &sequence : sequences)
+  // Dedup key is the set of simplified-transition indices (drops trailing level designators). When the
+  // simplified-index space fits in 64 entries (the overwhelmingly common case for a single combatant's
+  // turn DAG) we encode each footprint as a uint64_t bitmask: dedup then needs no per-sequence vector
+  // allocation, no sort/unique, no memcmp on keys — just an unordered_set<uint64_t>. We fall back to a
+  // sorted+uniqued std::vector<int> footprint only when an index >= 64 is present.
+  // transitionToSimplified and indexToActoid are dense vectors indexed by transition index (O(1) lookup).
+  const int numTransitions = static_cast<int>(transitionToSimplified.size());
+  int maxSimp = -1;
+  for(int s : transitionToSimplified)
     {
-      std::set<std::string> currentSequenceSet;
-      for(const auto &txIdx : sequence)
-        {
-          auto it = transitionToSimplified.find(txIdx);
-          if(it != transitionToSimplified.end())
-            {
-              currentSequenceSet.insert(it->second);
-            }
-        }
+      maxSimp = std::max(maxSimp, s);
+    }
 
-      std::string setKey = std::accumulate(currentSequenceSet.begin(), currentSequenceSet.end(), std::string{},
-                                           [](const std::string &a, const std::string &b) { return a + "," + b; });
+  auto hasAttackModifier = [&](const std::vector<int> &sequence) {
+    for(int tx : sequence)
+      {
+        if(tx >= 0 && tx < static_cast<int>(indexToActoid.size()))
+          {
+            Actoid *a = indexToActoid[tx];
+            if(a && a->hasFlag(ActoidFlags::IS_ATTACK_MODIFIER))
+              {
+                return true;
+              }
+          }
+      }
+    return false;
+  };
 
-      if(sequenceSets.find(setKey) == sequenceSets.end())
+  std::vector<std::vector<int>> prunedSequences;
+  prunedSequences.reserve(sequences.size());
+
+  if(maxSimp < 64)
+    {
+      std::unordered_set<uint64_t> sequenceSets;
+      sequenceSets.reserve(sequences.size() * 2);
+      for(auto &sequence : sequences)
         {
-          prunedSequences.push_back(sequence);
-          sequenceSets.insert(setKey);
-        }
-      else
-        {
-          bool hasAttackModifier = false;
-          for(const auto &tx : sequence)
+          uint64_t footprint = 0;
+          for(int txIdx : sequence)
             {
-              try
+              if(txIdx >= 0 && txIdx < numTransitions)
                 {
-                  auto it = indexToActoid.find(std::stoul(tx));
-                  if(it != indexToActoid.end() && it->second && it->second->hasFlag(ActoidFlags::IS_ATTACK_MODIFIER))
-                    {
-                      hasAttackModifier = true;
-                      break;
-                    }
-                }
-              catch(const std::exception &)
-                {
-                  continue;
+                  footprint |= (uint64_t{1} << transitionToSimplified[txIdx]);
                 }
             }
-          if(hasAttackModifier)
+
+          if(sequenceSets.insert(footprint).second || hasAttackModifier(sequence))
             {
-              prunedSequences.push_back(sequence);
+              prunedSequences.push_back(std::move(sequence));
             }
+        }
+      return prunedSequences;
+    }
+
+  // Fallback: simplified-index space exceeds 64; use a sorted+uniqued vector footprint.
+  struct VectorHash {
+    size_t operator()(const std::vector<int> &v) const
+    {
+      size_t h = v.size();
+      for(int x : v)
+        {
+          h ^= std::hash<int>{}(x) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+        }
+      return h;
+    }
+  };
+
+  std::unordered_set<std::vector<int>, VectorHash> sequenceSets;
+  sequenceSets.reserve(sequences.size());
+
+  std::vector<int> footprint;
+  for(auto &sequence : sequences)
+    {
+      footprint.clear();
+      for(int txIdx : sequence)
+        {
+          if(txIdx >= 0 && txIdx < numTransitions)
+            {
+              footprint.push_back(transitionToSimplified[txIdx]);
+            }
+        }
+      std::sort(footprint.begin(), footprint.end());
+      footprint.erase(std::unique(footprint.begin(), footprint.end()), footprint.end());
+
+      if(sequenceSets.insert(footprint).second || hasAttackModifier(sequence))
+        {
+          prunedSequences.push_back(std::move(sequence));
         }
     }
   return prunedSequences;
@@ -438,14 +480,14 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
     size_t maxSequenceLength = numStates * 2;
     
     auto allSequences = dag.dfs(0, maxSequenceLength);
-    auto prunedSequences = pruneSequences(allSequences, indexToActoid, transitionToSimplified);
+    auto prunedSequences = pruneSequences(std::move(allSequences), indexToActoid, transitionToSimplified);
     
     std::vector<std::vector<Actoid *>> sequences;
     for (const auto& arr : prunedSequences) {
         std::vector<Actoid *> sequence;
-        for (const auto& item : arr) {
-            auto it = indexToActoid.find(std::stoul(item));
-            sequence.push_back(it != indexToActoid.end() ? it->second : nullptr);
+        for (int item : arr) {
+            Actoid *a = (item >= 0 && item < static_cast<int>(indexToActoid.size())) ? indexToActoid[item] : nullptr;
+            sequence.push_back(a);
         }
         sequences.push_back(std::move(sequence));
     }
@@ -515,6 +557,14 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
 
         withPosition([&]() {
             for (size_t idx : ids) {
+                // The movement loop skips sequences whose path to this coord is None,
+                // leaving them out of sequenceToThreat. Such sequences are not viable
+                // plans, so skip them here too (mirrors Python, which only overwrites
+                // an existing sequence_to_threat entry). This also avoids creating an
+                // entry with an empty movement-threat vector, which would later crash
+                // getNearestAndMinimize's `.first.back()`.
+                if (sequenceToThreat.find(idx) == sequenceToThreat.end()) continue;
+
                 AttackThreatModifier *deltaAction = nullptr;
                 double threatAcc = 0.0;
                 bool firstFeasibilityCheckDone = false;

@@ -8,6 +8,7 @@
 #include <string>
 #include <functional>
 #include <set>
+#include <unordered_set>
 #include <blaze/Math.h>
 #include "core/interfaces.hpp"
 // #include "combat/action_dag.hpp"
@@ -49,9 +50,9 @@ namespace enc
     std::array<double, 2> maxThreat;
   };
 
-  std::vector<std::vector<std::string>> pruneSequences(const std::vector<std::vector<std::string>> &sequences,
-                                                       const std::unordered_map<size_t, Actoid *> &indexToActoid,
-                                                       const std::unordered_map<std::string, std::string> &transitionToSimplified);
+  std::vector<std::vector<int>> pruneSequences(std::vector<std::vector<int>> sequences,
+                                               const std::vector<Actoid *> &indexToActoid,
+                                               const std::vector<int> &transitionToSimplified);
 
   CoordToSequenceIds
   createCoordToSequenceMapping(const std::vector<std::vector<Actoid *>> &sequences, const MovementTransitionMap &movementTransitionToCoordAndType);

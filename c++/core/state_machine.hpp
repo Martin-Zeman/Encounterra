@@ -25,8 +25,8 @@ namespace enc {
     size_t numStates;
     std::unordered_map<size_t, StateId> indexToState;
     std::unordered_map<size_t, std::string> indexToTransition;
-    std::unordered_map<std::string, std::string> transitionToSimplified; // transitionIndex-as-string -> simplifiedIndex-as-string
-    std::unordered_map<size_t, Actoid *> indexToActoid; // transitionIndex -> owning actoid (nullptr for the None sentinel)
+    std::vector<int> transitionToSimplified; // [transitionIndex] -> simplifiedIndex (dense, indices are sequential)
+    std::vector<Actoid *> indexToActoid; // [transitionIndex] -> owning actoid (nullptr for the None sentinel)
   };
 
   class StateMachine
@@ -97,8 +97,15 @@ public:
     FlattenedDag getFlattenedDag() const;
 
     // Depth-first enumeration of all transition-index sequences from currentState to a nop sink (index 1).
-    // Each returned sequence element is a transition index encoded as a string. Mirrors numba_functions.dfs.
-    std::vector<std::vector<std::string>> dfs(int currentState, size_t maxSequenceLength) const;
+    // Each returned sequence element is a transition index. Mirrors numba_functions.dfs.
+    std::vector<std::vector<int>> dfs(int currentState, size_t maxSequenceLength) const;
+
+  private:
+    // Backtracking helper for dfs(): walks the DAG with a single shared `path` buffer (push/pop) so each
+    // complete path is materialized exactly once instead of copying the prefix at every branch.
+    void dfsRecurse(int state, size_t maxSequenceLength, std::vector<int> &path, std::vector<std::vector<int>> &out) const;
+
+  public:
     // auto getAllTransitions() const
     //   -> std::ranges::join_view<
     //     std::ranges::transform_view<std::ranges::ref_view<const std::unordered_map<StateId, std::vector<Transition>>>, std::vector<std::string>>>;

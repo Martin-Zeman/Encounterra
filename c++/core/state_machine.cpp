@@ -275,9 +275,9 @@ namespace enc
 
     std::unordered_map<std::string, size_t> transitionToIndex;
     std::unordered_map<size_t, std::string> indexToTransition;
-    std::unordered_map<size_t, Actoid *> indexToActoid;
+    std::vector<Actoid *> indexToActoid;
     std::unordered_map<std::string, size_t> simplifiedTransitions;
-    std::unordered_map<std::string, std::string> transitionToSimplified;
+    std::vector<int> transitionToSimplified;
 
     std::vector<std::vector<std::pair<int, int>>> dagForward(numStates);
 
@@ -302,7 +302,8 @@ namespace enc
                 tIdx = transitionToIndex.size();
                 transitionToIndex[transition.name] = tIdx;
                 indexToTransition[tIdx] = transition.name;
-                indexToActoid[tIdx] = transition.action;
+                // tIdx is assigned sequentially (== current vector size), so push_back lands at index tIdx.
+                indexToActoid.push_back(transition.action);
 
                 // Simplified name drops a trailing "_X" level designator (mirrors the Python optimization).
                 std::string shortened = transition.name;
@@ -321,7 +322,7 @@ namespace enc
                   {
                     simpIdx = sIt->second;
                   }
-                transitionToSimplified[std::to_string(tIdx)] = std::to_string(simpIdx);
+                transitionToSimplified.push_back(static_cast<int>(simpIdx));
               }
             else
               {
@@ -337,38 +338,39 @@ namespace enc
                         std::move(transitionToSimplified), std::move(indexToActoid)};
   }
 
-  std::vector<std::vector<std::string>> StateMachine::dfs(int currentState, size_t maxSequenceLength) const
+  void StateMachine::dfsRecurse(int state, size_t maxSequenceLength, std::vector<int> &path,
+                                std::vector<std::vector<int>> &out) const
   {
-    std::vector<std::vector<std::string>> sequences;
-    std::vector<std::pair<int, std::vector<std::string>>> stack;
-    stack.emplace_back(currentState, std::vector<std::string>{});
-
-    while(!stack.empty())
+    if(state == 1) // nop sink: a complete path
       {
-        auto [state, sequence] = std::move(stack.back());
-        stack.pop_back();
-
-        if(state == 1) // nop sink: a complete path
-          {
-            sequences.push_back(std::move(sequence));
-            continue;
-          }
-
-        if(state < 0 || static_cast<size_t>(state) >= _dagForward.size())
-          {
-            continue;
-          }
-
-        for(const auto &[transition, nextState] : _dagForward[state])
-          {
-            if(sequence.size() < maxSequenceLength)
-              {
-                std::vector<std::string> newSequence = sequence;
-                newSequence.push_back(std::to_string(transition));
-                stack.emplace_back(nextState, std::move(newSequence));
-              }
-          }
+        out.push_back(path);
+        return;
       }
+
+    if(state < 0 || static_cast<size_t>(state) >= _dagForward.size())
+      {
+        return;
+      }
+
+    if(path.size() >= maxSequenceLength)
+      {
+        return;
+      }
+
+    for(const auto &[transition, nextState] : _dagForward[state])
+      {
+        path.push_back(transition);
+        dfsRecurse(nextState, maxSequenceLength, path, out);
+        path.pop_back();
+      }
+  }
+
+  std::vector<std::vector<int>> StateMachine::dfs(int currentState, size_t maxSequenceLength) const
+  {
+    std::vector<std::vector<int>> sequences;
+    std::vector<int> path;
+    path.reserve(maxSequenceLength);
+    dfsRecurse(currentState, maxSequenceLength, path, sequences);
     return sequences;
   }
 
