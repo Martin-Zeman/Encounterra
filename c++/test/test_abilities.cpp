@@ -9,7 +9,7 @@
 #include "spells/spell_stats.hpp"
 #include "combatants/goblin.hpp"
 #include "combatants/draconic_sorcerer_lvl_1.hpp"
-#include "combatants/bugbear.hpp"
+#include "combatants/bugbear_warrior.hpp"
 #include "combatants/stone_giant.hpp"
 #include "combatants/wild_heart_barbarian_lvl_3.hpp"
 #include "combatants/battlemaster_fighter_lvl_5.hpp"

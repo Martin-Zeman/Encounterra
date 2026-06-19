@@ -3,11 +3,11 @@
 namespace enc
 {
 
-  class Bugbear : public Combatant
+  class BugbearWarrior : public Combatant
   {
   public:
-    Bugbear(int num);
-    Bugbear(const std::string &name);
+    BugbearWarrior(int num);
+    BugbearWarrior(const std::string &name);
 
     int getClassId() const override { return _classId; }
 
@@ -15,9 +15,9 @@ namespace enc
     static constexpr std::string_view getClassName() { return _className; }
 
   private:
-    static constexpr std::string_view _className = "Bugbear";
+    static constexpr std::string_view _className = "Bugbear Warrior";
     static constexpr int _classLevel = 1;
-    static constexpr int _classId = Combatant::generateClassId(_className, Monster::HUMANOID, _classLevel);
+    static constexpr int _classId = Combatant::generateClassId(_className, Monster::FEY, _classLevel);
   };
 
 }

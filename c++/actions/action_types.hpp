@@ -277,6 +277,7 @@ namespace enc
     ACTION_SURGE,
 
     /* Movement */
+    MOVEMENT_DELIMITER,
     STANDARD_MOVEMENT,
     DISENGAGED_MOVEMENT,
     FORCED_MOVEMENT,

@@ -9,7 +9,7 @@
 #include "spells/spell_stats.hpp"
 #include "combatants/goblin.hpp"
 #include "combatants/draconic_sorcerer_lvl_1.hpp"
-#include "combatants/bugbear.hpp"
+#include "combatants/bugbear_warrior.hpp"
 #include "combatants/stone_giant.hpp"
 #include "combatants/wild_heart_barbarian_lvl_3.hpp"
 #include "combatants/battlemaster_fighter_lvl_5.hpp"
@@ -33,7 +33,7 @@ protected:
   Teams *teams;
   Session *session;
   Goblin* goblin;
-  Bugbear* bugbear;
+  BugbearWarrior* bugbear;
   DraconicSorcererLvl1* draconic_sorcerer_lvl_1;
   WildHeartBarbarianLvl3* wild_heart_barbarian;
   BattlemasterFighterLvl5* battlemaster_fighter_lvl_5;
@@ -52,7 +52,7 @@ protected:
     session = new Session();
     goblin = new Goblin(1);
     draconic_sorcerer_lvl_1 = new DraconicSorcererLvl1(1);
-    bugbear = new Bugbear(1);
+    bugbear = new BugbearWarrior(1);
     wild_heart_barbarian = new WildHeartBarbarianLvl3(1);
     stone_giant = new StoneGiant(1);
     battlemaster_fighter_lvl_5 = new BattlemasterFighterLvl5(1);

@@ -4,6 +4,7 @@
 #include "core/feasibility.hpp"
 #include "actions/dodge.hpp"
 #include "actions/attack.hpp"
+#include "actions/break_grapple.hpp"
 #include "actions/movement.hpp"
 
 namespace enc
@@ -164,8 +165,18 @@ namespace enc
     auto &battleMap = BattleMap::getInstance();
     AttackFactory &factory = attack->getAttackFactory();
 
-    // Minimal port of resolve_attack: no advantage/disadvantage conditions are evaluated yet, so the roll is straight.
+    // Minimal port of resolve_attack: evaluate the grapple-related advantage/disadvantage sources.
     std::unordered_set<RollType> types;
+    // 2024: a Grappled creature has Disadvantage on attack rolls against any target other than the grappler.
+    if(attacker->isAffectedBy(Conditions::GRAPPLED) && attacker->getInitiatorOfCondition(Conditions::GRAPPLED) != target)
+      {
+        types.insert(RollType::DISADVANTAGE);
+      }
+    // Some attacks (e.g. the Bugbear Warrior's Light Hammer) have Advantage against a creature this combatant grapples.
+    if(factory.hasAdvantageVsGrappledTarget() && target->getInitiatorOfCondition(Conditions::GRAPPLED) == attacker)
+      {
+        types.insert(RollType::ADVANTAGE);
+      }
     RollType finalModifier = reconcileRollTypes(types);
 
     Die d20{1, 20};
@@ -210,6 +221,19 @@ namespace enc
         attack->setRollType(finalModifier);
         target->receiveCompoundDmg(compoundDmg, multiplier);
         battleMap.removeCombatantIfDead(*target);
+        // Apply on-hit riders (e.g. the grapple from a Grab) while the target is still in play.
+        if(target->isAlive())
+          {
+            for(const auto &onHit : factory.getOnHits())
+              {
+                auto extraDmg = onHit->hit(attacker, attack, target, multiplier, baseDmg);
+                if(!extraDmg.empty())
+                  {
+                    target->receiveCompoundDmg(extraDmg, multiplier);
+                    battleMap.removeCombatantIfDead(*target);
+                  }
+              }
+          }
         return ActionResult::HIT;
       }
 
@@ -229,7 +253,9 @@ namespace enc
             AttackFactory *aooFactory = candidate->getAoOFactory();
             if(aooFactory && candidate->hasReaction() && movingCombatant->isAlive())
               {
-                candidate->setHasReaction(false);
+                // The reaction is consumed inside resolveAction -> useResources (mirrors Python prompt_aoo,
+                // which leaves has_reaction for use_resources to clear). checkFeasibility still sees the
+                // reaction as available.
                 auto aoo = aooFactory->create(movingCombatant);
                 resolveAction(aoo, candidate);
               }
@@ -267,6 +293,12 @@ namespace enc
       case AbilityType::STANDARD_MOVEMENT:
       case AbilityType::DISENGAGED_MOVEMENT:
         {
+          // 2024: the Grappled (and Restrained) condition sets Speed to 0, so movement is blocked.
+          if(combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::RESTRAINED}))
+            {
+              std::cout << combatant->_name << " can't move (Speed 0 while grappled/restrained)" << std::endl;
+              return ActionResult::OTHER;
+            }
           auto *movement = dynamic_cast<MovementIncrement *>(action.get());
           if(!movement)
             {
@@ -275,6 +307,34 @@ namespace enc
           if(!requestMovement(combatant, movement))
             {
               return ActionResult::MISS;
+            }
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::BREAK_GRAPPLE:
+        {
+          auto *breakGrappleFactory = dynamic_cast<BreakGrappleFactory *>(&action->getFactory());
+          if(!breakGrappleFactory)
+            {
+              return ActionResult::MISS;
+            }
+          const ConditionWithDC &grapple = breakGrappleFactory->getGrappleCondition();
+          // 2024 escape: the Grappled creature uses its action for a Strength (Athletics) or
+          // Dexterity (Acrobatics) check against the escape DC, ending the condition on a success.
+          int bonus = std::max(combatant->getAthletics(), combatant->getAcrobatics());
+          std::cout << combatant->_name << " attempts to escape the grapple (DC " << grapple.dc << ")" << std::endl;
+          if(rollAbilityCheck(bonus, grapple.dc, RollType::STRAIGHT))
+            {
+              std::cout << combatant->_name << " breaks free of the grapple" << std::endl;
+              if(grapple.initiator != nullptr)
+                {
+                  grapple.initiator->removeCondition(Conditions::GRAPPLING);
+                }
+              combatant->breakOutOfGrapple();
+            }
+          else
+            {
+              std::cout << combatant->_name << " fails to escape the grapple" << std::endl;
             }
           return ActionResult::OTHER;
         }

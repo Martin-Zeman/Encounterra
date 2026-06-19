@@ -100,6 +100,7 @@ namespace enc
     std::vector<Combatant*> getNonSwallowedEnemiesWithinHopDistance(const Combatant* combatant, int distance);
     std::vector<Combatant*> getNonSwallowedEnemiesWithoutHopDistance(const Combatant* combatant, int distance);
     bool isDifficultTerrainAt(const Coords &coords) const;
+    bool areEmptyOrSelf(const Coords &coords, const Combatant &combatant) const;
     void pushCombatantAwayFrom(const Vector2D &origin, Combatant *targetCombatant, int distance);
     void setCombatRound(uint32_t round);
     uint32_t getCombatRound();
@@ -136,7 +137,6 @@ namespace enc
     BattleMap &operator=(const BattleMap &) = delete;
 
     bool isEmptyOrSelf(int x, int y, int combatantId) const;
-    bool areEmptyOrSelf(const Coords &coords, const Combatant &combatant) const;
     void fillRegion(MapMatrix &mask, const Coord &coord, int offset, int value);
     blaze::StaticMatrix<int, 2, 2> getHarmfulBoundingBox(const Combatant *caster, int inflation);
   };

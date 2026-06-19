@@ -24,6 +24,7 @@
 #include "actions/action_types.hpp"
 #include "actions/action_constants.hpp"
 #include "spells/firebolt.hpp"
+#include "abilities/on_hit_grapple.hpp"
 #include "effects/effect.hpp"
 #include "core/state_machine.hpp"
 
@@ -132,6 +133,17 @@ namespace enc
     Combatant *getGrappledTarget();
     std::optional<ConditionWithDC> needsToBreakOutOfGrapple();
     void breakOutOfGrapple();
+    // 2024: a grapple ends if the grappler gains the Incapacitated condition. Call at the start of the
+    // grappled creature's turn to release it from a grapple whose grappler can no longer maintain it.
+    void endGrappleIfGrapplerIncapacitated()
+    {
+      Combatant *grappler = getInitiatorOfCondition(Conditions::GRAPPLED);
+      if(grappler != nullptr && grappler->isAffectedBy(Conditions::INCAPACITATED))
+        {
+          grappler->removeCondition(Conditions::GRAPPLING);
+          removeAllConditionsOfType(Conditions::GRAPPLED);
+        }
+    }
     void setConcentrationEffect(std::shared_ptr<Effect> effect);
     std::weak_ptr<Effect> getConcentrationEffect() { return _concentrationEffect; }
     void breakConcentration();
@@ -158,6 +170,10 @@ namespace enc
     const std::unordered_map<SavingThrow, int> &getSavingThrows() { return _savingThrows; }
     int getSavingThrow(SavingThrow st) { return _savingThrows.at(st); }
     void setSavingThrow(SavingThrow st, int value) { _savingThrows.at(st) = value; }
+    int getAthletics() const { return _athletics; }
+    void setAthletics(int value) { _athletics = value; }
+    int getAcrobatics() const { return _acrobatics; }
+    void setAcrobatics(int value) { _acrobatics = value; }
     const std::vector<int> &getSavingThrowFlatMods(SavingThrow type) const;
     void addSavingThrowFlatMod(SavingThrow type, int mod);
     void clearSavingThrowFlatMods(SavingThrow type);
@@ -276,6 +292,24 @@ namespace enc
     std::shared_ptr<ActoidFactory> addMagicMissile() { return nullptr; }
     std::shared_ptr<ActoidFactory> addGrapple() { return nullptr; }
     std::shared_ptr<ActoidFactory> addGrappleAttack() { return nullptr; }
+
+    /**
+     * Add a melee attack that, on a hit, applies the 2024 Grappled condition to the target
+     * (escape DC = escapeDC, escaped with a Strength (Athletics) or Dexterity (Acrobatics) check)
+     * and gives this combatant the Grappling condition pointing at the target.
+     * Mirrors the Python OnHitAutoRestrained rider, adapted to the 2024 Grab (Grappled only).
+     */
+    std::shared_ptr<ActoidFactory> addGrappleAttack(const std::string &name, Combatant *owner, int toHit,
+                                                    const std::vector<Die> &dmgDice, int dmgBonus, DamageType damageType,
+                                                    int attackRange, int escapeDC, SkillCheck escapeSkill = SkillCheck::ATHLETICS)
+    {
+      std::vector<std::unique_ptr<OnHit>> onHit;
+      onHit.push_back(std::make_unique<OnHitGrapple>(escapeDC, escapeSkill));
+      auto factory = std::make_shared<MeleeAttackFactory>("MeleeAttackFactory", name, owner, AbilityType::MELEE_ATTACK, toHit,
+                                                          dmgDice, dmgBonus, damageType, attackRange, 1, Uses(), std::move(onHit));
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addVampiricBite() { return nullptr; }
     std::shared_ptr<ActoidFactory> addBless() { return nullptr; }
     std::shared_ptr<ActoidFactory> addRayOfEnfeeblement() { return nullptr; }
@@ -509,6 +543,8 @@ namespace enc
     int _meleeReactionRange = 1;
     int _speed;
     int _movement;
+    int _athletics = 0;
+    int _acrobatics = 0;
     Color _teamColor;
     StateMachine _attackFsm;
     std::unordered_map<std::string, std::shared_ptr<Uses>> _ammo; // TODO: Unify this with attacks so that it's shared between them

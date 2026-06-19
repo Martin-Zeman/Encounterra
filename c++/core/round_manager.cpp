@@ -180,6 +180,7 @@ namespace enc
               }
 
             combatant->newTurn();
+            combatant->endGrappleIfGrapplerIncapacitated();
             auto effects = effectTracker.getAffectingCombatant(combatant);
             _actionResolver.resolveEffects(effects, combatant);
 

@@ -4,6 +4,7 @@
 #include "core/round_manager.hpp"
 #include "core/types.hpp"
 #include "combatants/goblin.hpp"
+#include "combatants/bugbear_warrior.hpp"
 #include "effects/effect_tracker.hpp"
 
 #include <iostream>
@@ -27,18 +28,24 @@ int main()
     // Session owns the combatants (via unique_ptr); the RoundManager only borrows them.
     Session session;
 
-    auto *goblinBlue = new Goblin(1);
-    auto *goblinRed = new Goblin(2);
+    auto *bugbearWarrior = new BugbearWarrior(1);
+    auto *goblinRed1 = new Goblin(1);
+    auto *goblinRed2 = new Goblin(2);
+    auto *goblinRed3 = new Goblin(3);
 
-    session.addCombatant(goblinBlue, Color::BLUE);
-    session.addCombatant(goblinRed, Color::RED);
+    session.addCombatant(bugbearWarrior, Color::BLUE);
+    session.addCombatant(goblinRed1, Color::RED);
+    session.addCombatant(goblinRed2, Color::RED);
+    session.addCombatant(goblinRed3, Color::RED);
 
     // Place the two goblins on opposite sides of the map.
     battleMap.buildBaseAdjacencyMatrix();
-    battleMap.setCombatantCoordinates(*goblinBlue, Coord{1, 7});
-    battleMap.setCombatantCoordinates(*goblinRed, Coord{13, 7});
+    battleMap.setCombatantCoordinates(*bugbearWarrior, Coord{1, 7});
+    battleMap.setCombatantCoordinates(*goblinRed1, Coord{13, 7});
+    battleMap.setCombatantCoordinates(*goblinRed2, Coord{11, 6});
+    battleMap.setCombatantCoordinates(*goblinRed3, Coord{9, 8});
 
-    std::vector<Combatant *> combatants = {goblinBlue, goblinRed};
+    std::vector<Combatant *> combatants = {bugbearWarrior, goblinRed1, goblinRed2, goblinRed3};
     RoundManager roundManager(combatants, 50);
     roundManager.simulateN(1);
 

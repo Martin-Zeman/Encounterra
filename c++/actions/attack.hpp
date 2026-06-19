@@ -46,6 +46,9 @@ namespace enc
     int getDmgBonus() const { return _dmgBonus; }
     DamageType getDmgType() const { return _dmgType; }
     int getCritRange() const { return _critRange; }
+    const std::vector<std::unique_ptr<OnHit>> &getOnHits() const { return _onHit; }
+    void setAdvantageVsGrappledTarget(bool value) { _advantageVsGrappledTarget = value; }
+    bool hasAdvantageVsGrappledTarget() const { return _advantageVsGrappledTarget; }
 
   protected:
     int _toHit;
@@ -61,6 +64,7 @@ namespace enc
     bool _usesDex;
     bool _twoHanded;
     Die _toHitBonusDie;
+    bool _advantageVsGrappledTarget = false;
   };
 
   class Attack : public Actoid, public DirectThreat

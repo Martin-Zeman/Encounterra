@@ -1,9 +1,20 @@
 #include "core/feasibility.hpp"
 #include "core/combatant.hpp"
+#include "core/battle_map.hpp"
+#include "core/coords.hpp"
 #include "actions/action_types.hpp"
+#include "actions/movement.hpp"
 
 namespace enc
 {
+
+  namespace
+  {
+    bool isMovementAbility(AbilityType abilityType)
+    {
+      return abilityType > AbilityType::MOVEMENT_DELIMITER;
+    }
+  } // namespace
 
   bool checkFeasibility(Combatant *combatant, Actoid &actoid)
   {
@@ -17,9 +28,41 @@ namespace enc
       {
         result = combatant->hasBonusAction();
       }
+    else if(abilityType > AbilityType::REACTION_DELIMITER && abilityType < AbilityType::HASTE_ACTION_DELIMITER)
+      {
+        result = combatant->hasReaction();
+      }
     else if(abilityType > AbilityType::HASTE_ACTION_DELIMITER && abilityType < AbilityType::PASSIVE_DELIMITER)
       {
         result = combatant->hasHasteAction();
+      }
+    else if(isMovementAbility(abilityType))
+      {
+        // Movement is gated by movement points (not the action/bonus/reaction/haste economy). Mirrors
+        // Python check_feasibility's Movement branch.
+        if(combatant->isAffectedByAny({Conditions::INCAPACITATED, Conditions::STUNNED, Conditions::PARALYZED}))
+          {
+            result = false;
+          }
+        else if(abilityType == AbilityType::GET_UP_FROM_PRONE)
+          {
+            result = combatant->getMovement() >= combatant->getSpeed() / 2;
+          }
+        else if(abilityType == AbilityType::STANDARD_MOVEMENT || abilityType == AbilityType::DISENGAGED_MOVEMENT)
+          {
+            auto &battleMap = BattleMap::getInstance();
+            auto &movementIncrement = dynamic_cast<MovementIncrement &>(actoid);
+            Coords targetPosition = battleMap.getCombatantCoordinates(*combatant) + movementIncrement.getIncrement();
+            int movementNeeded = battleMap.isDifficultTerrainAt(targetPosition) ? 2 : 1;
+            result = combatant->getMovement() >= movementNeeded && targetPosition.areValidCoords(battleMap.getGridSize()) &&
+                     battleMap.areEmptyOrSelf(targetPosition, *combatant) &&
+                     !combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::RESTRAINED});
+          }
+        else
+          {
+            result = false; // FORCED_MOVEMENT is not planned via getAction.
+          }
+        return result;
       }
     else
       {
@@ -85,9 +128,18 @@ namespace enc
       {
         result = combatant->hasBonusAction();
       }
+    else if(abilityType > AbilityType::REACTION_DELIMITER && abilityType < AbilityType::HASTE_ACTION_DELIMITER)
+      {
+        result = combatant->hasReaction();
+      }
     else if(abilityType > AbilityType::HASTE_ACTION_DELIMITER && abilityType < AbilityType::PASSIVE_DELIMITER)
       {
         result = combatant->hasHasteAction();
+      }
+    else if(isMovementAbility(abilityType))
+      {
+        // Mirrors Python check_feasibility_light's Movement branch.
+        return combatant->getMovement() > 0 && !combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::RESTRAINED});
       }
     else
       {
