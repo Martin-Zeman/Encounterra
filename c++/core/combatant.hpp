@@ -31,6 +31,8 @@
 #include "spells/shield.hpp"
 #include "spells/innate_sorcery.hpp"
 #include "abilities/on_hit_grapple.hpp"
+#include "abilities/on_hit_prone.hpp"
+#include "abilities/on_hit_saving_throw_dmg.hpp"
 #include "effects/effect.hpp"
 #include "core/state_machine.hpp"
 #include "core/attack_fsm.hpp"
@@ -108,6 +110,7 @@ namespace enc
     void setSize(Size size) { _size = size; };
     Size getSize() const { return _size; };
     int getAC() const { return _ac; };
+    void setAC(int ac) { _ac = ac; };
     void setTeamColor(Color teamColor) { _teamColor = teamColor; }
     bool hasAction() const { return _hasAction; }
     bool hasBonusAction() const { return _hasBonusAction; }
@@ -191,12 +194,15 @@ namespace enc
     int getMaxHp() const { return _maxHp; }
     void setTemporaryHp(int hp) { _temporaryHp = std::max(_temporaryHp, hp); }
     int getTemporaryHp() { return _temporaryHp; }
+    //! Drop any temporary hit points (e.g. when a Wild Shape ends).
+    void clearTemporaryHp() { _temporaryHp = 0; }
     int getCurrentInit() const { return _currInit; }
     int getMovement() const { return _movement; }
     void setMovement(int movement) { _movement = movement; }
     bool hasMovement(int dist = 1) const { return _movement >= dist; }
     void decrementMovement(int dist = 1) { _movement -= dist; }
     int getSpeed() const { return _speed; }
+    void setSpeed(int speed) { _speed = speed; }
     bool hasPassiveAbility(AbilityType ability) const;
     // Current number of Metamagic sorcery points (0 if the combatant has no Metamagic resource).
     int getSorceryPoints() const;
@@ -208,6 +214,9 @@ namespace enc
     void triggerAttackFsm(const ActoidFactory *factory) { _attackFsm.trigger(factory); }
     int getAttackFsmState() const { return _attackFsm.getState(); }
     void setAttackFsmState(int state) { _attackFsm.setState(state); }
+    //! Whole finite-state-machine accessors used by Wild Shape to temporarily adopt a beast's multiattack pattern.
+    const AttackFsm &getAttackFsm() const { return _attackFsm; }
+    void setAttackFsm(const AttackFsm &fsm) { _attackFsm = fsm; }
     const std::unordered_map<SavingThrow, int> &getSavingThrows() { return _savingThrows; }
     int getSavingThrow(SavingThrow st) { return _savingThrows.at(st); }
     void setSavingThrow(SavingThrow st, int value) { _savingThrows.at(st) = value; }
@@ -245,6 +254,10 @@ namespace enc
       _dangerZoneAttack = factory;
     }
     AttackFactory* getAoOFactory() { return _aoOFactory; }
+    void setAoOFactory(AttackFactory* factory) { _aoOFactory = factory; }
+    //! Class id of the beast currently shaped into (0 = not wild-shaped). Used to forbid reshaping into the same form.
+    int getActiveWildshapeFormId() const { return _activeWildshapeFormId; }
+    void setActiveWildshapeFormId(int classId) { _activeWildshapeFormId = classId; }
     void setShortestPathsCache(const blaze::DynamicMatrix<Coord> &shortestPaths) { _shortestPathsCache = shortestPaths; }
     const blaze::DynamicMatrix<Coord> &getShortestPathsCache() const { return _shortestPathsCache; }
     std::deque<std::shared_ptr<Actoid>> &getActionPlan() { return _actionPlan; }
@@ -285,6 +298,19 @@ namespace enc
                                                   DamageType damageType, int attackRange)
     {
       auto factory = std::make_shared<MeleeAttackFactory>("MeleeAttackFactory", name, owner, AbilityType::MELEE_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+
+    //! Melee attack carrying on-hit riders (e.g. a beast's knock-Prone or save-for-half venom) and/or
+    //! always-applied extra damage dice. Mirrors the Python add_ability(MELEE_ATTACK, ..., on_hit=[...]).
+    std::shared_ptr<ActoidFactory> addMeleeAttackWithRiders(const std::string &name, Combatant *owner, int toHit,
+                                                            const std::vector<Die> &dmgDice, int dmgBonus, DamageType damageType, int attackRange,
+                                                            std::vector<std::unique_ptr<OnHit>> onHit,
+                                                            std::vector<DmgDieWithType> extraDmg = {})
+    {
+      auto factory = std::make_shared<MeleeAttackFactory>("MeleeAttackFactory", name, owner, AbilityType::MELEE_ATTACK, toHit, dmgDice, dmgBonus,
+                                                          damageType, attackRange, 1, Uses(), std::move(onHit), std::move(extraDmg));
       _actionFactories.emplace_back(factory);
       return factory;
     }
@@ -692,6 +718,7 @@ namespace enc
     std::unordered_set<DamageType> _dmgTypesTookLastRound;
     Combatant *_originalForm = this;
     Combatant *_currentWildshapeForm = nullptr;
+    int _activeWildshapeFormId = 0;
     Combatant *_swallower = nullptr;
     Combatant *_swallowedTarget = nullptr;
     Combatant *_constrictedTarget = nullptr;
