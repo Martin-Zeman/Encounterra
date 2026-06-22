@@ -24,6 +24,12 @@
 #include "actions/action_types.hpp"
 #include "actions/action_constants.hpp"
 #include "spells/firebolt.hpp"
+#include "spells/ray_of_frost.hpp"
+#include "spells/scorching_ray.hpp"
+#include "spells/hold_person.hpp"
+#include "spells/misty_step.hpp"
+#include "spells/shield.hpp"
+#include "spells/innate_sorcery.hpp"
 #include "abilities/on_hit_grapple.hpp"
 #include "effects/effect.hpp"
 #include "core/state_machine.hpp"
@@ -112,6 +118,19 @@ namespace enc
     void setHasReaction(bool has) { _hasReaction = has; }
     bool hasAlreadyUsedSpellslotThisTurn() { return _alreadyUsedSpellslotThisTurn; }
     void setAlreadyUsedSpellslotThisTurn(bool used) { _alreadyUsedSpellslotThisTurn = used; }
+    // Shield (reaction): +5 AC until the start of the caster's next turn, where newTurn()/reset() undo it.
+    bool isShieldSpellActive() const { return _isShieldSpellActive; }
+    void applyShieldSpell()
+    {
+      if(!_isShieldSpellActive)
+        {
+          _ac += 5;
+          _isShieldSpellActive = true;
+        }
+    }
+    // Innate Sorcery (2024): while active the caster has advantage on its own spell attack rolls.
+    bool isInnateSorceryActive() const { return _innateSorceryActive; }
+    void setInnateSorceryActive(bool active) { _innateSorceryActive = active; }
     int getMeleeReactionRange() { return _meleeReactionRange; }
     Combatant *getCurrentForm();
     Combatant *getOriginalForm();
@@ -155,6 +174,17 @@ namespace enc
     bool isVulnerableTo(DamageType dmgType);
     Spellslots &getSpellslots() { return *_spellslots; }
     int getLevel() const { return _level; }
+    int getDC() const { return _dc; }
+    // A creature is humanoid if it's a player-class combatant or a monster of the Humanoid type
+    // (used by spells such as Hold Person that only affect humanoids).
+    bool isHumanoid() const
+    {
+      if(_type != CombatantType::MONSTER)
+        {
+          return true;
+        }
+      return std::holds_alternative<Monster>(_subtype) && std::get<Monster>(_subtype) == Monster::HUMANOID;
+    }
     int getCurrentHp() const { return _currHp; }
     void setCurrentHp(int hp) { _currHp = hp; }
     int getMaxHp() const { return _maxHp; }
@@ -167,6 +197,8 @@ namespace enc
     void decrementMovement(int dist = 1) { _movement -= dist; }
     int getSpeed() const { return _speed; }
     bool hasPassiveAbility(AbilityType ability) const;
+    // Current number of Metamagic sorcery points (0 if the combatant has no Metamagic resource).
+    int getSorceryPoints() const;
     const std::unordered_map<SavingThrow, int> &getSavingThrows() { return _savingThrows; }
     int getSavingThrow(SavingThrow st) { return _savingThrows.at(st); }
     void setSavingThrow(SavingThrow st, int value) { _savingThrows.at(st) = value; }
@@ -277,7 +309,12 @@ namespace enc
     std::shared_ptr<ActoidFactory> addHide() { return nullptr; }
     std::shared_ptr<ActoidFactory> addTwinnedFirebolt() { return nullptr; }
     std::shared_ptr<ActoidFactory> addTwinnedHaste() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addScorchingRay() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addScorchingRay()
+    {
+      auto factory = std::make_shared<ScorchingRayFactory>(_spellToHit, AbilityType::SCORCHING_RAY, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addFaerieFire() { return nullptr; }
     std::shared_ptr<ActoidFactory> addWildshape() { return nullptr; }
     std::shared_ptr<ActoidFactory> addPounce() { return nullptr; }
@@ -285,7 +322,12 @@ namespace enc
     std::shared_ptr<ActoidFactory> addBreakGrapple() { return nullptr; }
     std::shared_ptr<ActoidFactory> addFlamingSphere() { return nullptr; }
     std::shared_ptr<ActoidFactory> addWeb() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHoldPerson() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHoldPerson()
+    {
+      auto factory = std::make_shared<HoldPersonFactory>(_dc, AbilityType::HOLD_PERSON, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addTwinnedHoldPerson() { return nullptr; }
     std::shared_ptr<ActoidFactory> addShockingGrasp() { return nullptr; }
     std::shared_ptr<ActoidFactory> addTwinnedShockingGrasp() { return nullptr; }
@@ -327,7 +369,12 @@ namespace enc
     std::shared_ptr<ActoidFactory> addConicBreathWeapon() { return nullptr; }
     std::shared_ptr<ActoidFactory> addConicBreathWeaponAttack() { return nullptr; }
     std::shared_ptr<ActoidFactory> addLineBreathWeapon() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addRayOfFrost() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addRayOfFrost()
+    {
+      auto factory = std::make_shared<RayOfFrostFactory>(_spellToHit, AbilityType::RAY_OF_FROST, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
 
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -343,7 +390,24 @@ namespace enc
     std::shared_ptr<ActoidFactory> addPamBonusAttack() { return nullptr; }
     std::shared_ptr<ActoidFactory> addRage() { return nullptr; }
     std::shared_ptr<ActoidFactory> addTotemRage() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addMistyStep() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addMistyStep()
+    {
+      auto factory = std::make_shared<MistyStepFactory>(this, _spellslots.get());
+      _bonusActionFactories.emplace_back(factory);
+      return factory;
+    }
+
+    //! Innate Sorcery (2024): bonus action, twice per long rest. Registers its limited-use resource and
+    //! a self-targeting threat-modifier factory whose threat reflects the advantage it grants the
+    //! caster's own spell attacks (see InnateSorceryFactory).
+    std::shared_ptr<ActoidFactory> addInnateSorcery()
+    {
+      auto resource = std::make_shared<Uses>(InnateSorceryFactory::maxUses, ResourceRefreshType::LONG_REST);
+      _resources.insert({AbilityType::INNATE_SORCERY, resource});
+      auto factory = std::make_shared<InnateSorceryFactory>(this, resource.get());
+      _bonusActionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addCunningDisengage() { return nullptr; }
     std::shared_ptr<ActoidFactory> addCunningDash() { return nullptr; }
     std::shared_ptr<ActoidFactory> addCunningHide() { return nullptr; }
@@ -401,7 +465,12 @@ namespace enc
       _dangerZoneAttack = static_cast<DirectThreatFactory *>(factory.get());
       return factory;
     }
-    std::shared_ptr<ActoidFactory> addShield() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addShield()
+    {
+      auto factory = std::make_shared<ShieldFactory>(this, _spellslots.get());
+      _reactionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addPreSwallowBiteReaction() { return nullptr; }
     std::shared_ptr<ActoidFactory> addUncannyDodge() { return nullptr; }
     std::shared_ptr<ActoidFactory> addParry() { return nullptr; }
@@ -465,7 +534,13 @@ namespace enc
     void addSentinel() {}
     void addPolearmMaster() {}
     void addDangerSense() {}
-    void addMetamagic() {}
+    //! Metamagic (2024): grants a pool of sorcery points (= sorcerer level) refreshed on a long rest,
+    //! and marks the combatant as having Metamagic so metamagic options become available.
+    void addMetamagic()
+    {
+      _passiveAbilities.insert(AbilityType::METAMAGIC);
+      _resources.insert({AbilityType::METAMAGIC, std::make_shared<Uses>(_level, ResourceRefreshType::LONG_REST)});
+    }
     void addPackTactics() {}
     void addFanaticAdvantage() {}
     void addWarCaster() {}
@@ -483,14 +558,50 @@ namespace enc
     void addGreatWeaponFighting() {}
     void addDueling() {}
     void addBattleMasterManeuvers() {}
-    void addDraconicResilience() {}
+    //! Draconic Resilience (2024): +3 HP at level 3 plus 1 per sorcerer level, and an unarmored AC of
+    //! 10 + Dex + Cha. The final HP and AC are baked into the combatant's constructor stats, so this
+    //! only registers the passive marker.
+    void addDraconicResilience() { _passiveAbilities.insert(AbilityType::DRACONIC_RESILIENCE); }
     void addUnarmoredDefense() {}
     void addDivineSmite() {}
     void addChannelDivinity() {}
     void addUndeadFortitude();
     void addMartialAdvantage() {}
-    void addQuickenedSpell() {}
-    void addTwinnedSpell() {}
+    //! Quickened Spell metamagic: for each eligible action spell already known, add a bonus-action
+    //! quickened variant (reusing the same factory class with the quickened ability type). Must be
+    //! called after the spells it should quicken have been added and after addMetamagic().
+    void addQuickenedSpell()
+    {
+      _passiveAbilities.insert(AbilityType::QUICKENED_SPELL);
+      std::vector<std::shared_ptr<ActoidFactory>> quickened;
+      for(const auto &af : _actionFactories)
+        {
+          switch(af->getAbilityType())
+            {
+            case AbilityType::FIREBOLT:
+              quickened.push_back(std::make_shared<FireboltFactory>(_spellToHit, AbilityType::QUICKENED_FIREBOLT, this, _spellslots.get()));
+              break;
+            case AbilityType::RAY_OF_FROST:
+              quickened.push_back(std::make_shared<RayOfFrostFactory>(_spellToHit, AbilityType::QUICKENED_RAY_OF_FROST, this, _spellslots.get()));
+              break;
+            case AbilityType::SCORCHING_RAY:
+              quickened.push_back(std::make_shared<ScorchingRayFactory>(_spellToHit, AbilityType::QUICKENED_SCORCHING_RAY, this, _spellslots.get()));
+              break;
+            case AbilityType::HOLD_PERSON:
+              quickened.push_back(std::make_shared<HoldPersonFactory>(_dc, AbilityType::QUICKENED_HOLD_PERSON, this, _spellslots.get()));
+              break;
+            default: break;
+            }
+        }
+      for(auto &q : quickened)
+        {
+          _bonusActionFactories.emplace_back(q);
+        }
+    }
+    //! Twinned Spell metamagic. The 2024 twinned-spell variant factories (which retarget a single-target
+    //! spell at a second creature) have not yet been ported to C++, so this registers the metamagic
+    //! option marker without generating separate twinned factories.
+    void addTwinnedSpell() { _passiveAbilities.insert(AbilityType::TWINNED_SPELL); }
     void addEmpoweredSpell() {}
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -540,6 +651,7 @@ namespace enc
     bool _alreadyUsedSpellslotThisTurn = false;
     bool _isDodging = false;
     bool _isShieldSpellActive = false;
+    bool _innateSorceryActive = false;
     int _meleeReactionRange = 1;
     int _speed;
     int _movement;

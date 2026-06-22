@@ -10,48 +10,49 @@ namespace enc
 {
   class Combatant;
 
-  class FireboltFactory : public DirectThreatFactory
+  // Ray of Frost (2024) — a cantrip frost ray. We model only the damage component (as the threat
+  // engine does for Python's RayOfFrost, whose threat is pure mean damage); the 2024 "Speed reduced
+  // by 10 ft." rider is intentionally omitted as it has no bearing on the projected threat value.
+  class RayOfFrostFactory : public DirectThreatFactory
   {
-    friend class Firebolt; // Allow Firebolt to access private members of FireboltFactory
+    friend class RayOfFrost;
 
   public:
     static constexpr int level = 0;
-    static constexpr SpellRange range = SpellRange::FEET_120;
+    static constexpr SpellRange range = SpellRange::FEET_60;
     static constexpr SpellTarget target = SpellTarget::ONE_CREATURE;
     static constexpr Duration duration = Duration::INSTANTANEOUS;
     static constexpr bool concentration = false;
     static constexpr SpellType type = SpellType::HARMFUL;
-    static constexpr DamageType dmgType = DamageType::Fire;
+    static constexpr DamageType dmgType = DamageType::Cold;
 
     static Die getDmgDice(int level)
     {
       if(level >= 1 && level <= 4)
         {
-          return {1, 10};
+          return {1, 8};
         }
       else if(level >= 5 && level <= 10)
         {
-          return {2, 10};
+          return {2, 8};
         }
       else if(level >= 11 && level <= 16)
         {
-          return {3, 10};
+          return {3, 8};
         }
       else if(level >= 17)
         {
-          return {4, 10};
+          return {4, 8};
         }
       else
         {
-          throw std::runtime_error("Incorrect caster level of Firebolt");
+          throw std::runtime_error("Incorrect caster level of Ray of Frost");
         }
     }
 
-    //! @todo Can I remove the resource here?
-    FireboltFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource);
+    RayOfFrostFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource);
 
-
-    std::vector<Combatant*> getEligibleTargets() const;
+    std::vector<Combatant *> getEligibleTargets() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
 
     std::shared_ptr<Actoid> create(void *target) override;
@@ -68,12 +69,12 @@ namespace enc
     Die _dmgDice;
   };
 
-  class Firebolt : public Actoid, public DirectThreat
+  class RayOfFrost : public Actoid, public DirectThreat
   {
   public:
-    Firebolt(Combatant &target, const FireboltFactory &factory, RollType rollType = RollType::STRAIGHT)
-        : Actoid(const_cast<FireboltFactory &>(factory), ActoidFlags::IS_SPELL | ActoidFlags::IS_ATTACK_LIKE, AbilityType::FIREBOLT), _target(target),
-          _factory(factory)
+    RayOfFrost(Combatant &target, const RayOfFrostFactory &factory, RollType rollType = RollType::STRAIGHT)
+        : Actoid(const_cast<RayOfFrostFactory &>(factory), ActoidFlags::IS_SPELL | ActoidFlags::IS_ATTACK_LIKE, factory._abilityType), _target(target),
+          _factory(factory), _rollType(rollType)
     {}
 
     std::string toString() const override;
@@ -85,15 +86,14 @@ namespace enc
     Die getDmgDice() const { return _factory._dmgDice; }
 
     double calculateThreat(const Kwargs &kwargs) override;
-    // double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
-                                                        const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
+                                                 const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
 
   private:
-    Combatant& _target;
-    const FireboltFactory &_factory;
+    Combatant &_target;
+    const RayOfFrostFactory &_factory;
     RollType _rollType;
   };
 }

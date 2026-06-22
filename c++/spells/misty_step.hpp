@@ -49,6 +49,8 @@ namespace enc
 
     std::string shorthandStr() const { return "MistyStep"; }
 
+    const Coord &getCoord() const { return _coord; }
+
     double calculateThreat(const Kwargs &kwargs) override;
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                         const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;

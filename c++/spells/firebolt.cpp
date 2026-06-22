@@ -16,7 +16,13 @@ namespace enc
 
   std::vector<Combatant*> FireboltFactory::getEligibleTargets() const
   {
-    return {}; // Placeholder
+    BattleMap &battleMap = BattleMap::getInstance();
+    Combatant *swallower = _combatant->getSwallower();
+    if(swallower)
+      {
+        return {swallower};
+      }
+    return battleMap.getNonSwallowedEnemiesWithinRadius(_combatant, static_cast<int>(FireboltFactory::range));
   }
 
   std::vector<std::shared_ptr<Actoid>> FireboltFactory::createAll(void *previousActionInDag)

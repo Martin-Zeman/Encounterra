@@ -212,6 +212,7 @@ namespace enc
     QUICKENED_CURE_WOUNDS,
     VOW_OF_ENMITY,
     AGGRESSIVE,
+    INNATE_SORCERY,
 
     /* Reaction */
     REACTION_DELIMITER,

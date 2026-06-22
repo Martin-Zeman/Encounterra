@@ -10,48 +10,27 @@ namespace enc
 {
   class Combatant;
 
-  class FireboltFactory : public DirectThreatFactory
+  // Scorching Ray (2024) — level 2. Creates three rays of fire, each a separate spell attack for
+  // 2d6 fire. The threat model concentrates all three rays on a single target (the threat-maximising
+  // play), so the projected threat equals three single-ray attacks against that target.
+  class ScorchingRayFactory : public DirectThreatFactory
   {
-    friend class Firebolt; // Allow Firebolt to access private members of FireboltFactory
+    friend class ScorchingRay;
 
   public:
-    static constexpr int level = 0;
+    static constexpr int level = 2;
+    static constexpr int numRays = 3;
     static constexpr SpellRange range = SpellRange::FEET_120;
-    static constexpr SpellTarget target = SpellTarget::ONE_CREATURE;
+    static constexpr SpellTarget target = SpellTarget::THREE_CREATURES;
     static constexpr Duration duration = Duration::INSTANTANEOUS;
     static constexpr bool concentration = false;
     static constexpr SpellType type = SpellType::HARMFUL;
     static constexpr DamageType dmgType = DamageType::Fire;
+    static constexpr Die rayDmgDice = {2, 6};
 
-    static Die getDmgDice(int level)
-    {
-      if(level >= 1 && level <= 4)
-        {
-          return {1, 10};
-        }
-      else if(level >= 5 && level <= 10)
-        {
-          return {2, 10};
-        }
-      else if(level >= 11 && level <= 16)
-        {
-          return {3, 10};
-        }
-      else if(level >= 17)
-        {
-          return {4, 10};
-        }
-      else
-        {
-          throw std::runtime_error("Incorrect caster level of Firebolt");
-        }
-    }
+    ScorchingRayFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource);
 
-    //! @todo Can I remove the resource here?
-    FireboltFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource);
-
-
-    std::vector<Combatant*> getEligibleTargets() const;
+    std::vector<Combatant *> getEligibleTargets() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
 
     std::shared_ptr<Actoid> create(void *target) override;
@@ -68,12 +47,12 @@ namespace enc
     Die _dmgDice;
   };
 
-  class Firebolt : public Actoid, public DirectThreat
+  class ScorchingRay : public Actoid, public DirectThreat
   {
   public:
-    Firebolt(Combatant &target, const FireboltFactory &factory, RollType rollType = RollType::STRAIGHT)
-        : Actoid(const_cast<FireboltFactory &>(factory), ActoidFlags::IS_SPELL | ActoidFlags::IS_ATTACK_LIKE, AbilityType::FIREBOLT), _target(target),
-          _factory(factory)
+    ScorchingRay(Combatant &target, const ScorchingRayFactory &factory, RollType rollType = RollType::STRAIGHT)
+        : Actoid(const_cast<ScorchingRayFactory &>(factory), ActoidFlags::IS_SPELL | ActoidFlags::IS_ATTACK_LIKE, factory._abilityType), _target(target),
+          _factory(factory), _rollType(rollType)
     {}
 
     std::string toString() const override;
@@ -83,17 +62,17 @@ namespace enc
     Combatant &getTarget() const { return _target; }
     int getToHit() const { return _factory._toHit; }
     Die getDmgDice() const { return _factory._dmgDice; }
+    static constexpr int getNumRays() { return ScorchingRayFactory::numRays; }
 
     double calculateThreat(const Kwargs &kwargs) override;
-    // double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
-                                                        const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
+                                                 const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
 
   private:
-    Combatant& _target;
-    const FireboltFactory &_factory;
+    Combatant &_target;
+    const ScorchingRayFactory &_factory;
     RollType _rollType;
   };
 }

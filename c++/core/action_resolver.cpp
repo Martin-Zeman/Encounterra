@@ -6,6 +6,11 @@
 #include "actions/attack.hpp"
 #include "actions/break_grapple.hpp"
 #include "actions/movement.hpp"
+#include "spells/firebolt.hpp"
+#include "spells/ray_of_frost.hpp"
+#include "spells/scorching_ray.hpp"
+#include "spells/misty_step.hpp"
+#include "effects/effect_tracker.hpp"
 
 namespace enc
 {
@@ -241,6 +246,74 @@ namespace enc
     return ActionResult::MISS;
   }
 
+  ActionResult ActionResolver::resolveRangedSpellAttack(Combatant *caster, int toHit, const Die &dmgDice, DamageType dmgType, Combatant *target)
+  {
+    auto &battleMap = BattleMap::getInstance();
+
+    // Minimal port of resolve_ranged_spell_attack: collect the relevant advantage/disadvantage sources.
+    std::unordered_set<RollType> types;
+    // Innate Sorcery grants the caster advantage on its own spell attack rolls.
+    if(caster->isInnateSorceryActive())
+      {
+        types.insert(RollType::ADVANTAGE);
+      }
+    // Attacking a Paralyzed/Restrained/Stunned/Blinded creature is made with advantage.
+    if(target->isAffectedByAny({Conditions::PARALYZED, Conditions::RESTRAINED, Conditions::STUNNED, Conditions::BLINDED}))
+      {
+        types.insert(RollType::ADVANTAGE);
+      }
+    // Ranged spell attacks are made with disadvantage while an enemy is adjacent to the caster.
+    if(battleMap.isEnemyAdjacent(*caster))
+      {
+        types.insert(RollType::DISADVANTAGE);
+      }
+    if(target->isDodging())
+      {
+        types.insert(RollType::DISADVANTAGE);
+      }
+    RollType finalModifier = reconcileRollTypes(types);
+
+    Die d20{1, 20};
+    int rolled;
+    if(finalModifier == RollType::ADVANTAGE)
+      {
+        rolled = std::max(rollDice(d20), rollDice(d20));
+      }
+    else if(finalModifier == RollType::DISADVANTAGE)
+      {
+        rolled = std::min(rollDice(d20), rollDice(d20));
+      }
+    else
+      {
+        rolled = rollDice(d20);
+      }
+
+    std::cout << caster->_name << " rolls a spell attack against " << target->_name << std::endl;
+
+    if(rolled == 1)
+      {
+        std::cout << "Natural 1 rolled!" << std::endl;
+        return ActionResult::MISS;
+      }
+    int multiplier = (rolled == 20) ? 2 : 1;
+
+    if(rolled + toHit >= target->getAC())
+      {
+        int dmg = multiplier * rollDiceMulti({dmgDice});
+        if(dmg < 0)
+          {
+            dmg = 0;
+          }
+        std::cout << "The spell " << (multiplier == 2 ? "CRITS" : "hits") << " " << target->_name << " for " << dmg << " damage" << std::endl;
+        target->receiveDmg(dmg, dmgType, multiplier);
+        battleMap.removeCombatantIfDead(*target);
+        return ActionResult::HIT;
+      }
+
+    std::cout << "The spell misses " << target->_name << std::endl;
+    return ActionResult::MISS;
+  }
+
   bool ActionResolver::requestMovement(Combatant *movingCombatant, MovementIncrement *movement)
   {
     auto &battleMap = BattleMap::getInstance();
@@ -343,6 +416,95 @@ namespace enc
       case AbilityType::DISENGAGE:
         // Minimal: the defensive effect is not applied yet, but the action is consumed by the planner.
         std::cout << combatant->_name << " takes the " << action->toString() << " action" << std::endl;
+        return ActionResult::OTHER;
+
+      case AbilityType::FIREBOLT:
+      case AbilityType::QUICKENED_FIREBOLT:
+        {
+          auto *firebolt = dynamic_cast<Firebolt *>(action.get());
+          if(!firebolt)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          return resolveRangedSpellAttack(combatant, firebolt->getToHit(), firebolt->getDmgDice(), FireboltFactory::dmgType, &firebolt->getTarget());
+        }
+
+      case AbilityType::RAY_OF_FROST:
+      case AbilityType::QUICKENED_RAY_OF_FROST:
+        {
+          auto *rayOfFrost = dynamic_cast<RayOfFrost *>(action.get());
+          if(!rayOfFrost)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          // The 2024 Speed-reduction rider is not modeled (see RayOfFrostFactory); only the damage resolves.
+          return resolveRangedSpellAttack(combatant, rayOfFrost->getToHit(), rayOfFrost->getDmgDice(), RayOfFrostFactory::dmgType,
+                                          &rayOfFrost->getTarget());
+        }
+
+      case AbilityType::SCORCHING_RAY:
+      case AbilityType::QUICKENED_SCORCHING_RAY:
+        {
+          auto *scorchingRay = dynamic_cast<ScorchingRay *>(action.get());
+          if(!scorchingRay)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          // All rays are concentrated on the single chosen target (matching the threat model); each is a
+          // separate spell attack and stops early if the target dies.
+          Combatant *target = &scorchingRay->getTarget();
+          ActionResult result = ActionResult::MISS;
+          for(int ray = 0; ray < ScorchingRay::getNumRays() && target->isAlive(); ++ray)
+            {
+              ActionResult rayResult =
+                  resolveRangedSpellAttack(combatant, scorchingRay->getToHit(), scorchingRay->getDmgDice(), ScorchingRayFactory::dmgType, target);
+              if(rayResult == ActionResult::HIT)
+                {
+                  result = ActionResult::HIT;
+                }
+            }
+          return result;
+        }
+
+      case AbilityType::HOLD_PERSON:
+      case AbilityType::QUICKENED_HOLD_PERSON:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          EffectTracker::getInstance().add(effect);
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::MISTY_STEP:
+        {
+          auto *mistyStep = dynamic_cast<MistyStep *>(action.get());
+          if(!mistyStep)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          BattleMap::getInstance().moveCombatant(*combatant, mistyStep->getCoord());
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::SHIELD:
+        // Reaction: +5 AC until the start of the caster's next turn.
+        std::cout << combatant->_name << " casts Shield" << std::endl;
+        combatant->applyShieldSpell();
+        return ActionResult::OTHER;
+
+      case AbilityType::INNATE_SORCERY:
+        // Bonus action self-buff: grants advantage on the caster's spell attacks for the encounter.
+        std::cout << combatant->_name << " channels Innate Sorcery" << std::endl;
+        combatant->setInnateSorceryActive(true);
         return ActionResult::OTHER;
 
       default:

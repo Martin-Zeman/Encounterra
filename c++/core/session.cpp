@@ -4,6 +4,7 @@
 #include "combatants/bugbear_warrior.hpp"
 #include "combatants/goblin.hpp"
 #include "combatants/draconic_sorcerer_lvl_1.hpp"
+#include "combatants/draconic_sorcerer_lvl_3.hpp"
 #include "combatants/giant_toad.hpp"
 #include "combatants/ogre.hpp"
 #include "combatants/wild_heart_barbarian_lvl_3.hpp"
@@ -18,6 +19,7 @@ namespace enc
     registerCombatantType<BattlemasterFighterLvl5>();
     registerCombatantType<BugbearWarrior>();
     registerCombatantType<DraconicSorcererLvl1>();
+    registerCombatantType<DraconicSorcererLvl3>();
     registerCombatantType<GiantToad>();
     registerCombatantType<Goblin>();
     registerCombatantType<GreenDragonWyrmling>();
@@ -63,6 +65,7 @@ namespace enc
   template void Session::addCombatant<BattlemasterFighterLvl5>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<BugbearWarrior>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<DraconicSorcererLvl1>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<DraconicSorcererLvl3>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<GiantToad>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<Goblin>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<GreenDragonWyrmling>(Color, ResourceDepletionLevel);
@@ -73,6 +76,7 @@ namespace enc
   template void Session::addCombatant<BattlemasterFighterLvl5>(BattlemasterFighterLvl5*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<BugbearWarrior>(BugbearWarrior*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<DraconicSorcererLvl1>(DraconicSorcererLvl1*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<DraconicSorcererLvl3>(DraconicSorcererLvl3*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<GiantToad>(GiantToad*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<Goblin>(Goblin*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<GreenDragonWyrmling>(GreenDragonWyrmling*, Color, ResourceDepletionLevel);

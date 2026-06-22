@@ -75,6 +75,7 @@ namespace enc
             _ac -= 5;
         }
         _isShieldSpellActive = false;
+        _innateSorceryActive = false;
         _conditions.clear();
         _dcConditions.clear();
         breakConcentration();
@@ -140,7 +141,13 @@ namespace enc
             }
           if(auto resource = factory->getResource())
             {
-              out.emplace_back(*resource, (*resource)->getUses());
+              // Only ammo-style (Uses) resources are snapshotted/restored here. Level-indexed
+              // resources such as Spellslots have no level-less getUses() and are managed by the
+              // owning combatant (mirroring Python's per-combatant export/import_resources).
+              if(auto *asUses = dynamic_cast<Uses *>(*resource))
+                {
+                  out.emplace_back(*resource, asUses->getUses());
+                }
             }
         }
     }
@@ -198,6 +205,12 @@ namespace enc
 
   bool Combatant::hasPassiveAbility(AbilityType ability) const{
     return _passiveAbilities.contains(ability);
+  }
+
+  int Combatant::getSorceryPoints() const
+  {
+    auto it = _resources.find(AbilityType::METAMAGIC);
+    return it != _resources.end() ? it->second->getUses() : 0;
   }
 
   void Combatant::applyCondition(const Condition &condition)

@@ -35,7 +35,8 @@ namespace enc
     MENACING_ATTACK_FRIGHTENED,
     PARALYZING_ATTACK_PARALYZED,
     SHIELD_OF_FAITH,
-    VOW_OF_ENMITY
+    VOW_OF_ENMITY,
+    INNATE_SORCERY
   };
 
   class Effect : public std::enable_shared_from_this<Effect>

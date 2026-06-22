@@ -204,4 +204,22 @@ namespace enc
 
     virtual ~TransformerFactory() = default;
   };
+
+  /**
+   * Threat calculation for factories that modify the threat of other abilities (buffs and debuffs).
+   * Unlike DirectThreatFactory, a ThreatModifierFactory does NOT set IS_DIRECT_THREAT and therefore does
+   * not participate in the threat-delta loops (calculateThreatInDelta/OutDelta) of other modifiers, which
+   * avoids endless loops. Mirrors Python's factory_interfaces.ThreatModifierFactory.
+   */
+  class ThreatModifierFactory : public ActoidFactory
+  {
+  protected:
+    ThreatModifierFactory(const std::string &name, const std::string &abilityName, Combatant *combatant, AbilityType abilityType)
+        : ActoidFactory(name, abilityName, combatant, abilityType)
+    {}
+
+  public:
+    virtual ~ThreatModifierFactory() = default;
+    virtual double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const = 0;
+  };
 }

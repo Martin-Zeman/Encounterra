@@ -63,6 +63,45 @@ namespace enc
             result = result && !combatant->hasAlreadyUsedSpellslotThisTurn();
             break;
           }
+        case AbilityType::SCORCHING_RAY:
+        case AbilityType::HOLD_PERSON:
+        case AbilityType::MISTY_STEP:
+          {
+            if(auto resource = factory->getResource())
+              result = result && (*resource)->hasUses(2);
+            else
+              throw std::runtime_error("Actoid factory must have an associated resource!");
+            result = result && !combatant->hasAlreadyUsedSpellslotThisTurn();
+            break;
+          }
+        case AbilityType::QUICKENED_SCORCHING_RAY:
+        case AbilityType::QUICKENED_HOLD_PERSON:
+          {
+            if(auto resource = factory->getResource())
+              result = result && (*resource)->hasUses(2);
+            else
+              throw std::runtime_error("Actoid factory must have an associated resource!");
+            result = result && !combatant->hasAlreadyUsedSpellslotThisTurn();
+            result = result && combatant->getSorceryPoints() > 1;
+            break;
+          }
+        case AbilityType::TWINNED_HOLD_PERSON:
+          {
+            // Twinned Spell (2024): costs 1 sorcery point to add a second target.
+            if(auto resource = factory->getResource())
+              result = result && (*resource)->hasUses(2);
+            else
+              throw std::runtime_error("Actoid factory must have an associated resource!");
+            result = result && !combatant->hasAlreadyUsedSpellslotThisTurn();
+            result = result && combatant->getSorceryPoints() > 0;
+            break;
+          }
+        case AbilityType::QUICKENED_FIREBOLT:
+        case AbilityType::QUICKENED_RAY_OF_FROST:
+          {
+            result = result && combatant->getSorceryPoints() > 1;
+            break;
+          }
         case AbilityType::FIREBOLT: /*Nothing to do*/ break;
         default: break;
         }
