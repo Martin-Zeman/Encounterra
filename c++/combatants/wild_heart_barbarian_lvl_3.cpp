@@ -11,7 +11,7 @@ namespace enc
   {
     _instanceId = generateInstanceId();
 
-    addMeleeAttack("Two-handed axe", this,
+    auto axe = addMeleeAttack("Two-handed axe", this,
                    5,                         // toHit
                    std::vector<Die>{{1, 12}}, // dmgDice
                    3,                         // dmgBonus
@@ -25,6 +25,9 @@ namespace enc
                       DamageType::Slashing,
                       1 // attackRange
     );
+
+    // Single attack at 3rd level (Extra Attack is gained at 5th level).
+    addAttackTransition(axe.get(), AttackFsm::START, AttackFsm::NOP);
   }
 
   WildHeartBarbarianLvl3::WildHeartBarbarianLvl3(const std::string &name)
@@ -32,7 +35,7 @@ namespace enc
   {
     _instanceId = generateInstanceId();
 
-    addMeleeAttack("Two-handed axe", this,
+    auto axe = addMeleeAttack("Two-handed axe", this,
                    5,                         // toHit
                    std::vector<Die>{{1, 12}}, // dmgDice
                    3,                         // dmgBonus
@@ -46,5 +49,8 @@ namespace enc
                       DamageType::Slashing,
                       1 // attackRange
     );
+
+    // Single attack at 3rd level (Extra Attack is gained at 5th level).
+    addAttackTransition(axe.get(), AttackFsm::START, AttackFsm::NOP);
   }
 }

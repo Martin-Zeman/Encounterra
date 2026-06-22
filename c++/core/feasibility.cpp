@@ -79,12 +79,14 @@ namespace enc
       case AbilityType::PARALYZING_MELEE_ATTACK:
       case AbilityType::HASTE_PARALYZING_MELEE_ATTACK:
       {
-        // @todo: Add FSM
         // @todo: Add is reckless attack has been used
         // @todo: Check if they are enemies
         // @todo: Check range
         // @todo: Check if target is alive
         Attack &attack = dynamic_cast<Attack &>(actoid);
+        // Multiattack: a second, complementary attack can be granted by the attack FSM even once the action
+        // economy is spent (mirrors Python feasibility's `res |= not attack_fsm.is_0() and ...`).
+        result = result || (!combatant->isAttackFsmAtStart() && combatant->attackFsmHasTransition(&attack.getFactory()));
         if(auto ammo = attack.getFactory().getResource())
           {
             result &= (*ammo)->hasUses();
@@ -207,9 +209,11 @@ namespace enc
       case AbilityType::PARALYZING_MELEE_ATTACK:
       case AbilityType::HASTE_PARALYZING_MELEE_ATTACK:
       {
-        // @todo: Add FSM
         // @todo: Add is reckless attack has been used
         Attack &attack = dynamic_cast<Attack &>(actoid);
+        // Multiattack: a second, complementary attack can be granted by the attack FSM even once the action
+        // economy is spent (mirrors Python feasibility's `res |= not attack_fsm.is_0() and ...`).
+        result = result || (!combatant->isAttackFsmAtStart() && combatant->attackFsmHasTransition(&attack.getFactory()));
         if(auto ammo = attack.getFactory().getResource())
           {
             result &= (*ammo)->hasUses();

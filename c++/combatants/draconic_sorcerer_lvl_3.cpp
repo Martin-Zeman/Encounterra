@@ -18,8 +18,11 @@ namespace enc
       self->addDraconicResilience();
 
       // Quarterstaff: a simple melee weapon used as both an action and an opportunity reaction.
-      self->addMeleeAttack("Quarterstaff", self, 1, std::vector<Die>{{1, 8}}, -1, DamageType::Bludgeoning, 1);
+      auto quarterstaff = self->addMeleeAttack("Quarterstaff", self, 1, std::vector<Die>{{1, 8}}, -1, DamageType::Bludgeoning, 1);
       self->addReactionAttack("Quarterstaff", self, 1, std::vector<Die>{{1, 8}}, -1, DamageType::Bludgeoning, 1);
+
+      // Single attack: the quarterstaff (no multiattack).
+      self->addAttackTransition(quarterstaff.get(), AttackFsm::START, AttackFsm::NOP);
 
       // Cantrips and leveled spells.
       auto firebolt = self->addFirebolt();

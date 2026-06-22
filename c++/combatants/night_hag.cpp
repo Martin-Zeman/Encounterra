@@ -12,7 +12,7 @@ namespace enc
   {
     _instanceId = generateInstanceId();
 
-    addMeleeAttack("Claws", this,
+    auto claws = addMeleeAttack("Claws", this,
                    7,                        // toHit
                    std::vector<Die>{{2, 8}}, // dmgDice
                    4,                        // dmgBonus
@@ -20,6 +20,9 @@ namespace enc
                    1 // attackRange
     );
     // addAbility(AbilityType::SPELLSLOTS, )
+
+    // Single attack: the claws (no multiattack).
+    addAttackTransition(claws.get(), AttackFsm::START, AttackFsm::NOP);
   }
 
   NightHag::NightHag(const std::string &name)
@@ -28,7 +31,7 @@ namespace enc
   {
     _instanceId = generateInstanceId();
 
-    addMeleeAttack("Claws", this,
+    auto claws = addMeleeAttack("Claws", this,
                    7,                        // toHit
                    std::vector<Die>{{2, 8}}, // dmgDice
                    4,                        // dmgBonus
@@ -36,5 +39,8 @@ namespace enc
                    1 // attackRange
     );
     // addAbility(AbilityType::SPELLSLOTS, )
+
+    // Single attack: the claws (no multiattack).
+    addAttackTransition(claws.get(), AttackFsm::START, AttackFsm::NOP);
   }
 }

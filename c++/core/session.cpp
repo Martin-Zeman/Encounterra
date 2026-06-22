@@ -1,5 +1,6 @@
 #include "session.hpp"
 #include "combatants/battlemaster_fighter_lvl_5.hpp"
+#include "combatants/brown_bear.hpp"
 #include "combatants/stone_giant.hpp"
 #include "combatants/bugbear_warrior.hpp"
 #include "combatants/goblin.hpp"
@@ -17,6 +18,7 @@ namespace enc
   {
     // Register all combatant types
     registerCombatantType<BattlemasterFighterLvl5>();
+    registerCombatantType<BrownBear>();
     registerCombatantType<BugbearWarrior>();
     registerCombatantType<DraconicSorcererLvl1>();
     registerCombatantType<DraconicSorcererLvl3>();
@@ -63,6 +65,7 @@ namespace enc
 
   // Explicit template instantiations
   template void Session::addCombatant<BattlemasterFighterLvl5>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<BrownBear>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<BugbearWarrior>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<DraconicSorcererLvl1>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<DraconicSorcererLvl3>(Color, ResourceDepletionLevel);
@@ -74,6 +77,7 @@ namespace enc
   template void Session::addCombatant<WildHeartBarbarianLvl3>(Color, ResourceDepletionLevel);
 
   template void Session::addCombatant<BattlemasterFighterLvl5>(BattlemasterFighterLvl5*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<BrownBear>(BrownBear*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<BugbearWarrior>(BugbearWarrior*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<DraconicSorcererLvl1>(DraconicSorcererLvl1*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<DraconicSorcererLvl3>(DraconicSorcererLvl3*, Color, ResourceDepletionLevel);

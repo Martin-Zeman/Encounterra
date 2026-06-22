@@ -20,7 +20,7 @@ namespace enc
     void buildBugbearWarrior(BugbearWarrior *self)
     {
       // Grab: Melee, +4 to hit, reach 10 ft. (2 squares), 2d6+2 Bludgeoning, Grappled (escape DC 12).
-      self->addGrappleAttack("Grab", self,
+      auto grab = self->addGrappleAttack("Grab", self,
                              4,                        // toHit
                              std::vector<Die>{{2, 6}}, // dmgDice
                              2,                        // dmgBonus
@@ -44,13 +44,18 @@ namespace enc
         }
 
       // Light Hammer (Ranged): +4 to hit, range 20/60 ft., 3d4+2 Bludgeoning.
-      self->addRangedAttack("Light Hammer (Thrown)", self,
+      auto lightHammerThrown = self->addRangedAttack("Light Hammer (Thrown)", self,
                             4,                        // toHit
                             std::vector<Die>{{3, 4}}, // dmgDice
                             2,                        // dmgBonus
                             DamageType::Bludgeoning,
                             12 // attackRange (long range 60 ft.)
       );
+
+      // Single attack: Grab, the melee Light Hammer, or the thrown Light Hammer (no multiattack).
+      self->addAttackTransition(grab.get(), AttackFsm::START, AttackFsm::NOP);
+      self->addAttackTransition(lightHammer.get(), AttackFsm::START, AttackFsm::NOP);
+      self->addAttackTransition(lightHammerThrown.get(), AttackFsm::START, AttackFsm::NOP);
 
       // Opportunity attack with the Light Hammer. addReactionAttack also registers this
       // reach-10ft melee as the bugbear's danger-zone threat. The bugbear is a melee

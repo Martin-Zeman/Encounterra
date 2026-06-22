@@ -128,6 +128,7 @@ namespace enc
       bool hasHasteAction;
       bool alreadyUsedSpellslotThisTurn;
       int movement;
+      int attackFsmState;
       std::vector<std::pair<Resource *, int>> resourceUses; // factory resource -> current uses
     };
 
@@ -162,6 +163,7 @@ namespace enc
     snapshot.hasHasteAction = _hasHasteAction;
     snapshot.alreadyUsedSpellslotThisTurn = _alreadyUsedSpellslotThisTurn;
     snapshot.movement = _movement;
+    snapshot.attackFsmState = _attackFsm.getState();
     collectFactoryResources(_actionFactories, snapshot.resourceUses);
     collectFactoryResources(_bonusActionFactories, snapshot.resourceUses);
     collectFactoryResources(_hasteActionFactories, snapshot.resourceUses);
@@ -181,6 +183,7 @@ namespace enc
     _hasHasteAction = snapshot.hasHasteAction;
     _alreadyUsedSpellslotThisTurn = snapshot.alreadyUsedSpellslotThisTurn;
     _movement = snapshot.movement;
+    _attackFsm.setState(snapshot.attackFsmState);
     for(const auto &[resource, uses] : snapshot.resourceUses)
       {
         if(auto *asUses = dynamic_cast<Uses *>(resource))

@@ -11,7 +11,7 @@ namespace enc
   {
     _instanceId = generateInstanceId();
 
-    addMeleeAttack("Two-handed axe", this,
+    auto axe = addMeleeAttack("Two-handed axe", this,
                    7,                         // toHit
                    std::vector<Die>{{1, 12}}, // dmgDice
                    4,                         // dmgBonus
@@ -25,6 +25,10 @@ namespace enc
                       DamageType::Slashing,
                       1 // attackRange
     );
+
+    // Extra Attack (5th level): the barbarian makes two axe attacks per turn.
+    addAttackTransition(axe.get(), AttackFsm::START, 1);
+    addAttackTransition(axe.get(), 1, AttackFsm::NOP);
   }
 
   WildHeartBarbarianLvl5::WildHeartBarbarianLvl5(const std::string &name)
@@ -32,7 +36,7 @@ namespace enc
   {
     _instanceId = generateInstanceId();
 
-    addMeleeAttack("Two-handed axe", this,
+    auto axe = addMeleeAttack("Two-handed axe", this,
                    7,                         // toHit
                    std::vector<Die>{{1, 12}}, // dmgDice
                    4,                         // dmgBonus
@@ -46,5 +50,9 @@ namespace enc
                       DamageType::Slashing,
                       1 // attackRange
     );
+
+    // Extra Attack (5th level): the barbarian makes two axe attacks per turn.
+    addAttackTransition(axe.get(), AttackFsm::START, 1);
+    addAttackTransition(axe.get(), 1, AttackFsm::NOP);
   }
 }

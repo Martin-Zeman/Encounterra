@@ -12,7 +12,7 @@ namespace enc
     _instanceId = generateInstanceId();
     _size = Size::SMALL;
 
-    addMeleeAttack("Scimitar", this,
+    auto scimitar = addMeleeAttack("Scimitar", this,
                    4,                        // toHit
                    std::vector<Die>{{1, 6}}, // dmgDice
                    2,                        // dmgBonus
@@ -35,6 +35,10 @@ namespace enc
                       1 // attackRange
     );
     setDangerZoneAttack(static_cast<DirectThreatFactory*>(shortbowFactory.get()));
+
+    // Single attack: either the Scimitar or the Shortbow (no multiattack).
+    addAttackTransition(scimitar.get(), AttackFsm::START, AttackFsm::NOP);
+    addAttackTransition(shortbowFactory.get(), AttackFsm::START, AttackFsm::NOP);
   }
 
   Goblin::Goblin(const std::string &name) : Combatant(CombatantType::MONSTER, Monster::HUMANOID, _classLevel, name, 7, 15, 2, 0, 30, 0)
@@ -42,7 +46,7 @@ namespace enc
     _instanceId = generateInstanceId();
     _size = Size::SMALL;
 
-    addMeleeAttack("Scimitar", this,
+    auto scimitar = addMeleeAttack("Scimitar", this,
                    4,                        // toHit
                    std::vector<Die>{{1, 6}}, // dmgDice
                    2,                        // dmgBonus
@@ -65,5 +69,9 @@ namespace enc
                       1 // attackRange
     );
     setDangerZoneAttack(static_cast<DirectThreatFactory*>(shortbowFactory.get()));
+
+    // Single attack: either the Scimitar or the Shortbow (no multiattack).
+    addAttackTransition(scimitar.get(), AttackFsm::START, AttackFsm::NOP);
+    addAttackTransition(shortbowFactory.get(), AttackFsm::START, AttackFsm::NOP);
   }
 }

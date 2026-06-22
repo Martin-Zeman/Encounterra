@@ -47,6 +47,9 @@ namespace enc
         case AbilityType::PARALYZING_MELEE_ATTACK:
         case AbilityType::HASTE_PARALYZING_MELEE_ATTACK:
           {
+            // Multiattack: a second, complementary attack can be granted by the attack FSM even once the action
+            // economy is spent (mirrors Python feasibility's `res |= not attack_fsm.is_0() and ...`).
+            result = result || (!combatant->isAttackFsmAtStart() && combatant->attackFsmHasTransition(factory));
             if(auto ammo = factory->getResource())
               result = result && (*ammo)->hasUses();
             else

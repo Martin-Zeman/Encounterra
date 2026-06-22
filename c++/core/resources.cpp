@@ -29,6 +29,7 @@ namespace enc
               {
                 (*ammo)->useResource();
               }
+            combatant->triggerAttackFsm(&actoid.getFactory());
             break;
 
           case AbilityType::FIREBALL:
@@ -61,6 +62,7 @@ namespace enc
               {
                 (*ammo)->useResource();
               }
+            combatant->triggerAttackFsm(&actoid.getFactory());
             break;
           default: break;
           }
@@ -83,6 +85,7 @@ namespace enc
               {
                 (*ammo)->useResource();
               }
+            combatant->triggerAttackFsm(&actoid.getFactory());
             break;
           default: break;
           }

@@ -33,6 +33,7 @@
 #include "abilities/on_hit_grapple.hpp"
 #include "effects/effect.hpp"
 #include "core/state_machine.hpp"
+#include "core/attack_fsm.hpp"
 
 namespace enc
 {
@@ -199,6 +200,14 @@ namespace enc
     bool hasPassiveAbility(AbilityType ability) const;
     // Current number of Metamagic sorcery points (0 if the combatant has no Metamagic resource).
     int getSorceryPoints() const;
+    // Attack FSM (multiattack gating). Combatants register transitions keyed by their attack factories; the FSM is
+    // reset to its start state at the beginning of each turn and advanced as attacks are spent.
+    void addAttackTransition(const ActoidFactory *factory, int origin, int destination) { _attackFsm.addTransition(factory, origin, destination); }
+    bool isAttackFsmAtStart() const { return _attackFsm.isAtStart(); }
+    bool attackFsmHasTransition(const ActoidFactory *factory) const { return _attackFsm.hasAvailableTransition(factory); }
+    void triggerAttackFsm(const ActoidFactory *factory) { _attackFsm.trigger(factory); }
+    int getAttackFsmState() const { return _attackFsm.getState(); }
+    void setAttackFsmState(int state) { _attackFsm.setState(state); }
     const std::unordered_map<SavingThrow, int> &getSavingThrows() { return _savingThrows; }
     int getSavingThrow(SavingThrow st) { return _savingThrows.at(st); }
     void setSavingThrow(SavingThrow st, int value) { _savingThrows.at(st) = value; }
@@ -658,7 +667,7 @@ namespace enc
     int _athletics = 0;
     int _acrobatics = 0;
     Color _teamColor;
-    StateMachine _attackFsm;
+    AttackFsm _attackFsm;
     std::unordered_map<std::string, std::shared_ptr<Uses>> _ammo; // TODO: Unify this with attacks so that it's shared between them
     std::unordered_set<DamageType> _resistances;
     std::unordered_set<DamageType> _immunities;
