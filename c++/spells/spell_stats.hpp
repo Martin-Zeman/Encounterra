@@ -11,6 +11,7 @@ namespace enc
     ONE_CREATURE,
     TWO_CREATURES,
     THREE_CREATURES,
+    RADIUS_5,
     RADIUS_10,
     RADIUS_20,
     RADIUS_30,

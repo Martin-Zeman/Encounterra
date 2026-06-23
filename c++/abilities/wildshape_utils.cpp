@@ -4,8 +4,10 @@
 #include "combatants/giant_constrictor_snake.hpp"
 #include "combatants/giant_spider.hpp"
 #include "combatants/giant_toad.hpp"
+#include "combatants/lion.hpp"
 // #include "combatants/quetzalcoatlus.hpp"
 #include "combatants/saber_toothed_tiger.hpp"
+#include "combatants/tiger.hpp"
 #include <iostream>
 
 namespace enc
@@ -26,11 +28,13 @@ namespace enc
             return forms;
           }
 
-        // Base forms available at all levels 3+
+        // Base forms available at all levels 3+ (best CR 1 beasts for the Circle of the Moon)
         forms = {[](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<DireWolf>(name + " Direwolf"); },
                  [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<BrownBear>(name + " Brown Bear"); },
                  [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<GiantToad>(name + " Giant Toad"); },
-                 [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<GiantSpider>(name + " Giant Spider"); }};
+                 [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<GiantSpider>(name + " Giant Spider"); },
+                 [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<Tiger>(name + " Tiger"); },
+                 [](const std::string &name) -> std::unique_ptr<Combatant> { return std::make_unique<Lion>(name + " Lion"); }};
 
         // Add additional forms based on level
         if(level >= 6)

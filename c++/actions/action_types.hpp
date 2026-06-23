@@ -169,6 +169,9 @@ namespace enc
     CONIC_BREATH_WEAPON_ATTACK,
     LINE_BREATH_WEAPON,
     RAY_OF_FROST,
+    MOONBEAM,
+    STARRY_WISP,
+    ROAR,
 
     /* Bonus Action */
     BONUS_ACTION_DELIMITER,

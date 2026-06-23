@@ -3,6 +3,7 @@
 #include "core/battle_map.hpp"
 #include <memory>
 #include <limits>
+#include <algorithm>
 
 namespace enc
 {
@@ -155,5 +156,32 @@ namespace enc
         return coords;
       }
     return {};
+  }
+
+  void RayOfFrostEffect::activate(const Kwargs &kwargs)
+  {
+    if(_applied || _combatants.empty())
+      {
+        return;
+      }
+    Combatant *target = _combatants[0];
+    int newSpeed = std::max(0, target->getSpeed() - SPEED_REDUCTION);
+    target->setSpeed(newSpeed);
+    if(target->getMovement() > newSpeed)
+      {
+        target->setMovement(newSpeed);
+      }
+    _applied = true;
+  }
+
+  void RayOfFrostEffect::deactivate()
+  {
+    if(!_applied || _combatants.empty())
+      {
+        return;
+      }
+    Combatant *target = _combatants[0];
+    target->setSpeed(target->getSpeed() + SPEED_REDUCTION);
+    _applied = false;
   }
 }

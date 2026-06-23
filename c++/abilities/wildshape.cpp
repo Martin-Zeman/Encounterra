@@ -10,10 +10,11 @@ namespace enc
   namespace
   {
     //! A beast's "weapon" attacks are its Melee/Ranged attack factories (excluding Dodge/Disengage etc.).
+    //! Pounce and Roar are signature beast actions that should likewise transfer to the druid while shaped.
     bool isWeaponAttack(const std::shared_ptr<ActoidFactory> &f)
     {
       AbilityType t = f->getAbilityType();
-      return t == AbilityType::MELEE_ATTACK || t == AbilityType::RANGED_ATTACK;
+      return t == AbilityType::MELEE_ATTACK || t == AbilityType::RANGED_ATTACK || t == AbilityType::POUNCE || t == AbilityType::ROAR;
     }
 
     //! A druid action persists while shaped only if it is the Wild Shape action itself or it is explicitly
@@ -70,8 +71,9 @@ namespace enc
     }
   }
 
-  WildshapeFactory::WildshapeFactory(Combatant *combatant, AbilityType actionType)
-      : TransformerFactory("WildshapeFactory", "Wildshape", combatant, actionType), _combatant(combatant), _actionType(actionType)
+  WildshapeFactory::WildshapeFactory(Combatant *combatant, AbilityType actionType, Resource *resource)
+      : TransformerFactory("WildshapeFactory", "Wildshape", combatant, actionType), _combatant(combatant), _actionType(actionType),
+        _resource(resource)
   {
     setFlag(FactoryFlags::TARGETS_SELF);
   }
@@ -163,6 +165,11 @@ namespace enc
     druid->setSpeed(_form->getSpeed());
     druid->setMovement(std::max(0, _form->getSpeed() - usedMovement));
 
+    // Size: adopt the beast's Size (most Wild Shape forms are larger than the druid). The eligible-coordinate
+    // search in getEligibleCoords already guarantees the druid only shapes where the larger footprint fits.
+    _savedSize = druid->getSize();
+    druid->setSize(_form->getSize());
+
     // Suppress the druid's own actions (weapons and ordinary spells). Only abilities flagged
     // TRANSITIONS_TO_WILDSHAPE (the Circle of the Moon loadout) and the Wild Shape action survive.
     _savedAoOFactory = druid->getAoOFactory();
@@ -226,6 +233,7 @@ namespace enc
     druid->setAC(_savedAc);
     druid->setSpeed(_savedSpeed);
     druid->setMovement(std::min(druid->getMovement(), _savedSpeed));
+    druid->setSize(_savedSize);
     druid->setAoOFactory(_savedAoOFactory);
     druid->setDangerZoneAttack(_savedDangerZone);
 

@@ -27,12 +27,22 @@
 #include "spells/ray_of_frost.hpp"
 #include "spells/scorching_ray.hpp"
 #include "spells/hold_person.hpp"
+#include "spells/spike_growth.hpp"
+#include "spells/faerie_fire.hpp"
+#include "spells/flaming_sphere.hpp"
+#include "spells/moonbeam.hpp"
 #include "spells/misty_step.hpp"
 #include "spells/shield.hpp"
 #include "spells/innate_sorcery.hpp"
+#include "spells/healing_word.hpp"
+#include "spells/cure_wounds.hpp"
+#include "spells/starry_wisp.hpp"
+#include "spells/thunderwave.hpp"
 #include "abilities/on_hit_grapple.hpp"
 #include "abilities/on_hit_prone.hpp"
 #include "abilities/on_hit_saving_throw_dmg.hpp"
+#include "abilities/pounce.hpp"
+#include "abilities/roar.hpp"
 #include "effects/effect.hpp"
 #include "core/state_machine.hpp"
 #include "core/attack_fsm.hpp"
@@ -179,6 +189,9 @@ namespace enc
     Spellslots &getSpellslots() { return *_spellslots; }
     int getLevel() const { return _level; }
     int getDC() const { return _dc; }
+    //! The caster's spellcasting ability modifier, derived from the spell save DC (DC = 8 + proficiency +
+    //! ability modifier). Used by heals such as Healing Word / Cure Wounds.
+    int getSpellcastingModifier() const { return _dc - 8 - (2 + (_level - 1) / 4); }
     // A creature is humanoid if it's a player-class combatant or a monster of the Humanoid type
     // (used by spells such as Hold Person that only affect humanoids).
     bool isHumanoid() const
@@ -338,8 +351,19 @@ namespace enc
      }
     std::shared_ptr<ActoidFactory> addChaosBolt() { return nullptr; }
     std::shared_ptr<ActoidFactory> addHaste() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addStarryWisp()
+    {
+      auto factory = std::make_shared<StarryWispFactory>(_spellToHit, AbilityType::STARRY_WISP, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addHungerOfHadar() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addSpikeGrowth() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addSpikeGrowth()
+    {
+      auto factory = std::make_shared<SpikeGrowthFactory>(AbilityType::SPIKE_GROWTH, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addCloudOfDaggers() { return nullptr; }
     std::shared_ptr<ActoidFactory> addHide() { return nullptr; }
     std::shared_ptr<ActoidFactory> addTwinnedFirebolt() { return nullptr; }
@@ -351,11 +375,44 @@ namespace enc
       return factory;
     }
     std::shared_ptr<ActoidFactory> addFaerieFire() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addWildshape() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addFaerieFire(int dc)
+    {
+      auto factory = std::make_shared<FaerieFireFactory>(dc, AbilityType::FAERIE_FIRE, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addPounce() { return nullptr; }
+    //! Register a Pounce action built from a (suppressed) primary attack carrying the Prone rider and a
+    //! (suppressed) secondary follow-up attack. The primary/secondary are owned by the PounceFactory and are
+    //! NOT registered as independent actions. `distance` is the straight-line charge length in cells.
+    std::shared_ptr<ActoidFactory> addPounce(std::shared_ptr<MeleeAttackFactory> primary, std::shared_ptr<MeleeAttackFactory> secondary, int distance)
+    {
+      auto factory = std::make_shared<PounceFactory>(this, std::move(primary), std::move(secondary), distance);
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    //! Register a Roar action: a WIS-save Frighten affecting enemies within `range` cells of the roarer.
+    std::shared_ptr<ActoidFactory> addRoar(int dc, int range)
+    {
+      auto factory = std::make_shared<RoarFactory>(this, dc, range);
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addConstrict() { return nullptr; }
     std::shared_ptr<ActoidFactory> addBreakGrapple() { return nullptr; }
     std::shared_ptr<ActoidFactory> addFlamingSphere() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addFlamingSphere(int dc)
+    {
+      auto factory = std::make_shared<FlamingSphereFactory>(dc, AbilityType::FLAMING_SPHERE, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    std::shared_ptr<ActoidFactory> addMoonbeam(int dc)
+    {
+      auto factory = std::make_shared<MoonbeamFactory>(dc, AbilityType::MOONBEAM, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addWeb() { return nullptr; }
     std::shared_ptr<ActoidFactory> addHoldPerson()
     {
@@ -394,12 +451,23 @@ namespace enc
     std::shared_ptr<ActoidFactory> addSleep() { return nullptr; }
     std::shared_ptr<ActoidFactory> addShakeAllyAwake() { return nullptr; }
     std::shared_ptr<ActoidFactory> addThunderwave() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addThunderwave(int dc)
+    {
+      auto factory = std::make_shared<ThunderwaveFactory>(dc, AbilityType::THUNDERWAVE, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addMenacingMeleeAttack() { return nullptr; }
     std::shared_ptr<ActoidFactory> addParalyzingMeleeAttack() { return nullptr; }
     std::shared_ptr<ActoidFactory> addMenacingRangedAttack() { return nullptr; }
     std::shared_ptr<ActoidFactory> addPrecisionAttack() { return nullptr; }
     std::shared_ptr<ActoidFactory> addLayOnHands() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addCureWounds() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addCureWounds()
+    {
+      auto factory = std::make_shared<CureWoundsFactory>(this, _spellslots.get(), getSpellcastingModifier());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addAbjureEnemy() { return nullptr; }
     std::shared_ptr<ActoidFactory> addConicBreathWeapon() { return nullptr; }
     std::shared_ptr<ActoidFactory> addConicBreathWeaponAttack() { return nullptr; }
@@ -460,13 +528,24 @@ namespace enc
     std::shared_ptr<ActoidFactory> addQuickenedHoldPerson() { return nullptr; }
     std::shared_ptr<ActoidFactory> addQuickenedRayOfFrost() { return nullptr; }
     std::shared_ptr<ActoidFactory> addFlamingSphereRam() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addMoonWildshape() { return nullptr; }
+    //! Circle of the Moon Wild Shape (bonus action). Registers a 2-uses-per-short-rest resource and a
+    //! WildshapeFactory bound to it. Defined out of line in combatant.cpp to avoid a circular include with
+    //! abilities/wildshape.hpp.
+    std::shared_ptr<ActoidFactory> addMoonWildshape();
+    //! Generic (non-Moon) Wild Shape (bonus action). Same wiring as addMoonWildshape but with the WILDSHAPE
+    //! ability type (druid-level temporary hit points, plain beast AC).
+    std::shared_ptr<ActoidFactory> addWildshape();
     std::shared_ptr<ActoidFactory> addQuickenedShockingGrasp() { return nullptr; }
     std::shared_ptr<ActoidFactory> addQuickenedMagicMissile() { return nullptr; }
     std::shared_ptr<ActoidFactory> addQuickenedRayOfEnfeeblement() { return nullptr; }
     std::shared_ptr<ActoidFactory> addQuickenedSleep() { return nullptr; }
     std::shared_ptr<ActoidFactory> addSecondWind() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addHealingWord() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addHealingWord()
+    {
+      auto factory = std::make_shared<HealingWordFactory>(this, _spellslots.get(), getSpellcastingModifier());
+      _bonusActionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addTwinnedHealingWord() { return nullptr; }
     std::shared_ptr<ActoidFactory> addShillelagh() { return nullptr; }
     std::shared_ptr<ActoidFactory> addQuickenedThunderwave() { return nullptr; }

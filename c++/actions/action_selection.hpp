@@ -11,7 +11,7 @@
 #include <unordered_set>
 #include <blaze/Math.h>
 #include "core/interfaces.hpp"
-// #include "combat/action_dag.hpp"
+#include "actions/action_dag.hpp"
 #include "core/combatant.hpp"
 #include "core/battle_map.hpp"
 #include "core/threat_utils.hpp"
@@ -113,7 +113,7 @@ namespace enc
    */
   std::vector<std::shared_ptr<Actoid>>
   translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
-                             const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToActoid,
+                             const ActoidOwnershipPool &actoidPool,
                              const MovementTransitionMap &movementTransitionToCoordAndType, const std::vector<Actoid *> &sequence,
                              const TransitionToMsPath &transitionNameToMsPath);
 
@@ -158,7 +158,7 @@ namespace enc
    */
   std::optional<BestSequenceResult>
   findBestSequence(Combatant *combatant, const StateMachine &dag,
-                   const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToActoid,
+                   const ActoidOwnershipPool &actoidPool,
                    const TransitionToEligibleCoords &transitionToEligibleCoords, const MovementTransitionMap &movementTransitionToCoordAndType,
                    const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
                    double infeasibilityMultiplier = 0.5);

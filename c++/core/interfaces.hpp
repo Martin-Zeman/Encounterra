@@ -127,7 +127,7 @@ namespace enc
     bool hasFlag(FactoryFlags flag) const { return (_flags & static_cast<uint32_t>(flag)) != 0; }
     uint32_t getFlags() const { return _flags; }
     Combatant *getCombatant() { return _combatant; }
-    void setCombatant(Combatant *combatant) { _combatant = combatant; }
+    virtual void setCombatant(Combatant *combatant) { _combatant = combatant; }
     virtual ~ActoidFactory() = default;
     virtual std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) = 0;
     virtual std::shared_ptr<Actoid> create(void *target) = 0;

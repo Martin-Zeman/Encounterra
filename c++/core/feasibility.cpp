@@ -162,6 +162,37 @@ namespace enc
         result &= combatant->getSorceryPoints() > 1;
         break;
       }
+      case AbilityType::HEALING_WORD:
+      case AbilityType::CURE_WOUNDS:
+      case AbilityType::THUNDERWAVE:
+      case AbilityType::FAERIE_FIRE:
+      {
+        if(auto resource = actoid.getFactory().getResource())
+          {
+            result &= (*resource)->hasUses(1);
+          }
+        else
+          {
+            throw std::runtime_error("Actoid factory must have an associated resource!");
+          }
+        result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
+        break;
+      }
+      case AbilityType::SPIKE_GROWTH:
+      case AbilityType::FLAMING_SPHERE:
+      case AbilityType::MOONBEAM:
+      {
+        if(auto resource = actoid.getFactory().getResource())
+          {
+            result &= (*resource)->hasUses(2);
+          }
+        else
+          {
+            throw std::runtime_error("Actoid factory must have an associated resource!");
+          }
+        result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
+        break;
+      }
       case AbilityType::FIREBOLT: /*Nothing to do*/ break;
 
       default: break;
@@ -287,6 +318,37 @@ namespace enc
       case AbilityType::QUICKENED_RAY_OF_FROST:
       {
         result &= combatant->getSorceryPoints() > 1;
+        break;
+      }
+      case AbilityType::HEALING_WORD:
+      case AbilityType::CURE_WOUNDS:
+      case AbilityType::THUNDERWAVE:
+      case AbilityType::FAERIE_FIRE:
+      {
+        if(auto resource = actoid.getFactory().getResource())
+          {
+            result &= (*resource)->hasUses(1);
+          }
+        else
+          {
+            throw std::runtime_error("Actoid factory must have an associated resource!");
+          }
+        result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
+        break;
+      }
+      case AbilityType::SPIKE_GROWTH:
+      case AbilityType::FLAMING_SPHERE:
+      case AbilityType::MOONBEAM:
+      {
+        if(auto resource = actoid.getFactory().getResource())
+          {
+            result &= (*resource)->hasUses(2);
+          }
+        else
+          {
+            throw std::runtime_error("Actoid factory must have an associated resource!");
+          }
+        result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
         break;
       }
       case AbilityType::FIREBOLT: /*Nothing to do*/ break;

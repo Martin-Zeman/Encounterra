@@ -10,6 +10,11 @@
 #include "combatants/ogre.hpp"
 #include "combatants/wild_heart_barbarian_lvl_3.hpp"
 #include "combatants/green_dragon_wyrmling.hpp"
+#include "combatants/moon_druid_lvl_3.hpp"
+#include "combatants/dire_wolf.hpp"
+#include "combatants/giant_spider.hpp"
+#include "combatants/tiger.hpp"
+#include "combatants/lion.hpp"
 
 namespace enc
 {
@@ -28,6 +33,11 @@ namespace enc
     registerCombatantType<Ogre>();
     registerCombatantType<StoneGiant>();
     registerCombatantType<WildHeartBarbarianLvl3>();
+    registerCombatantType<MoonDruidLvl3>();
+    registerCombatantType<DireWolf>();
+    registerCombatantType<GiantSpider>();
+    registerCombatantType<Tiger>();
+    registerCombatantType<Lion>();
     // Register other combatant types...
   }
 
@@ -75,6 +85,11 @@ namespace enc
   template void Session::addCombatant<Ogre>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<StoneGiant>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<WildHeartBarbarianLvl3>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<MoonDruidLvl3>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<DireWolf>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<GiantSpider>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Tiger>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Lion>(Color, ResourceDepletionLevel);
 
   template void Session::addCombatant<BattlemasterFighterLvl5>(BattlemasterFighterLvl5*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<BrownBear>(BrownBear*, Color, ResourceDepletionLevel);
@@ -87,6 +102,11 @@ namespace enc
   template void Session::addCombatant<Ogre>(Ogre*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<StoneGiant>(StoneGiant*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<WildHeartBarbarianLvl3>(WildHeartBarbarianLvl3*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<MoonDruidLvl3>(MoonDruidLvl3*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<DireWolf>(DireWolf*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<GiantSpider>(GiantSpider*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Tiger>(Tiger*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Lion>(Lion*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<Combatant>(Combatant*, Color, ResourceDepletionLevel);
 
   // Add more explicit instantiations for other combatant types

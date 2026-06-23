@@ -16,9 +16,11 @@
 namespace enc {
 
 // Ownership pool for the proto-DAG actoids (produced by generateProtoDag). The StateMachine stores raw Actoid*
-// pointing into the shared_ptr instances kept alive here. Kept keyed by the (legacy) transition name purely as an
-// ownership container; lookups in the DAG/selection pipeline are by Actoid identity, not by this string.
-using TransitionNameToActoid = std::unordered_map<std::string, std::shared_ptr<Actoid>>;
+// pointing into the shared_ptr instances kept alive here. Keyed by Actoid identity (the raw pointer), which both
+// keeps every actoid alive and doubles as the identity->shared_ptr lookup the DAG/selection pipeline needs. Keying
+// by pointer (instead of the old toString()-derived name) avoids the string construction and the name-collision
+// hazard where two distinct actoids sharing a name would drop one shared_ptr and dangle its raw pointer.
+using ActoidOwnershipPool = std::unordered_map<Actoid *, std::shared_ptr<Actoid>>;
 
 // Transition identity -> eligible coordinates for that action.
 using TransitionToEligibleCoords = std::unordered_map<Actoid *, CoordVector>;

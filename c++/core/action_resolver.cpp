@@ -10,6 +10,14 @@
 #include "spells/ray_of_frost.hpp"
 #include "spells/scorching_ray.hpp"
 #include "spells/misty_step.hpp"
+#include "spells/healing_word.hpp"
+#include "spells/cure_wounds.hpp"
+#include "spells/starry_wisp.hpp"
+#include "spells/flaming_sphere.hpp"
+#include "spells/moonbeam.hpp"
+#include "spells/thunderwave.hpp"
+#include "abilities/pounce.hpp"
+#include "abilities/roar.hpp"
 #include "effects/effect_tracker.hpp"
 
 namespace enc
@@ -59,7 +67,7 @@ namespace enc
     return false;
   }
 
-  void resolveDmgSavingThrow(SavingThrow savingThrowType, int dc, const std::string &abilityName, int dmg, DamageType dmgType, Combatant *target,
+  bool resolveDmgSavingThrow(SavingThrow savingThrowType, int dc, const std::string &abilityName, int dmg, DamageType dmgType, Combatant *target,
                              bool halfOnSuccess, bool isSpellEffect)
   {
     auto stBonus = target->getSavingThrow(savingThrowType);
@@ -143,6 +151,7 @@ namespace enc
       }
 
     BattleMap::getInstance().removeCombatantIfDead(*target);
+    return saved;
   }
 
   std::shared_ptr<Actoid> ActionResolver::handleErrorCase(const std::shared_ptr<Actoid> &action, Combatant *combatant)
@@ -430,6 +439,26 @@ namespace enc
           return resolveRangedSpellAttack(combatant, firebolt->getToHit(), firebolt->getDmgDice(), FireboltFactory::dmgType, &firebolt->getTarget());
         }
 
+      case AbilityType::STARRY_WISP:
+        {
+          auto *starryWisp = dynamic_cast<StarryWisp *>(action.get());
+          if(!starryWisp)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          // On a hit Starry Wisp lights up the target, barring it from benefiting from invisibility.
+          ActionResult result = resolveRangedSpellAttack(combatant, starryWisp->getToHit(), starryWisp->getDmgDice(), StarryWispFactory::dmgType,
+                                                         &starryWisp->getTarget());
+          if(result == ActionResult::HIT && starryWisp->getTarget().isAlive())
+            {
+              auto effect = std::make_shared<StarryWispEffect>(combatant, &starryWisp->getTarget());
+              EffectTracker::getInstance().add(effect);
+              effect->activate();
+            }
+          return result;
+        }
+
       case AbilityType::RAY_OF_FROST:
       case AbilityType::QUICKENED_RAY_OF_FROST:
         {
@@ -439,9 +468,16 @@ namespace enc
               return ActionResult::MISS;
             }
           std::cout << combatant->_name << " casts " << action->toString() << std::endl;
-          // The 2024 Speed-reduction rider is not modeled (see RayOfFrostFactory); only the damage resolves.
-          return resolveRangedSpellAttack(combatant, rayOfFrost->getToHit(), rayOfFrost->getDmgDice(), RayOfFrostFactory::dmgType,
-                                          &rayOfFrost->getTarget());
+          // On a hit the 2024 Ray of Frost reduces the target's Speed by 10 ft until the caster's next turn.
+          ActionResult result = resolveRangedSpellAttack(combatant, rayOfFrost->getToHit(), rayOfFrost->getDmgDice(), RayOfFrostFactory::dmgType,
+                                                         &rayOfFrost->getTarget());
+          if(result == ActionResult::HIT && rayOfFrost->getTarget().isAlive())
+            {
+              auto effect = std::make_shared<RayOfFrostEffect>(combatant, &rayOfFrost->getTarget());
+              EffectTracker::getInstance().add(effect);
+              effect->activate();
+            }
+          return result;
         }
 
       case AbilityType::SCORCHING_RAY:
@@ -471,6 +507,10 @@ namespace enc
 
       case AbilityType::HOLD_PERSON:
       case AbilityType::QUICKENED_HOLD_PERSON:
+      case AbilityType::SPIKE_GROWTH:
+      case AbilityType::FAERIE_FIRE:
+      case AbilityType::FLAMING_SPHERE:
+      case AbilityType::MOONBEAM:
         {
           auto effect = std::dynamic_pointer_cast<Effect>(action);
           if(!effect)
@@ -478,6 +518,126 @@ namespace enc
               return ActionResult::MISS;
             }
           std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          EffectTracker::getInstance().add(effect);
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::FLAMING_SPHERE_RAM:
+        {
+          auto *ram = dynamic_cast<FlamingSphereRam *>(action.get());
+          if(!ram)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " rams the Flaming Sphere into " << ram->getTarget()._name << std::endl;
+          int damage = rollDiceMulti(ram->getDmgDice());
+          resolveDmgSavingThrow(ram->getSavingThrow(), ram->getDc(), "Flaming Sphere", damage, FlamingSphereRamFactory::dmgType, &ram->getTarget(),
+                                /*halfOnSuccess=*/true, /*isSpellEffect=*/true);
+          ram->getEffect()->moveOrigin(ram->getCoord());
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::THUNDERWAVE:
+      case AbilityType::QUICKENED_THUNDERWAVE:
+        {
+          auto *thunderwave = dynamic_cast<Thunderwave *>(action.get());
+          if(!thunderwave)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          BattleMap &battleMap = BattleMap::getInstance();
+          const ThunderwaveFactory &factory = thunderwave->getThunderwaveFactory();
+          std::vector<Combatant *> affected = battleMap.getCombatantsAffectedByBoxAoE(ThunderwaveFactory::target, thunderwave->getCoord());
+          int damage = rollDiceMulti(factory.getDmgDice());
+          Vector2D origin = battleMap.getCombatantCoordinates(*combatant).getCenter();
+          for(auto *aff : affected)
+            {
+              bool saved = resolveDmgSavingThrow(factory.getSavingThrow(), factory.getDc(), "Thunderwave", damage, ThunderwaveFactory::dmgType, aff,
+                                                 /*halfOnSuccess=*/true, /*isSpellEffect=*/true);
+              // On a failed save the (surviving) creature is pushed 10 ft (2 cells) away from the caster.
+              if(aff->isAlive() && !saved)
+                {
+                  battleMap.pushCombatantAwayFrom(origin, aff, 2);
+                }
+            }
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::POUNCE:
+        {
+          auto *pounce = dynamic_cast<Pounce *>(action.get());
+          if(!pounce)
+            {
+              return ActionResult::MISS;
+            }
+          Combatant *target = pounce->getTarget();
+          PounceFactory &factory = pounce->getPounceFactory();
+          std::cout << combatant->_name << " pounces on " << (target ? target->_name : std::string("?")) << std::endl;
+
+          // Primary attack: carries the Prone rider (a failed save knocks the target Prone).
+          ActionResult result = ActionResult::MISS;
+          if(auto *primaryFactory = factory.getPrimaryAttack())
+            {
+              auto primaryActoid = primaryFactory->create(target);
+              if(auto *atk = dynamic_cast<Attack *>(primaryActoid.get()))
+                {
+                  result = resolveAttack(atk, target, combatant);
+                }
+            }
+          // Bonus-action follow-up: if the target was left Prone (and alive), bite it.
+          if(target->isAlive() && target->isAffectedBy(Conditions::PRONE))
+            {
+              if(auto *secondaryFactory = factory.getSecondaryAttack())
+                {
+                  auto secondaryActoid = secondaryFactory->create(target);
+                  if(auto *atk = dynamic_cast<Attack *>(secondaryActoid.get()))
+                    {
+                      resolveAttack(atk, target, combatant);
+                    }
+                }
+            }
+          return result;
+        }
+
+      case AbilityType::ROAR:
+        {
+          auto *roar = dynamic_cast<Roar *>(action.get());
+          if(!roar)
+            {
+              return ActionResult::MISS;
+            }
+          RoarFactory &factory = roar->getRoarFactory();
+          std::cout << combatant->_name << " roars" << std::endl;
+          std::vector<Combatant *> frightened;
+          for(auto *enemy : factory.getEligibleTargets())
+            {
+              // Wisdom save; on a failure the creature is Frightened until the start of the roarer's next turn.
+              if(!rollSavingThrow(enemy->getSavingThrow(RoarFactory::savingThrow), factory.getDc(), RollType::STRAIGHT))
+                {
+                  std::cout << enemy->_name << " is Frightened by the roar" << std::endl;
+                  frightened.push_back(enemy);
+                }
+            }
+          if(!frightened.empty())
+            {
+              auto effect = std::make_shared<RoarFrightenedEffect>(combatant, frightened);
+              EffectTracker::getInstance().add(effect);
+              effect->activate();
+            }
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::MOON_WILDSHAPE:
+      case AbilityType::WILDSHAPE:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " uses " << action->toString() << std::endl;
           EffectTracker::getInstance().add(effect);
           effect->activate();
           return ActionResult::OTHER;
@@ -492,6 +652,34 @@ namespace enc
             }
           std::cout << combatant->_name << " casts " << action->toString() << std::endl;
           BattleMap::getInstance().moveCombatant(*combatant, mistyStep->getCoord());
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::HEALING_WORD:
+        {
+          auto *healingWord = dynamic_cast<HealingWord *>(action.get());
+          if(!healingWord)
+            {
+              return ActionResult::MISS;
+            }
+          Combatant &target = healingWord->getTarget();
+          int healed = rollDice(healingWord->getHealDice()) + healingWord->getMod();
+          target.setCurrentHp(std::min(target.getMaxHp(), target.getCurrentHp() + healed));
+          std::cout << combatant->_name << " casts " << action->toString() << " (heals " << healed << ")" << std::endl;
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::CURE_WOUNDS:
+        {
+          auto *cureWounds = dynamic_cast<CureWounds *>(action.get());
+          if(!cureWounds)
+            {
+              return ActionResult::MISS;
+            }
+          Combatant &target = cureWounds->getTarget();
+          int healed = rollDice(cureWounds->getHealDice()) + cureWounds->getMod();
+          target.setCurrentHp(std::min(target.getMaxHp(), target.getCurrentHp() + healed));
+          std::cout << combatant->_name << " casts " << action->toString() << " (heals " << healed << ")" << std::endl;
           return ActionResult::OTHER;
         }
 
@@ -577,6 +765,7 @@ ActionResult ActionResolver::resolveAction(const std::shared_ptr<Actoid>& action
           case EffectType::MENACING_ATTACK_FRIGHTENED:
           case EffectType::VOW_OF_ENMITY:
           case EffectType::RAY_OF_FROST:
+          case EffectType::STARRY_WISP:
           case EffectType::PARALYZING_ATTACK_PARALYZED:
             // TODO: track if the barbarian attacked or received damage
             break;

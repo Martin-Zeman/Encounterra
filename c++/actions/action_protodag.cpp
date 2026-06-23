@@ -105,6 +105,40 @@ namespace enc
             result = result && combatant->getSorceryPoints() > 1;
             break;
           }
+        case AbilityType::MOON_WILDSHAPE:
+        case AbilityType::WILDSHAPE:
+          {
+            // Wild Shape is limited to a fixed number of uses per short rest (held by the factory's resource).
+            // It cannot be used while already shaped (the active-form id is non-zero); the same-form filter in
+            // WildshapeFactory::createAll plus this guard prevent re-shaping mid-form.
+            if(auto resource = factory->getResource())
+              result = result && (*resource)->hasUses();
+            result = result && combatant->getActiveWildshapeFormId() == 0;
+            break;
+          }
+        case AbilityType::HEALING_WORD:
+        case AbilityType::CURE_WOUNDS:
+        case AbilityType::THUNDERWAVE:
+        case AbilityType::FAERIE_FIRE:
+          {
+            if(auto resource = factory->getResource())
+              result = result && (*resource)->hasUses(1);
+            else
+              throw std::runtime_error("Actoid factory must have an associated resource!");
+            result = result && !combatant->hasAlreadyUsedSpellslotThisTurn();
+            break;
+          }
+        case AbilityType::SPIKE_GROWTH:
+        case AbilityType::FLAMING_SPHERE:
+        case AbilityType::MOONBEAM:
+          {
+            if(auto resource = factory->getResource())
+              result = result && (*resource)->hasUses(2);
+            else
+              throw std::runtime_error("Actoid factory must have an associated resource!");
+            result = result && !combatant->hasAlreadyUsedSpellslotThisTurn();
+            break;
+          }
         case AbilityType::FIREBOLT: /*Nothing to do*/ break;
         default: break;
         }
@@ -174,7 +208,7 @@ namespace enc
   {
     ProtoDagResult out;
     StateMachine &fsm = out.fsm;
-    TransitionNameToActoid &transitionNameToActoid = out.transitionNameToActoid;
+    ActoidOwnershipPool &actoidPool = out.actoidPool;
 
     using Fas = std::vector<std::shared_ptr<Actoid>>;
     using AfToA = std::unordered_map<ActoidFactory *, Fas>;
@@ -222,10 +256,13 @@ namespace enc
         if(sameAsPrevious)
           stateFootprint.depthMarker = depth;
 
+        // The FSM transition name only feeds the flattened-DAG dedup/simplification path (indexToTransition). Build it
+        // from the actoid's memoised value hash plus the depth, avoiding the expensive toString() rendering. The
+        // trailing "_<depth>" keeps the simplified-name stripping (drop the depth level) working as before.
         const std::string actionTakenName =
-          (actionTaken ? actionTaken->toString() : std::string("None")) + "_" + std::to_string(depth);
+          (actionTaken ? std::to_string(actionTaken->getHash()) : std::string("None")) + "_" + std::to_string(depth);
         if(actionTaken)
-          transitionNameToActoid[actionTakenName] = actionTaken;
+          actoidPool[actionTaken.get()] = actionTaken;
 
         if(stateFootprint.isEmpty())
           {

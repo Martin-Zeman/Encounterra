@@ -14,6 +14,18 @@ namespace enc
         return {};
       }
 
+    if(!_requiresSave)
+      {
+        // Automatic prone (e.g. 2024 Dire Wolf Bite): no saving throw, but only if the target is small enough.
+        if(target->getSize() > _maxSize)
+          {
+            return {};
+          }
+        std::cout << target->_name << " is knocked Prone (no save)" << std::endl;
+        target->applyCondition(Condition(Conditions::PRONE, attacker, nullptr, target));
+        return {};
+      }
+
     bool saved = rollSavingThrow(target->getSavingThrow(_saveType), _dc, RollType::STRAIGHT);
     if(!saved)
       {

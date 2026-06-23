@@ -340,20 +340,16 @@ void decodeMsPathToActions(
 
 std::vector<std::shared_ptr<Actoid>>
 translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths,
-                           const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToActoid,
+                           const ActoidOwnershipPool &actoidPool,
                            const MovementTransitionMap &movementTransitionToCoordAndType, const std::vector<Actoid *> &sequence,
                            const TransitionToMsPath &transitionNameToMsPath)
 {
   std::vector<std::shared_ptr<Actoid>> actions;
   auto &battleMap = BattleMap::getInstance();
 
-  // Reverse lookup from actoid identity to its owning shared_ptr (proto / non-movement actions).
-  std::unordered_map<Actoid *, std::shared_ptr<Actoid>> actoidToShared;
-  actoidToShared.reserve(transitionNameToActoid.size());
-  for(const auto &[name, ptr] : transitionNameToActoid)
-    {
-      actoidToShared[ptr.get()] = ptr;
-    }
+  // The ownership pool is already keyed by actoid identity (Actoid* -> shared_ptr), so it doubles as the reverse
+  // lookup used to recover the owning shared_ptr for each proto / non-movement action in the chosen sequence.
+  const std::unordered_map<Actoid *, std::shared_ptr<Actoid>> &actoidToShared = actoidPool;
 
   for(Actoid *action : sequence)
     {
@@ -425,7 +421,7 @@ translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int>
 
 std::optional<BestSequenceResult>
 findBestSequence(Combatant *combatant, const StateMachine &dag,
-                 const std::unordered_map<std::string, std::shared_ptr<Actoid>> &transitionNameToActoid,
+                 const ActoidOwnershipPool &actoidPool,
                  const TransitionToEligibleCoords &transitionToEligibleCoords, const MovementTransitionMap &movementTransitionToCoordAndType,
                  const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths, double infeasibilityMultiplier)
 {
@@ -443,13 +439,9 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
 
     Coords currentCoords = battleMap.getCombatantCoordinates(*combatant);
 
-    // Reverse lookup from actoid identity to its owning shared_ptr (needed for wildshape handling below).
-    std::unordered_map<Actoid *, std::shared_ptr<Actoid>> actoidToShared;
-    actoidToShared.reserve(transitionNameToActoid.size());
-    for(const auto &[name, ptr] : transitionNameToActoid)
-      {
-        actoidToShared[ptr.get()] = ptr;
-      }
+    // The ownership pool is already keyed by actoid identity (Actoid* -> shared_ptr); reuse it directly as the reverse
+    // lookup needed for wildshape handling below.
+    const std::unordered_map<Actoid *, std::shared_ptr<Actoid>> &actoidToShared = actoidPool;
 
     // Remove a Misty Step transition that targets the current coordinate (a no-op move) if it exists.
     {

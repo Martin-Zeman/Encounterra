@@ -12,12 +12,15 @@ namespace enc
 {
   class Combatant;
 
-  // Ray of Frost (2024) — a cantrip frost ray. The damage component is what the threat engine projects
-  // (matching Python's RayOfFrost, whose threat is pure mean damage). On a hit, the 2024 "Speed reduced
-  // by 10 ft. until the start of your next turn." rider is applied via RayOfFrostEffect.
-  class RayOfFrostFactory : public DirectThreatFactory
+  /**
+   * Starry Wisp (2024): a cantrip (Radiant) ranged spell attack with a 60-foot range, dealing 1d8 Radiant
+   * damage that scales with character level like other cantrips. Mirrors Firebolt. On a hit the target
+   * sheds light and "can't benefit from the Invisible condition" until the caster's next turn, modeled
+   * via StarryWispEffect.
+   */
+  class StarryWispFactory : public DirectThreatFactory
   {
-    friend class RayOfFrost;
+    friend class StarryWisp;
 
   public:
     static constexpr int level = 0;
@@ -26,7 +29,7 @@ namespace enc
     static constexpr Duration duration = Duration::INSTANTANEOUS;
     static constexpr bool concentration = false;
     static constexpr SpellType type = SpellType::HARMFUL;
-    static constexpr DamageType dmgType = DamageType::Cold;
+    static constexpr DamageType dmgType = DamageType::Radiant;
 
     static Die getDmgDice(int level)
     {
@@ -48,17 +51,15 @@ namespace enc
         }
       else
         {
-          throw std::runtime_error("Incorrect caster level of Ray of Frost");
+          throw std::runtime_error("Incorrect caster level of Starry Wisp");
         }
     }
 
-    RayOfFrostFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource);
+    StarryWispFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource);
 
     std::vector<Combatant *> getEligibleTargets() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
-
     std::shared_ptr<Actoid> create(void *target) override;
-
     std::optional<Resource *> getResource() override { return _resource; }
 
     double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const override;
@@ -71,16 +72,15 @@ namespace enc
     Die _dmgDice;
   };
 
-  class RayOfFrost : public Actoid, public DirectThreat
+  class StarryWisp : public Actoid, public DirectThreat
   {
   public:
-    RayOfFrost(Combatant &target, const RayOfFrostFactory &factory, RollType rollType = RollType::STRAIGHT)
-        : Actoid(const_cast<RayOfFrostFactory &>(factory), ActoidFlags::IS_SPELL | ActoidFlags::IS_ATTACK_LIKE, factory._abilityType), _target(target),
-          _factory(factory), _rollType(rollType)
+    StarryWisp(Combatant &target, const StarryWispFactory &factory, RollType rollType = RollType::STRAIGHT)
+        : Actoid(const_cast<StarryWispFactory &>(factory), ActoidFlags::IS_SPELL | ActoidFlags::IS_ATTACK_LIKE, AbilityType::STARRY_WISP),
+          _target(target), _factory(factory)
     {}
 
     std::string toString() const override;
-
     std::string shorthandStr() const;
 
     Combatant &getTarget() const { return _target; }
@@ -95,26 +95,21 @@ namespace enc
 
   private:
     Combatant &_target;
-    const RayOfFrostFactory &_factory;
-    RollType _rollType;
+    const StarryWispFactory &_factory;
   };
 
-  // Applies the 2024 Ray of Frost speed-reduction rider: the target's Speed drops by 10 ft (2 cells) until
-  // the start of the caster's next turn (modeled as a single-turn limited-duration effect on the caster).
-  class RayOfFrostEffect : public CombatantEffect, public LimitedDurationEffect
+  // Applies the 2024 Starry Wisp rider on a hit: the target sheds light and "can't benefit from the
+  // Invisible condition" until the start of the caster's next turn (single-turn limited-duration effect).
+  class StarryWispEffect : public CombatantEffect, public LimitedDurationEffect
   {
   public:
-    RayOfFrostEffect(Combatant *caster, Combatant *target)
+    StarryWispEffect(Combatant *caster, Combatant *target)
         : Effect(caster), CombatantEffect(caster, {target}), LimitedDurationEffect(caster, 1)
     {}
 
-    EffectType getEffectType() const override { return EffectType::RAY_OF_FROST; }
+    EffectType getEffectType() const override { return EffectType::STARRY_WISP; }
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;
     bool deactivateForCombatant(Combatant *combatant) override { return true; }
-
-  private:
-    static constexpr int SPEED_REDUCTION = 2; // 10 ft expressed in 5-ft cells
-    bool _applied = false;
   };
 }

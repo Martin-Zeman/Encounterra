@@ -30,7 +30,10 @@ namespace enc
     SWALLOWED = 1 << 14,
     GRAPPLING = 1 << 15,
     AWAKENED_BY_DMG = 1 << 16,
-    CAN_BE_SHAKEN_AWAKE = 1 << 17
+    CAN_BE_SHAKEN_AWAKE = 1 << 17,
+    // Set by Starry Wisp on a hit: the creature can't benefit from the Invisible condition (relevant once
+    // invisibility-granting combatants such as rogues are ported).
+    CANNOT_TURN_INVISIBLE = 1 << 18
   };
 
   // Operator overloading for bitwise operations on Conditions

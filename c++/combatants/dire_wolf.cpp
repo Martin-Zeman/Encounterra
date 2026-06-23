@@ -11,10 +11,10 @@ namespace enc
     {
       self->setSize(Size::LARGE);
 
-      // Bite: +5, 1d10+3 Piercing, reach 5 ft. On a hit the target must succeed on a DC 13 Strength save
-      // or be knocked Prone (2024 statblock).
+      // Bite: +5, 1d10+3 Piercing, reach 5 ft. On a hit the target has the Prone condition if it is Huge or
+      // smaller — no saving throw (2024 statblock).
       std::vector<std::unique_ptr<OnHit>> biteRiders;
-      biteRiders.push_back(std::make_unique<OnHitProne>(SavingThrow::STR, 13));
+      biteRiders.push_back(std::make_unique<OnHitProne>(Size::HUGE));
       auto bite = self->addMeleeAttackWithRiders("Bite", self, 5, std::vector<Die>{{1, 10}}, 3, DamageType::Piercing, 1, std::move(biteRiders));
 
       // Opportunity attack uses the same Bite (no Prone rider on the reaction, mirroring the Python reaction bite).

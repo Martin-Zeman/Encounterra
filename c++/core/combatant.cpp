@@ -7,9 +7,30 @@
 #include "core/rechargeable_factory.hpp"
 #include "effects/effect_tracker.hpp"
 #include "core/resources.hpp"
+#include "abilities/wildshape.hpp"
 
 namespace enc
 {
+
+  std::shared_ptr<ActoidFactory> Combatant::addMoonWildshape()
+  {
+    // 2 uses per short rest (unlimited at level 20), keyed by WILDSHAPE so Moon and generic Wild Shape share
+    // the same resource bookkeeping (mirrors the Python combatant setup).
+    auto resource = std::make_shared<Uses>(WildshapeFactory::getWildshapeUses(_level), ResourceRefreshType::SHORT_REST);
+    _resources.insert({AbilityType::WILDSHAPE, resource});
+    auto factory = std::make_shared<WildshapeFactory>(this, AbilityType::MOON_WILDSHAPE, resource.get());
+    _bonusActionFactories.emplace_back(factory);
+    return factory;
+  }
+
+  std::shared_ptr<ActoidFactory> Combatant::addWildshape()
+  {
+    auto resource = std::make_shared<Uses>(WildshapeFactory::getWildshapeUses(_level), ResourceRefreshType::SHORT_REST);
+    _resources.insert({AbilityType::WILDSHAPE, resource});
+    auto factory = std::make_shared<WildshapeFactory>(this, AbilityType::WILDSHAPE, resource.get());
+    _bonusActionFactories.emplace_back(factory);
+    return factory;
+  }
 
   Combatant::Combatant(CombatantType type, SubType subtype, int level, std::string name, int hp, int ac, int initBonus, int spellToHit, int speed,
                        int dc, std::unordered_set<DamageType> resistances, std::unordered_set<DamageType> immunities,
@@ -346,6 +367,10 @@ namespace enc
   {
     if(auto effect = _concentrationEffect.lock())
       {
+        // Clear the handle BEFORE removing the effect: EffectTracker::remove() calls the effect's
+        // deactivate(), and concentration spells' deactivate() calls breakConcentration() again. Resetting
+        // first makes that re-entrant call a no-op and avoids infinite recursion.
+        _concentrationEffect.reset();
         EffectTracker::getInstance().remove(effect);
       }
     _concentrationEffect.reset();
@@ -622,7 +647,7 @@ std::deque<std::shared_ptr<Actoid>> Combatant::calculateActionPlan(const blaze::
     buildActionStateMachine(this, proto.fsm, distances, shortestPaths);
 
   std::optional<BestSequenceResult> best =
-    findBestSequence(this, *dagResult.stateMachine, proto.transitionNameToActoid, *dagResult.transitionToEligibleCoords,
+    findBestSequence(this, *dagResult.stateMachine, proto.actoidPool, *dagResult.transitionToEligibleCoords,
                      *dagResult.movementTransToCoordAndType, distances, shortestPaths);
   if(!best.has_value())
     {
@@ -630,7 +655,7 @@ std::deque<std::shared_ptr<Actoid>> Combatant::calculateActionPlan(const blaze::
     }
 
   std::vector<std::shared_ptr<Actoid>> actions =
-    translateSequenceToActions(this, distances, shortestPaths, proto.transitionNameToActoid,
+    translateSequenceToActions(this, distances, shortestPaths, proto.actoidPool,
                                *dagResult.movementTransToCoordAndType, best->sequence, best->msPathMap);
   return std::deque<std::shared_ptr<Actoid>>(actions.begin(), actions.end());
 }

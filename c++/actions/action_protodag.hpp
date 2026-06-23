@@ -15,7 +15,7 @@ namespace enc
   struct ProtoDagResult
   {
     StateMachine fsm;
-    TransitionNameToActoid transitionNameToActoid;
+    ActoidOwnershipPool actoidPool;
   };
 
   /**

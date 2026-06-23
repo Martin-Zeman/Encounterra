@@ -38,6 +38,6 @@ namespace enc
 
   bool hasAdvantageSavingThrow(SavingThrow savingThrow, Combatant *target, bool isSpellEffect);
   bool hasDisadvantageSavingThrow(SavingThrow savingThrow, Combatant *target);
-  void resolveDmgSavingThrow(SavingThrow savingThrowType, int dc, const std::string &abilityName, int dmg, DamageType dmgType, Combatant *target,
+  bool resolveDmgSavingThrow(SavingThrow savingThrowType, int dc, const std::string &abilityName, int dmg, DamageType dmgType, Combatant *target,
                              bool halfOnSuccess = false, bool isSpellEffect = false);
 }

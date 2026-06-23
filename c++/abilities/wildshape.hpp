@@ -23,11 +23,16 @@ namespace enc
     friend class Wildshape;
 
   public:
-    WildshapeFactory(Combatant *combatant, AbilityType actionType);
+    WildshapeFactory(Combatant *combatant, AbilityType actionType, Resource *resource = nullptr);
 
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;
     std::shared_ptr<Actoid> create(void *form) override;
-    std::optional<Resource *> getResource() override { return {}; }
+    std::optional<Resource *> getResource() override
+    {
+      if(_resource == nullptr)
+        return {};
+      return _resource;
+    }
     double calculateThreat(const Kwargs &kwargs) override;
 
     static int getWildshapeUses(int level);
@@ -36,6 +41,8 @@ namespace enc
   protected:
     Combatant *_combatant;
     AbilityType _actionType;
+    //! Limited-use resource (e.g. 2 uses per short rest). Null if uses are unlimited / unenforced.
+    Resource *_resource = nullptr;
   };
 
   /**
@@ -110,6 +117,7 @@ namespace enc
     int _savedAc = 0;
     int _savedSpeed = 0;
     int _savedMovement = 0;
+    Size _savedSize = Size::MEDIUM;
     AttackFsm _savedFsm;
     AttackFactory *_savedAoOFactory = nullptr;
     DirectThreatFactory *_savedDangerZone = nullptr;

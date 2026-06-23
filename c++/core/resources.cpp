@@ -44,6 +44,78 @@ namespace enc
             combatant->setAlreadyUsedSpellslotThisTurn(true);
             break;
 
+          case AbilityType::CURE_WOUNDS:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(1);
+              }
+            else
+              {
+                throw std::runtime_error("Cure Wounds factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            break;
+
+          case AbilityType::THUNDERWAVE:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(1);
+              }
+            else
+              {
+                throw std::runtime_error("Thunderwave factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            break;
+
+          case AbilityType::SPIKE_GROWTH:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(2);
+              }
+            else
+              {
+                throw std::runtime_error("Spike Growth factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            break;
+
+          case AbilityType::FAERIE_FIRE:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(1);
+              }
+            else
+              {
+                throw std::runtime_error("Faerie Fire factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            break;
+
+          case AbilityType::FLAMING_SPHERE:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(2);
+              }
+            else
+              {
+                throw std::runtime_error("Flaming Sphere factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            break;
+
+          case AbilityType::MOONBEAM:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(2);
+              }
+            else
+              {
+                throw std::runtime_error("Moonbeam factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            break;
+
           case AbilityType::FIREBOLT: /*Nothing to do*/ break;
 
           default: break;
@@ -63,6 +135,25 @@ namespace enc
                 (*ammo)->useResource();
               }
             combatant->triggerAttackFsm(&actoid.getFactory());
+            break;
+          case AbilityType::MOON_WILDSHAPE:
+          case AbilityType::WILDSHAPE:
+            // Consume one Wild Shape use (per short rest).
+            if(auto uses = actoid.getFactory().getResource())
+              {
+                (*uses)->useResource();
+              }
+            break;
+          case AbilityType::HEALING_WORD:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(1);
+              }
+            else
+              {
+                throw std::runtime_error("Healing Word factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
             break;
           default: break;
           }

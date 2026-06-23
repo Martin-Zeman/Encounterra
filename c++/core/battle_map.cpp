@@ -372,6 +372,37 @@ namespace enc
     return path;
   }
 
+  bool BattleMap::isPathStraight(const CoordVector &path, int length)
+  {
+    if(path.size() < 2 || length < 2)
+      {
+        return false;
+      }
+    if(static_cast<size_t>(length) > path.size())
+      {
+        return false;
+      }
+
+    // Inspect the last `length` coords; every step must share the same direction.
+    const size_t start = path.size() - static_cast<size_t>(length);
+    bool haveDirection = false;
+    Coord direction{0, 0};
+    for(size_t i = start; i + 1 < path.size(); ++i)
+      {
+        Coord step{path[i + 1][0] - path[i][0], path[i + 1][1] - path[i][1]};
+        if(!haveDirection)
+          {
+            direction = step;
+            haveDirection = true;
+          }
+        else if(step[0] != direction[0] || step[1] != direction[1])
+          {
+            return false;
+          }
+      }
+    return true;
+  }
+
   int BattleMap::getHopDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const
   {
     return getHopDistanceCoords(_combatantCoordinateCache.at(combatant1._instanceId), _combatantCoordinateCache.at(combatant2._instanceId));

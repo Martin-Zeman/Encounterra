@@ -36,7 +36,10 @@ namespace enc
     PARALYZING_ATTACK_PARALYZED,
     SHIELD_OF_FAITH,
     VOW_OF_ENMITY,
-    INNATE_SORCERY
+    INNATE_SORCERY,
+    MOONBEAM,
+    STARRY_WISP,
+    ROAR_FRIGHTENED
   };
 
   class Effect : public std::enable_shared_from_this<Effect>

@@ -59,6 +59,9 @@ namespace enc
     DijkstraResult dijkstra(const Coord &src, const MapMatrix &adjMatrix, const MapMatrix &mask);
     DijkstraResult calcDijkstra(const Combatant &combatant);
     CoordVector reconstructFromShortestPath(const blaze::DynamicMatrix<Coord> &shortest_paths, const Coord &source, const Coord &target);
+    // Port of numba is_path_straight: true iff the last `length` coords of `path` advance in a single, constant
+    // step direction (and the path is at least `length` coords long, with length >= 2). Used by Pounce.
+    static bool isPathStraight(const CoordVector &path, int length);
     int getHopDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const;
     double getCartesianDistanceCombatants(const Combatant &combatant1, const Combatant &combatant2) const;
     std::unordered_set<Coord> getAdjacentCoords(const Coords &coords) const;
