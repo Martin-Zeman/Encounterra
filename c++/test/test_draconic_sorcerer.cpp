@@ -7,6 +7,7 @@
 #include "core/interfaces.hpp"
 #include "core/types.hpp"
 #include "core/resources.hpp"
+#include "core/threat_modifiers.hpp"
 #include "combatants/goblin.hpp"
 #include "combatants/bugbear_warrior.hpp"
 #include "combatants/wild_heart_barbarian_lvl_5.hpp"
@@ -190,6 +191,27 @@ namespace
     auto *threatFactory = dynamic_cast<DirectThreatFactory *>(factory);
     ASSERT_NE(threatFactory, nullptr);
     EXPECT_GT(threatFactory->calculateThreatToTarget(goblin, {}), 0.0);
+  }
+
+  TEST_F(DraconicSorcererLvl3Test, HoldPersonThreatRisesWithSaveDcBonus)
+  {
+    session->addCombatant(sorcerer, Color::BLUE);
+    session->addCombatant(goblin, Color::RED);
+    battleMap->buildBaseAdjacencyMatrix();
+    battleMap->setCombatantCoordinates(*sorcerer, Coord{1, 3});
+    battleMap->setCombatantCoordinates(*goblin, Coord{5, 3});
+
+    auto *factory = findFactory(sorcerer->getActionFactoriesConst(), AbilityType::HOLD_PERSON);
+    ASSERT_NE(factory, nullptr);
+    auto *threatFactory = dynamic_cast<DirectThreatFactory *>(factory);
+    ASSERT_NE(threatFactory, nullptr);
+    // A +1 to the caster's spell save DC raises the chance Hold Person's save fails, so the
+    // save-DC delta must be positive against a humanoid that can fail the save.
+    ThreatModifiers saveDcMods;
+    saveDcMods.set(ThreatModifierType::SAVE_DC, 1);
+    EXPECT_GT(threatFactory->calculateThreatToTargetDelta(goblin, saveDcMods), 0.0);
+    // With no save-DC bonus there is no improvement to value.
+    EXPECT_DOUBLE_EQ(threatFactory->calculateThreatToTargetDelta(goblin, ThreatModifiers{}), 0.0);
   }
 
   TEST_F(DraconicSorcererLvl3Test, InnateSorceryIsThreatModifierNotDirectThreat)

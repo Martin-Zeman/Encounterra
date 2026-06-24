@@ -62,6 +62,11 @@ namespace enc
 
   double HoldPersonFactory::calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const
   {
+    return threatToTargetWithDc(target, _dc);
+  }
+
+  double HoldPersonFactory::threatToTargetWithDc(Combatant *target, int dc) const
+  {
     if(target->isAffectedBy(Conditions::PARALYZED))
       {
         return 0;
@@ -106,7 +111,7 @@ namespace enc
 
     double threatRoundTotal = maxActionThreat + threatInDelta;
 
-    double pFail = getSavingThrowFailProb(_dc, target->getSavingThrow(HoldPersonFactory::savingThrow));
+    double pFail = getSavingThrowFailProb(dc, target->getSavingThrow(HoldPersonFactory::savingThrow));
     double pFailAcc = pFail;
     double totalThreat = 0.0;
     for(int i = 0; i < ROUND_HORIZON; ++i)
@@ -115,6 +120,18 @@ namespace enc
         pFailAcc *= pFail;
       }
     return totalThreat;
+  }
+
+  double HoldPersonFactory::calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const
+  {
+    // Hold Person lands on a Wisdom save, so a flat bonus to the caster's spell save DC raises the chance
+    // the target stays paralyzed. The delta is the extra threat the higher DC buys over the spell's horizon.
+    int saveDcBonus = modifiers.getOrDefault(ThreatModifierType::SAVE_DC, 0);
+    if(saveDcBonus == 0)
+      {
+        return 0;
+      }
+    return threatToTargetWithDc(target, _dc + saveDcBonus) - threatToTargetWithDc(target, _dc);
   }
 
   double HoldPersonFactory::calculateMaxThreat() const
@@ -143,6 +160,11 @@ namespace enc
   double HoldPerson::calculateThreat(const Kwargs &kwargs)
   {
     return _factory.calculateThreatToTarget(getCombatants()[0], kwargs);
+  }
+
+  double HoldPerson::calculateThreatDelta(const ThreatModifiers &modifiers) const
+  {
+    return _factory.calculateThreatToTargetDelta(getCombatants()[0], modifiers);
   }
 
   void HoldPerson::activate(const Kwargs &kwargs)

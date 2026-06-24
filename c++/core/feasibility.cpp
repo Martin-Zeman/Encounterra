@@ -193,6 +193,17 @@ namespace enc
         result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
         break;
       }
+      case AbilityType::INNATE_SORCERY:
+      {
+        // A bonus-action self-buff that lasts the encounter: never re-channel it while it is already active,
+        // and only while uses remain.
+        result &= !combatant->isInnateSorceryActive();
+        if(auto resource = actoid.getFactory().getResource())
+          {
+            result &= (*resource)->hasUses();
+          }
+        break;
+      }
       case AbilityType::FIREBOLT: /*Nothing to do*/ break;
 
       default: break;
@@ -349,6 +360,17 @@ namespace enc
             throw std::runtime_error("Actoid factory must have an associated resource!");
           }
         result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
+        break;
+      }
+      case AbilityType::INNATE_SORCERY:
+      {
+        // A bonus-action self-buff that lasts the encounter: never re-channel it while it is already active,
+        // and only while uses remain.
+        result &= !combatant->isInnateSorceryActive();
+        if(auto resource = actoid.getFactory().getResource())
+          {
+            result &= (*resource)->hasUses();
+          }
         break;
       }
       case AbilityType::FIREBOLT: /*Nothing to do*/ break;

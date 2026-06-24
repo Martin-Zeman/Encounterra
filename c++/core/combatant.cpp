@@ -9,6 +9,8 @@
 #include "core/resources.hpp"
 #include "abilities/wildshape.hpp"
 
+#include <algorithm>
+
 namespace enc
 {
 
@@ -153,6 +155,7 @@ namespace enc
       int movement;
       int attackFsmState;
       std::vector<std::pair<Resource *, int>> resourceUses; // factory resource -> current uses
+      std::vector<std::pair<Spellslots *, std::unordered_map<int, int>>> spellslotUses; // spellslots -> per-level uses
     };
 
     void collectFactoryResources(const std::vector<std::shared_ptr<ActoidFactory>> &factories, std::vector<std::pair<Resource *, int>> &out)
@@ -190,6 +193,20 @@ namespace enc
     collectFactoryResources(_actionFactories, snapshot.resourceUses);
     collectFactoryResources(_bonusActionFactories, snapshot.resourceUses);
     collectFactoryResources(_hasteActionFactories, snapshot.resourceUses);
+    // Combatant-owned resources (spell slots, sorcery points/METAMAGIC, rage, ...) are mutated by useResources
+    // during speculative planning but are not factory-ammo, so snapshot them here too. Spell slots are
+    // level-indexed (snapshot the whole map); everything else is a flat Uses pool.
+    for(const auto &[ability, resource] : _resources)
+      {
+        if(auto *slots = dynamic_cast<Spellslots *>(resource.get()))
+          {
+            snapshot.spellslotUses.emplace_back(slots, slots->getCurrentSlots());
+          }
+        else if(auto *asUses = dynamic_cast<Uses *>(resource.get()))
+          {
+            snapshot.resourceUses.emplace_back(resource.get(), asUses->getUses());
+          }
+      }
     return snapshot;
   }
 
@@ -214,6 +231,10 @@ namespace enc
             asUses->setResource(uses);
           }
       }
+    for(const auto &[slots, perLevel] : snapshot.spellslotUses)
+      {
+        slots->setCurrentSlots(perLevel);
+      }
   }
 
   bool Combatant::isAffectedBy(Conditions condition) const
@@ -237,6 +258,15 @@ namespace enc
   {
     auto it = _resources.find(AbilityType::METAMAGIC);
     return it != _resources.end() ? it->second->getUses() : 0;
+  }
+
+  void Combatant::consumeSorceryPoints(int amount)
+  {
+    auto it = _resources.find(AbilityType::METAMAGIC);
+    if(it != _resources.end())
+      {
+        it->second->useResource(amount);
+      }
   }
 
   void Combatant::applyCondition(const Condition &condition)
@@ -659,6 +689,7 @@ std::deque<std::shared_ptr<Actoid>> Combatant::calculateActionPlan(const blaze::
   std::vector<std::shared_ptr<Actoid>> actions =
     translateSequenceToActions(this, distances, shortestPaths, proto.actoidPool,
                                *dagResult.movementTransToCoordAndType, best->sequence, best->msPathMap);
+
   return std::deque<std::shared_ptr<Actoid>>(actions.begin(), actions.end());
 }
 }

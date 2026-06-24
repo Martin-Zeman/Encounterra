@@ -11,6 +11,7 @@
 #include "spells/spell_stats.hpp"
 #include "spells/fireball.hpp"
 #include "spells/firebolt.hpp"
+#include "spells/scorching_ray.hpp"
 #include "combatants/goblin.hpp"
 #include "combatants/acolyte.hpp"
 #include "combatants/draconic_sorcerer_lvl_1.hpp"
@@ -120,6 +121,23 @@ TEST_F(ResourceTest, UseResourcesSpellslots)
     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(3), 2);
     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(2), 3);
     EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(1), 4);
+}
+
+// 2024 rule: only one spell may be cast using a spell slot per turn. Casting a leveled spell must consume
+// the slot AND flag the turn so a second slot-spell (e.g. Quickened Scorching Ray) is blocked by feasibility.
+TEST_F(ResourceTest, UseResourcesScorchingRayConsumesSlotAndFlagsTurn)
+{
+    ScorchingRayFactory scorchingRayFactory(5, AbilityType::SCORCHING_RAY, draconic_sorcerer_lvl_5,
+                                            &draconic_sorcerer_lvl_5->getSpellslots());
+    auto scorchingRay = scorchingRayFactory.create(&goblin);
+
+    EXPECT_FALSE(draconic_sorcerer_lvl_5->hasAlreadyUsedSpellslotThisTurn());
+    EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(2), 3);
+
+    useResources(draconic_sorcerer_lvl_5, *scorchingRay);
+
+    EXPECT_TRUE(draconic_sorcerer_lvl_5->hasAlreadyUsedSpellslotThisTurn());
+    EXPECT_EQ(draconic_sorcerer_lvl_5->getSpellslots().getUses(2), 2);
 }
 
 // TEST_F(ResourceTest, UseResourcesAlreadyUsedSpellslotThisTurn)

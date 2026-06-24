@@ -139,6 +139,15 @@ namespace enc
             result = result && !combatant->hasAlreadyUsedSpellslotThisTurn();
             break;
           }
+        case AbilityType::INNATE_SORCERY:
+          {
+            // A bonus-action self-buff that lasts the encounter: never re-channel it while it is already active,
+            // and only while uses remain.
+            result = result && !combatant->isInnateSorceryActive();
+            if(auto resource = factory->getResource())
+              result = result && (*resource)->hasUses();
+            break;
+          }
         case AbilityType::FIREBOLT: /*Nothing to do*/ break;
         default: break;
         }

@@ -39,11 +39,18 @@ namespace enc
     Resource *_resource;
   };
 
-  class InnateSorcery : public Actoid, public Threat
+  // Modeled as an AttackThreatModifier (mirroring Rage): the buff carries no inherent threat of its own;
+  // instead, when it precedes a sorcerer spell attack in a planned sequence it contributes that attack's
+  // advantage delta via calculateThreatForAttack. This makes the branch of the game tree in which Innate
+  // Sorcery is channeled BEFORE the spell score highest, so the planner orders it first. The benefit is
+  // conditioned on the buff not being active yet — once active it grants no further advantage, so its threat
+  // is zero and it is not re-channeled.
+  class InnateSorcery : public AttackThreatModifier
   {
   public:
     InnateSorcery(const InnateSorceryFactory &factory)
-        : Actoid(const_cast<InnateSorceryFactory &>(factory), ActoidFlags::IS_SPELL, AbilityType::INNATE_SORCERY), _factory(factory)
+        : AttackThreatModifier(const_cast<InnateSorceryFactory &>(factory), ActoidFlags::IS_SPELL, AbilityType::INNATE_SORCERY),
+          _factory(factory)
     {}
 
     std::string toString() const override { return "Innate Sorcery"; }
@@ -51,6 +58,7 @@ namespace enc
     std::string shorthandStr() const { return "Innate Sorcery"; }
 
     double calculateThreat(const Kwargs &kwargs) override;
+    double calculateThreatForAttack(Combatant *attacker, Actoid *attack, const Kwargs &kwargs) override;
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),
                                                  const blaze::DynamicMatrix<Coord> &shortestPaths = blaze::DynamicMatrix<Coord>()) override;
 

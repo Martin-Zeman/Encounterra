@@ -116,6 +116,32 @@ namespace enc
             combatant->setAlreadyUsedSpellslotThisTurn(true);
             break;
 
+          case AbilityType::SCORCHING_RAY:
+          case AbilityType::HOLD_PERSON:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(2);
+              }
+            else
+              {
+                throw std::runtime_error("Leveled spell factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            break;
+
+          case AbilityType::TWINNED_HOLD_PERSON:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(2);
+              }
+            else
+              {
+                throw std::runtime_error("Leveled spell factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            combatant->consumeSorceryPoints(1); // Twinned Spell (2024) costs 1 sorcery point.
+            break;
+
           case AbilityType::FIREBOLT: /*Nothing to do*/ break;
 
           default: break;
@@ -161,6 +187,35 @@ namespace enc
               {
                 (*uses)->useResource();
               }
+            break;
+          case AbilityType::MISTY_STEP:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(2);
+              }
+            else
+              {
+                throw std::runtime_error("Leveled bonus-action spell factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            break;
+          case AbilityType::QUICKENED_SCORCHING_RAY:
+          case AbilityType::QUICKENED_HOLD_PERSON:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(2);
+              }
+            else
+              {
+                throw std::runtime_error("Leveled bonus-action spell factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            combatant->consumeSorceryPoints(2); // Quickened Spell costs 2 sorcery points.
+            break;
+          case AbilityType::QUICKENED_FIREBOLT:
+          case AbilityType::QUICKENED_RAY_OF_FROST:
+            // Quickened cantrips use no spell slot, but still cost 2 sorcery points.
+            combatant->consumeSorceryPoints(2);
             break;
           default: break;
           }

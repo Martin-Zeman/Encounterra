@@ -148,6 +148,11 @@ namespace enc
 
     void depleteResource(ResourceDepletionLevel level) override;
 
+    //! Snapshot of the current per-level slot counts, used to save/restore state across the planner's
+    //! speculative proto-DAG exploration (see Combatant::exportResources/importResources).
+    const std::unordered_map<int, int> &getCurrentSlots() const { return _currSpellslots; }
+    void setCurrentSlots(const std::unordered_map<int, int> &slots) { _currSpellslots = slots; }
+
   private:
     std::unordered_map<int, int> _maxSpellslots;
     std::unordered_map<int, int> _currSpellslots;

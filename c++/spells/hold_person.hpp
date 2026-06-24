@@ -41,13 +41,19 @@ namespace enc
 
     double calculateThreatToTarget(Combatant *target, const Kwargs &kwargs) const override;
     double calculateMaxThreat() const override;
+    //! Change in this spell's threat from a flat bonus to the caster's spell save DC (ThreatModifierType::SAVE_DC).
+    //! Lets save-DC buffs such as Innate Sorcery value Hold Person as an alternative to advantage on spell attacks.
+    double calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const override;
 
   private:
+    //! Hold Person's threat against a target evaluated with an explicit spell save DC.
+    double threatToTargetWithDc(Combatant *target, int dc) const;
+
     int _dc;
     Resource *_resource;
   };
 
-  class HoldPerson : public Actoid, public LimitedDurationEffect, public CombatantEffect, public Threat
+  class HoldPerson : public Actoid, public LimitedDurationEffect, public CombatantEffect, public DirectThreat
   {
   public:
     HoldPerson(Combatant &target, const HoldPersonFactory &factory)
@@ -63,6 +69,8 @@ namespace enc
     EffectType getEffectType() const override { return EffectType::HOLD_PERSON; }
 
     double calculateThreat(const Kwargs &kwargs) override;
+    //! Delegates to the factory so a save-DC buff (Innate Sorcery) can value this spell when it precedes it.
+    double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 
     void activate(const Kwargs &kwargs = {}) override;
     void deactivate() override;

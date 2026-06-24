@@ -227,6 +227,8 @@ namespace enc
     bool hasPassiveAbility(AbilityType ability) const;
     // Current number of Metamagic sorcery points (0 if the combatant has no Metamagic resource).
     int getSorceryPoints() const;
+    // Spend Metamagic sorcery points (no-op if the combatant has no Metamagic resource).
+    void consumeSorceryPoints(int amount);
     // Attack FSM (multiattack gating). Combatants register transitions keyed by their attack factories; the FSM is
     // reset to its start state at the beginning of each turn and advanced as attacks are spent.
     void addAttackTransition(const ActoidFactory *factory, int origin, int destination) { _attackFsm.addTransition(factory, origin, destination); }

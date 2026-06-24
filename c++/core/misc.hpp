@@ -366,7 +366,8 @@ namespace enc
     DMG_BONUS_DIE,
     CRIT_RANGE,
     AUTO_CRIT,
-    TARGET_AC
+    TARGET_AC,
+    SAVE_DC //!< Flat bonus to the caster's spell save DC (e.g. Innate Sorcery's +1), used by save-based spells.
   };
 
   enum class Terrain
