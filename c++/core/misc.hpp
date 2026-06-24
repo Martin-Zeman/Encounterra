@@ -234,6 +234,20 @@ namespace enc
     CUSTOM = 4 // only used for cases where Coords express a set of coordinates that's not a combatant
   };
 
+  //! 2024 weapon mastery properties. A weapon grants its mastery to a proficient wielder.
+  enum class WeaponMastery
+  {
+    NONE,
+    CLEAVE, //!< On hit, make one extra attack against a second enemy within 5 ft (once per turn).
+    GRAZE,  //!< On a miss, deal damage equal to the ability modifier used for the attack.
+    NICK,   //!< The Light extra attack can be made as part of the Attack action (no Bonus Action cost).
+    PUSH,   //!< On hit, push a Large-or-smaller target up to 10 ft away.
+    SAP,    //!< On hit, the target has Disadvantage on its next attack roll before the wielder's next turn.
+    SLOW,   //!< On hit, reduce the target's Speed by 10 ft until the start of the wielder's next turn.
+    TOPPLE, //!< On hit, the target makes a Con save or has the Prone condition.
+    VEX     //!< On hit, the wielder has Advantage on its next attack roll against that target.
+  };
+
   enum class Statistics
   {
     VICTORIES = 1,

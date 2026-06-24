@@ -23,6 +23,10 @@ namespace enc
       // Single attack: 0 -> nop.
       self->addAttackTransition(bite.get(), AttackFsm::START, AttackFsm::NOP);
 
+      // Pack Tactics: the Dire Wolf has Advantage on attack rolls against a target if at least one of its allies
+      // is within 5 ft of that target.
+      self->addPackTactics();
+
       self->setSavingThrow(SavingThrow::STR, 3);
       self->setSavingThrow(SavingThrow::DEX, 2);
       self->setSavingThrow(SavingThrow::CON, 2);

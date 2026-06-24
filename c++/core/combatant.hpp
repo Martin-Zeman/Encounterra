@@ -43,6 +43,9 @@
 #include "abilities/on_hit_saving_throw_dmg.hpp"
 #include "abilities/pounce.hpp"
 #include "abilities/roar.hpp"
+#include "abilities/rage.hpp"
+#include "abilities/reckless_attack.hpp"
+#include "abilities/on_hit_mastery.hpp"
 #include "effects/effect.hpp"
 #include "core/state_machine.hpp"
 #include "core/attack_fsm.hpp"
@@ -215,6 +218,11 @@ namespace enc
     bool hasMovement(int dist = 1) const { return _movement >= dist; }
     void decrementMovement(int dist = 1) { _movement -= dist; }
     int getSpeed() const { return _speed; }
+
+    //! Flat bonus added to the damage of the combatant's Strength-based melee attacks (e.g. the Barbarian's
+    //! Rage Damage). Toggled on/off by the Rage effect and consumed by resolveAttack.
+    int getAbilityDmgBonus() const { return _abilityDmgBonus; }
+    void addAbilityDmgBonus(int delta) { _abilityDmgBonus += delta; }
     void setSpeed(int speed) { _speed = speed; }
     bool hasPassiveAbility(AbilityType ability) const;
     // Current number of Metamagic sorcery points (0 if the combatant has no Metamagic resource).
@@ -292,6 +300,14 @@ namespace enc
     void addVulnerability(DamageType dmgType);
     void removeVulnerability(DamageType dmgType);
     bool isDodging() { return _isDodging; }
+    //! When disengaging, the combatant's movement does not provoke opportunity attacks this turn.
+    bool isDisengaging() const { return _isDisengaging; }
+    void setDisengaging(bool value) { _isDisengaging = value; }
+    //! Claim a once-per-turn weapon mastery (e.g. Cleave). Returns false if it was already used this turn.
+    bool tryUseMasteryThisTurn(WeaponMastery mastery)
+    {
+      return _masteriesUsedThisTurn.insert(mastery).second;
+    }
     /**
      * Handles concentration checks when a combatant takes damage.
      *
@@ -329,14 +345,44 @@ namespace enc
     }
 
     std::shared_ptr<ActoidFactory> addRangedAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice,
-                                                   int dmgBonus, DamageType damageType, int attackRange)
+                                                   int dmgBonus, DamageType damageType, int attackRange, int ammo = Uses::INFINITE_USES)
     {
-      auto factory = std::make_shared<RangedAttackFactory>("RangedAttackFactory", name, owner, AbilityType::RANGED_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
+      auto factory = std::make_shared<RangedAttackFactory>("RangedAttackFactory", name, owner, AbilityType::RANGED_ATTACK, toHit, dmgDice,
+                                                           dmgBonus, damageType, attackRange, 1,
+                                                           ammo == Uses::INFINITE_USES ? Uses() : Uses(ammo));
       _actionFactories.emplace_back(factory);
       return factory;
     }
 
-    std::shared_ptr<ActoidFactory> addRecklessAttack() { return nullptr; }
+    //! Reckless Attack (Barbarian): a two-handed melee Strength attack made with Advantage that, until the
+    //! barbarian's next turn, also lets enemies attack it with Advantage. Registered as an Action factory.
+    std::shared_ptr<ActoidFactory> addRecklessAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice,
+                                                     int dmgBonus, DamageType damageType, int attackRange)
+    {
+      auto factory = std::make_shared<RecklessAttackFactory>(name, owner, toHit, dmgDice, dmgBonus, damageType, attackRange);
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    //! Attach a 2024 weapon-mastery property to a weapon's attack factory. Graze is stored as on-miss damage
+    //! (the attack's ability modifier); the on-hit masteries are bolted on as an OnHitMastery rider. Nick and
+    //! None add no rider here.
+    void applyWeaponMastery(const std::shared_ptr<ActoidFactory> &factory, WeaponMastery mastery)
+    {
+      auto *attackFactory = dynamic_cast<AttackFactory *>(factory.get());
+      if(attackFactory == nullptr || mastery == WeaponMastery::NONE)
+        {
+          return;
+        }
+      attackFactory->setMastery(mastery);
+      if(mastery == WeaponMastery::GRAZE)
+        {
+          attackFactory->setGrazeDamage(attackFactory->getDmgBonus());
+        }
+      else if(mastery != WeaponMastery::NICK)
+        {
+          attackFactory->addOnHit(std::make_unique<OnHitMastery>(mastery));
+        }
+    }
     std::shared_ptr<ActoidFactory> addPreSwallowBite() { return nullptr; }
     std::shared_ptr<ActoidFactory> addBiteAndSwallow() { return nullptr; }
     std::shared_ptr<ActoidFactory> addDodge() { return nullptr; }
@@ -491,8 +537,25 @@ namespace enc
     std::shared_ptr<ActoidFactory> addBonusMeleeAttack() { return nullptr; }
     std::shared_ptr<ActoidFactory> addBonusRangedAttack() { return nullptr; }
     std::shared_ptr<ActoidFactory> addPamBonusAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addRage() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addTotemRage() { return nullptr; }
+    //! Rage (Path of the Wild Heart, 2024). Registers the shared pool of Rage uses (refreshed on a long
+    //! rest) and offers the three Rage of the Wilds animal aspects (Bear, Eagle, Wolf) as separate bonus
+    //! action options drawing from that pool. Returns the first (Bear) factory.
+    std::shared_ptr<ActoidFactory> addRage()
+    {
+      auto resource = std::make_shared<Uses>(RageFactory::getRageUses(_level), ResourceRefreshType::LONG_REST);
+      _resources.insert({AbilityType::RAGE, resource});
+      std::shared_ptr<ActoidFactory> first;
+      for(RageVariant variant : {RageVariant::BEAR, RageVariant::EAGLE, RageVariant::WOLF})
+        {
+          auto factory = std::make_shared<RageFactory>(this, resource.get(), variant, AbilityType::RAGE);
+          _bonusActionFactories.emplace_back(factory);
+          if(!first)
+            {
+              first = factory;
+            }
+        }
+      return first;
+    }
     std::shared_ptr<ActoidFactory> addMistyStep()
     {
       auto factory = std::make_shared<MistyStepFactory>(this, _spellslots.get());
@@ -647,7 +710,9 @@ namespace enc
 
     void addSentinel() {}
     void addPolearmMaster() {}
-    void addDangerSense() {}
+    //! Danger Sense (Barbarian): Advantage on Dexterity saving throws against effects the barbarian can see.
+    //! Registered as a passive marker.
+    void addDangerSense() { _passiveAbilities.insert(AbilityType::DANGER_SENSE); }
     //! Metamagic (2024): grants a pool of sorcery points (= sorcerer level) refreshed on a long rest,
     //! and marks the combatant as having Metamagic so metamagic options become available.
     void addMetamagic()
@@ -655,7 +720,9 @@ namespace enc
       _passiveAbilities.insert(AbilityType::METAMAGIC);
       _resources.insert({AbilityType::METAMAGIC, std::make_shared<Uses>(_level, ResourceRefreshType::LONG_REST)});
     }
-    void addPackTactics() {}
+    //! Pack Tactics: the creature has Advantage on an attack roll against a target if at least one of its
+    //! allies is within 5 ft of the target and the ally is not Incapacitated. Registered as a passive marker.
+    void addPackTactics() { _passiveAbilities.insert(AbilityType::PACK_TACTICS); }
     void addFanaticAdvantage() {}
     void addWarCaster() {}
     void addEldritchMind() {}
@@ -676,7 +743,9 @@ namespace enc
     //! 10 + Dex + Cha. The final HP and AC are baked into the combatant's constructor stats, so this
     //! only registers the passive marker.
     void addDraconicResilience() { _passiveAbilities.insert(AbilityType::DRACONIC_RESILIENCE); }
-    void addUnarmoredDefense() {}
+    //! Unarmored Defense (Barbarian): AC = 10 + Dex + Con while wearing no armor. The resulting AC is baked
+    //! into the combatant's constructor stats, so this only registers the passive marker.
+    void addUnarmoredDefense() { _passiveAbilities.insert(AbilityType::UNARMORED_DEFENSE); }
     void addDivineSmite() {}
     void addChannelDivinity() {}
     void addUndeadFortitude();
@@ -764,6 +833,8 @@ namespace enc
     bool _hasHasteAction = false;
     bool _alreadyUsedSpellslotThisTurn = false;
     bool _isDodging = false;
+    bool _isDisengaging = false;
+    std::unordered_set<WeaponMastery> _masteriesUsedThisTurn;
     bool _isShieldSpellActive = false;
     bool _innateSorceryActive = false;
     int _meleeReactionRange = 1;

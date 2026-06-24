@@ -127,6 +127,19 @@ namespace enc
     return initiatorEffects;
   }
 
+  std::vector<std::shared_ptr<Effect>> EffectTracker::getEffectsByType(EffectType effectType) const
+  {
+    std::vector<std::shared_ptr<Effect>> matching;
+    for(const auto &effect : _effects)
+      {
+        if(effect->getEffectType() == effectType)
+          {
+            matching.push_back(effect);
+          }
+      }
+    return matching;
+  }
+
   void EffectTracker::combatantDied(Combatant *combatant)
   {
     auto initiatorEffects = getEffectsByInitiator(combatant);

@@ -12,7 +12,6 @@ namespace enc
     POST_HASTE_LETHARGY,
     WILDSHAPE,
     RAGE,
-    TOTEM_RAGE,
     HASTE,
     TWINNED_HASTE,
     DODGE,
@@ -39,7 +38,10 @@ namespace enc
     INNATE_SORCERY,
     MOONBEAM,
     STARRY_WISP,
-    ROAR_FRIGHTENED
+    ROAR_FRIGHTENED,
+    SLOWED,
+    SAPPED,
+    VEXED,
   };
 
   class Effect : public std::enable_shared_from_this<Effect>

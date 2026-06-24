@@ -27,6 +27,17 @@ namespace enc
      * @param combatant The combatant to apply the effects to
      */
     void resolveEffects(const std::unordered_set<std::shared_ptr<Effect>> &effects, Combatant *combatant);
+    /**
+     * Collects the advantage/disadvantage sources that apply to a given attack, without mutating any state
+     * (no Rage extension, no Sap/Vex consumption). Exposed so the roll-type logic can be verified
+     * deterministically in tests, since the d20 RNG itself cannot be seeded.
+     *
+     * @param attack The attack being made
+     * @param target The target of the attack
+     * @param attacker The attacker
+     * @return The set of RollType modifiers contributed by all sources
+     */
+    std::unordered_set<RollType> collectAttackRollTypes(Attack *attack, Combatant *target, Combatant *attacker) const;
     // TODO
   private:
     std::shared_ptr<Actoid> handleErrorCase(const std::shared_ptr<Actoid> &action, Combatant *combatant);

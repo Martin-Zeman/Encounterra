@@ -50,6 +50,8 @@ namespace enc
 
     std::vector<std::shared_ptr<Effect>> getEffectsByInitiator(Combatant *initiator) const;
 
+    std::vector<std::shared_ptr<Effect>> getEffectsByType(EffectType effectType) const;
+
     void combatantDied(Combatant *combatant);
 
     void createPostHasteLethargy(Combatant *initiator, Combatant *combatant);

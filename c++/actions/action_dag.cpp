@@ -15,7 +15,6 @@ namespace enc
 
   const std::unordered_map<AbilityType, PriorityActionInfo> PRIORITY_BONUS_ACTIONS
     = {{AbilityType::CUNNING_DISENGAGE, {"cdi_", MovementThreatType::DISENGAGED}},
-       {AbilityType::TOTEM_RAGE, {"m_", MovementThreatType::STANDARD}},
        {AbilityType::RAGE, {"m_", MovementThreatType::STANDARD}},
        {AbilityType::AGGRESSIVE, {"m_", MovementThreatType::STANDARD}}};
 

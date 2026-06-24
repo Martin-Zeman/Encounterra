@@ -18,6 +18,8 @@
 #include "spells/thunderwave.hpp"
 #include "abilities/pounce.hpp"
 #include "abilities/roar.hpp"
+#include "abilities/rage.hpp"
+#include "core/teams.hpp"
 #include "effects/effect_tracker.hpp"
 
 namespace enc
@@ -174,12 +176,25 @@ namespace enc
     return nullptr;
   }
 
-  ActionResult ActionResolver::resolveAttack(Attack *attack, Combatant *target, Combatant *attacker)
+  // Graze mastery: on a miss, the target still takes damage equal to the attack's ability modifier (stored on
+  // the factory as the graze damage). No effect for weapons that lack the Graze property.
+  static void applyGrazeOnMiss(AttackFactory &factory, Combatant *target)
+  {
+    int grazeDmg = factory.getGrazeDamage();
+    if(grazeDmg > 0)
+      {
+        std::cout << "Graze deals " << grazeDmg << " to " << target->_name << std::endl;
+        target->receiveDmg(grazeDmg, factory.getDmgType());
+        BattleMap::getInstance().removeCombatantIfDead(*target);
+      }
+  }
+
+  std::unordered_set<RollType> ActionResolver::collectAttackRollTypes(Attack *attack, Combatant *target, Combatant *attacker) const
   {
     auto &battleMap = BattleMap::getInstance();
+    EffectTracker &effectTracker = EffectTracker::getInstance();
     AttackFactory &factory = attack->getAttackFactory();
 
-    // Minimal port of resolve_attack: evaluate the grapple-related advantage/disadvantage sources.
     std::unordered_set<RollType> types;
     // 2024: a Grappled creature has Disadvantage on attack rolls against any target other than the grappler.
     if(attacker->isAffectedBy(Conditions::GRAPPLED) && attacker->getInitiatorOfCondition(Conditions::GRAPPLED) != target)
@@ -190,6 +205,98 @@ namespace enc
     if(factory.hasAdvantageVsGrappledTarget() && target->getInitiatorOfCondition(Conditions::GRAPPLED) == attacker)
       {
         types.insert(RollType::ADVANTAGE);
+      }
+    // Reckless Attack: a barbarian attacking recklessly has Advantage on its Strength melee attacks until the
+    // start of its next turn, and attack rolls against it have Advantage during that time as well.
+    if(attack->getAbilityType() == AbilityType::RECKLESS_ATTACK
+       || effectTracker.isAffectingCombatant(attacker, EffectType::RECKLESS_ATTACK)
+       || effectTracker.isAffectingCombatant(target, EffectType::RECKLESS_ATTACK))
+      {
+        types.insert(RollType::ADVANTAGE);
+      }
+    // Wolf Rage: while the Wolf-aspect barbarian is raging, its allies have Advantage on attack rolls against
+    // any enemy within 5 ft of the barbarian.
+    for(const auto &effect : effectTracker.getEffectsByType(EffectType::RAGE))
+      {
+        auto rage = std::dynamic_pointer_cast<Rage>(effect);
+        if(!rage || rage->getVariant() != RageVariant::WOLF)
+          {
+            continue;
+          }
+        Combatant *barbarian = rage->getInitiator();
+        if(barbarian == attacker)
+          {
+            continue; // The benefit goes to the barbarian's allies, not the barbarian itself.
+          }
+        if(Teams::getInstance().areAllies(*attacker, *barbarian)
+           && battleMap.getHopDistanceCombatants(*target, *barbarian) <= 1)
+          {
+            types.insert(RollType::ADVANTAGE);
+            break;
+          }
+      }
+    // Pack Tactics: a creature with this trait has Advantage on an attack roll against a target if at least one
+    // of its allies is within 5 ft of the target and that ally is not Incapacitated.
+    if(attacker->hasPassiveAbility(AbilityType::PACK_TACTICS) && battleMap.isAllyAdjacentToTarget(*attacker, *target))
+      {
+        types.insert(RollType::ADVANTAGE);
+      }
+    // Faerie Fire: attack rolls against a target affected by Faerie Fire are made with Advantage.
+    if(effectTracker.isAffectingCombatant(target, EffectType::FAERIE_FIRE))
+      {
+        types.insert(RollType::ADVANTAGE);
+      }
+    // Sap mastery: a Sapped attacker has Disadvantage on its next attack roll.
+    if(effectTracker.isAffectingCombatant(attacker, EffectType::SAPPED))
+      {
+        types.insert(RollType::DISADVANTAGE);
+      }
+    // Vex mastery: the wielder has Advantage on its next attack roll against the vexed target.
+    for(const auto &effect : effectTracker.getEffectsByInitiator(attacker))
+      {
+        if(effect->getEffectType() == EffectType::VEXED && effect->getTarget() == target)
+          {
+            types.insert(RollType::ADVANTAGE);
+            break;
+          }
+      }
+    return types;
+  }
+
+  ActionResult ActionResolver::resolveAttack(Attack *attack, Combatant *target, Combatant *attacker)
+  {
+    auto &battleMap = BattleMap::getInstance();
+    AttackFactory &factory = attack->getAttackFactory();
+    EffectTracker &effectTracker = EffectTracker::getInstance();
+
+    // Detection of all advantage/disadvantage sources is side-effect-free (see collectAttackRollTypes).
+    std::unordered_set<RollType> types = collectAttackRollTypes(attack, target, attacker);
+
+    // The state mutations tied to actually making the attack are applied here, once, on resolution.
+    // 2024 Rage duration: making an attack roll against an enemy extends the attacker's own Rage.
+    if(Teams::getInstance().areEnemies(*attacker, *target))
+      {
+        for(const auto &effect : effectTracker.getEffectsByInitiator(attacker))
+          {
+            if(auto rage = std::dynamic_pointer_cast<Rage>(effect))
+              {
+                rage->markExtended();
+              }
+          }
+      }
+    // Sap mastery: the Disadvantage is consumed by this attack.
+    if(effectTracker.isAffectingCombatant(attacker, EffectType::SAPPED))
+      {
+        effectTracker.removeEffectFromCombatantByType(attacker, EffectType::SAPPED);
+      }
+    // Vex mastery: the Advantage against this target is consumed by this attack.
+    for(const auto &effect : effectTracker.getEffectsByInitiator(attacker))
+      {
+        if(effect->getEffectType() == EffectType::VEXED && effect->getTarget() == target)
+          {
+            effectTracker.remove(effect);
+            break;
+          }
       }
     RollType finalModifier = reconcileRollTypes(types);
 
@@ -214,6 +321,7 @@ namespace enc
     if(rolled == 1)
       {
         std::cout << "Natural 1 rolled!" << std::endl;
+        applyGrazeOnMiss(factory, target);
         return ActionResult::MISS;
       }
     else if(rolled >= 21 - factory.getCritRange())
@@ -225,6 +333,12 @@ namespace enc
       {
         int dmgDiceSum = rollDiceMulti(factory.getDmgDice());
         int baseDmg = multiplier * dmgDiceSum + factory.getDmgBonus();
+        // Rage Damage (and similar flat ability bonuses) apply to Strength-based melee attacks. The flat
+        // bonus is added once — it is not doubled on a critical hit.
+        if(factory.hasFlag(FactoryFlags::IS_MELEE) && !factory.hasFlag(FactoryFlags::USES_DEX))
+          {
+            baseDmg += attacker->getAbilityDmgBonus();
+          }
         if(baseDmg < 0)
           {
             baseDmg = 0;
@@ -252,6 +366,7 @@ namespace enc
       }
 
     std::cout << "The attack misses " << target->_name << std::endl;
+    applyGrazeOnMiss(factory, target);
     return ActionResult::MISS;
   }
 
@@ -327,7 +442,7 @@ namespace enc
   {
     auto &battleMap = BattleMap::getInstance();
 
-    if(movement->incursAOO())
+    if(movement->incursAOO() && !movingCombatant->isDisengaging())
       {
         auto aooCandidates = battleMap.getAooEligibleCombatants(movingCombatant, movement->getIncrement());
         for(auto *candidate : aooCandidates)
@@ -369,6 +484,24 @@ namespace enc
             {
               return ActionResult::MISS;
             }
+          return resolveAttack(attack, &attack->getTarget(), combatant);
+        }
+
+      case AbilityType::RECKLESS_ATTACK:
+        {
+          auto *attack = dynamic_cast<Attack *>(action.get());
+          if(!attack)
+            {
+              return ActionResult::MISS;
+            }
+          // Apply the Reckless Attack effect first so that this attack — and, until the barbarian's next
+          // turn, attacks against it — are resolved with Advantage.
+          if(auto effect = std::dynamic_pointer_cast<Effect>(action))
+            {
+              EffectTracker::getInstance().add(effect);
+              effect->activate();
+            }
+          std::cout << combatant->_name << " attacks recklessly" << std::endl;
           return resolveAttack(attack, &attack->getTarget(), combatant);
         }
 
@@ -689,6 +822,21 @@ namespace enc
         combatant->applyShieldSpell();
         return ActionResult::OTHER;
 
+      case AbilityType::RAGE:
+        {
+          // Bonus action self-buff: grants Rage Damage on Strength melee attacks and Resistance to (at
+          // least) Bludgeoning/Piercing/Slashing for its duration, via the Rage effect.
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " enters a Rage (" << action->toString() << ")" << std::endl;
+          EffectTracker::getInstance().add(effect);
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
       case AbilityType::INNATE_SORCERY:
         // Bonus action self-buff: grants advantage on the caster's spell attacks for the encounter.
         std::cout << combatant->_name << " channels Innate Sorcery" << std::endl;
@@ -745,7 +893,6 @@ ActionResult ActionResolver::resolveAction(const std::shared_ptr<Actoid>& action
             break;
 
           case EffectType::RAGE:
-          case EffectType::TOTEM_RAGE:
           case EffectType::WILDSHAPE:
           case EffectType::DODGE:
           case EffectType::DISENGAGE:

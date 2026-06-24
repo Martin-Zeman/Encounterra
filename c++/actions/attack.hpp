@@ -47,6 +47,13 @@ namespace enc
     DamageType getDmgType() const { return _dmgType; }
     int getCritRange() const { return _critRange; }
     const std::vector<std::unique_ptr<OnHit>> &getOnHits() const { return _onHit; }
+    //! Attach an on-hit rider after construction (used to bolt weapon-mastery behaviour onto a weapon).
+    void addOnHit(std::unique_ptr<OnHit> onHit) { _onHit.push_back(std::move(onHit)); }
+    void setMastery(WeaponMastery mastery) { _mastery = mastery; }
+    WeaponMastery getMastery() const { return _mastery; }
+    //! On-miss Graze damage (equal to the attack's ability modifier); 0 when the weapon lacks Graze.
+    void setGrazeDamage(int dmg) { _grazeDamage = dmg; }
+    int getGrazeDamage() const { return _grazeDamage; }
     void setAdvantageVsGrappledTarget(bool value) { _advantageVsGrappledTarget = value; }
     bool hasAdvantageVsGrappledTarget() const { return _advantageVsGrappledTarget; }
 
@@ -65,6 +72,8 @@ namespace enc
     bool _twoHanded;
     Die _toHitBonusDie;
     bool _advantageVsGrappledTarget = false;
+    WeaponMastery _mastery = WeaponMastery::NONE;
+    int _grazeDamage = 0;
   };
 
   class Attack : public Actoid, public DirectThreat

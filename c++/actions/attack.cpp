@@ -20,7 +20,8 @@ namespace enc
   AttackFactory::AttackFactory(const AttackFactory &other)
       : DirectThreatFactory(other), _toHit(other._toHit), _dmgDice(other._dmgDice), _dmgBonus(other._dmgBonus), _dmgType(other._dmgType),
         _attackRange(other._attackRange), _shortRange(other._shortRange), _critRange(other._critRange), _ammo(other._ammo),
-        _extraDmg(other._extraDmg), _usesDex(other._usesDex), _twoHanded(other._twoHanded), _toHitBonusDie(other._toHitBonusDie)
+        _extraDmg(other._extraDmg), _usesDex(other._usesDex), _twoHanded(other._twoHanded), _toHitBonusDie(other._toHitBonusDie),
+        _advantageVsGrappledTarget(other._advantageVsGrappledTarget), _mastery(other._mastery), _grazeDamage(other._grazeDamage)
   {
     for(const auto &onHit : other._onHit)
       {
@@ -32,7 +33,8 @@ namespace enc
       : DirectThreatFactory(std::move(other)), _toHit(other._toHit), _dmgDice(std::move(other._dmgDice)), _dmgBonus(other._dmgBonus),
         _dmgType(other._dmgType), _attackRange(other._attackRange), _shortRange(other._shortRange), _critRange(other._critRange),
         _ammo(std::move(other._ammo)), _onHit(std::move(other._onHit)), _extraDmg(std::move(other._extraDmg)), _usesDex(other._usesDex),
-        _twoHanded(other._twoHanded), _toHitBonusDie(other._toHitBonusDie)
+        _twoHanded(other._twoHanded), _toHitBonusDie(other._toHitBonusDie), _advantageVsGrappledTarget(other._advantageVsGrappledTarget),
+        _mastery(other._mastery), _grazeDamage(other._grazeDamage)
   {}
 
   AttackFactory &AttackFactory::operator=(const AttackFactory &other)
@@ -52,6 +54,9 @@ namespace enc
         _usesDex = other._usesDex;
         _twoHanded = other._twoHanded;
         _toHitBonusDie = other._toHitBonusDie;
+        _advantageVsGrappledTarget = other._advantageVsGrappledTarget;
+        _mastery = other._mastery;
+        _grazeDamage = other._grazeDamage;
 
         _onHit.clear();
         for(const auto &onHit : other._onHit)
@@ -80,6 +85,9 @@ namespace enc
         _usesDex = other._usesDex;
         _twoHanded = other._twoHanded;
         _toHitBonusDie = other._toHitBonusDie;
+        _advantageVsGrappledTarget = other._advantageVsGrappledTarget;
+        _mastery = other._mastery;
+        _grazeDamage = other._grazeDamage;
       }
     return *this;
   }

@@ -133,6 +133,8 @@ namespace enc
             _constrictedTarget = nullptr;
             }
         _weaponDmgDealtThisTurn = 0;
+        _isDisengaging = false;
+        _masteriesUsedThisTurn.clear();
   }
 
   Combatant *Combatant::getCurrentForm() { return _currentWildshapeForm == nullptr ? _originalForm : _currentWildshapeForm; }

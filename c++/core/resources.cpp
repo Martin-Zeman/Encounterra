@@ -155,6 +155,13 @@ namespace enc
               }
             combatant->setAlreadyUsedSpellslotThisTurn(true);
             break;
+          case AbilityType::RAGE:
+            // Consume one Rage use (the animal-aspect variants share a single pool, refreshed on a long rest).
+            if(auto uses = actoid.getFactory().getResource())
+              {
+                (*uses)->useResource();
+              }
+            break;
           default: break;
           }
       }
