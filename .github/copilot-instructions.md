@@ -184,6 +184,16 @@ cmake ..
 make -j$(nproc)
 ```
 
+#### Release Build
+
+```bash
+cd c++/build-release
+cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
+make -j$(nproc)
+```
+
+The release binary is at `./bin/encounterra`. Use this build for benchmarking and profiling (see Performance Optimizations section).
+
 ---
 
 ## Migration Note
@@ -193,7 +203,8 @@ Most of the python files have their direct equivalent in C++. However, a few key
 - In C++ the multiple inheritance has to deal with the diamond problem by using virtual inheritance. This is not an issue in python.
 - Most test from Python have been migrated but some are still in progress. Even though the testing framework is also different (GTest vs pytest) the test files try to be direct equivalents.
 - The `simulator/utils/state_machine_template.py` has been replaced by a much leaner `c++/core/state_machine.cpp/.hpp`
-- The python implementation is written based on 2014 version of the 5e rules whereas the c++ implementation is based on 2024 version. This means some mechanics (such as grappling etc.), class names and abilities have changed. 
+- The python implementation is written based on 2014 version of the 5e rules whereas the c++ implementation is based on 2024 version. This means some mechanics (such as grappling etc.), class names and abilities have changed.
+- Spells to migrate: Bless, Magic Missile, Mage Armor, Shield, Sleep, Tasha's hideous Laughter, Armor of Agathys, Bane, Dissonant Whispers, Entangle, Guiding Bolt, Shield of Faith, Hex, Hellish Rebuke, Hunter's Mark, Divine Smite, Sanctuary, Protection from Evil and Good, Burning Hands, Web, Spiritual Weapon, Silence, Misty Step, Heat Metal, Cloud of Daggers, Barkskin, Conjure Animals, Counterspell, Fireball, Fear, Haste, Hypnotic Pattern, Spirit Guardians, Aura of Vitality, Blinding Smite, Conjure Barrage, Slow, Call Lightning, Hunger of Hadar, Lightning Bolt, Lightning Arrow
 
 ## Performance Optimizations (C++)
 

@@ -214,6 +214,31 @@ namespace
     EXPECT_DOUBLE_EQ(threatFactory->calculateThreatToTargetDelta(goblin, ThreatModifiers{}), 0.0);
   }
 
+  TEST_F(DraconicSorcererLvl3Test, QuickenedSpellConsumesSorceryPointsSlotAndFlag)
+  {
+    session->addCombatant(sorcerer, Color::BLUE);
+    session->addCombatant(goblin, Color::RED);
+    battleMap->buildBaseAdjacencyMatrix();
+    battleMap->setCombatantCoordinates(*sorcerer, Coord{1, 3});
+    battleMap->setCombatantCoordinates(*goblin, Coord{5, 3});
+
+    auto *factory = findFactory(sorcerer->getBonusActionFactoriesConst(), AbilityType::QUICKENED_SCORCHING_RAY);
+    ASSERT_NE(factory, nullptr);
+    auto quickened = factory->create(static_cast<void *>(goblin));
+
+    int sorceryPointsBefore = sorcerer->getSorceryPoints();
+    ASSERT_GT(sorceryPointsBefore, 1);
+    int slotsBefore = sorcerer->getSpellslots().getUses(2);
+
+    useResources(sorcerer, *quickened);
+
+    // 2024 metamagic: Quickened Spell costs 2 sorcery points, spends a level-2 slot, and counts as the
+    // turn's one slot-spell.
+    EXPECT_EQ(sorcerer->getSorceryPoints(), sorceryPointsBefore - 2);
+    EXPECT_EQ(sorcerer->getSpellslots().getUses(2), slotsBefore - 1);
+    EXPECT_TRUE(sorcerer->hasAlreadyUsedSpellslotThisTurn());
+  }
+
   TEST_F(DraconicSorcererLvl3Test, InnateSorceryIsThreatModifierNotDirectThreat)
   {
     auto *factory = findFactory(sorcerer->getBonusActionFactoriesConst(), AbilityType::INNATE_SORCERY);
