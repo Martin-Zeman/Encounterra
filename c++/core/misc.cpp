@@ -1,8 +1,12 @@
 #include "core/misc.hpp"
 #include <iostream>
+#include <cstdlib>
 
 namespace enc
 {
+  // Forward declaration: the shared RNG accessor is defined further down but used by rollDice() above it.
+  inline std::mt19937 &getRNG();
+
   int getRollTypeDelta(RollType rollType, int rollNeeded, int defaultValue)
   {
     auto rollTypeIt = ROLL_TYPE_DELTA.find(rollType);
@@ -200,8 +204,7 @@ double meanDmgAutoHit(const std::vector<Die> &dmgDice, bool isImmune, bool isRes
 
 int rollDice(const Die &dice)
 {
-  static std::random_device rd;
-  static std::mt19937 gen(rd());
+  auto &gen = getRNG();
 
   int numDice = dice[0];
   int numSides = dice[1];
@@ -223,12 +226,19 @@ int rollDiceMulti(const std::vector<Die> &diceList)
   
 }
 
-// Helper function to create random number generator
+// Helper function to create random number generator. Seeded from std::random_device by default; if the
+// ENC_SEED environment variable is set to an integer, that fixed seed is used instead, making a full
+// simulation run reproducible (useful for deterministic benchmarking and debugging).
 inline std::mt19937 &getRNG()
 {
-  //! @todo: use this in the other instances too
-  static std::random_device rd;
-  static std::mt19937 gen(rd());
+  static std::mt19937 gen = [] {
+    if(const char *seedEnv = std::getenv("ENC_SEED"))
+      {
+        return std::mt19937(static_cast<std::mt19937::result_type>(std::strtoul(seedEnv, nullptr, 10)));
+      }
+    std::random_device rd;
+    return std::mt19937(rd());
+  }();
   return gen;
 }
 

@@ -71,10 +71,8 @@ namespace enc
 
   void Combatant::rollInitiative()
   {
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> distrib(1, 20);
-    _currInit = distrib(gen) + _initBonus;
+    // Route through the shared RNG (rollD20) like every other roll so a run is seedable via ENC_SEED.
+    _currInit = rollD20(RollType::STRAIGHT) + _initBonus;
   }
 
   void Combatant::reset() {
