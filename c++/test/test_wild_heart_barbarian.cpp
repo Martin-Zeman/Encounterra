@@ -7,12 +7,15 @@
 #include "core/action_resolver.hpp"
 #include "actions/attack.hpp"
 #include "actions/melee_attack.hpp"
+#include "actions/movement.hpp"
 #include "actions/action_types.hpp"
 #include "abilities/rage.hpp"
 #include "effects/effect_tracker.hpp"
 #include "combatants/goblin.hpp"
 #include "combatants/wild_heart_barbarian_lvl_3.hpp"
 #include <algorithm>
+#include <deque>
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -75,6 +78,42 @@ namespace
     {
       auto factory = atk->getActionFactory(AbilityType::MELEE_ATTACK).lock();
       return std::dynamic_pointer_cast<Attack>(factory->create(static_cast<void *>(tgt)));
+    }
+
+    // Run the full planner (proto-DAG -> action DAG -> findBestSequence -> translate) and return the chosen
+    // plan as an ordered list of concrete actoids, exactly as it would be executed this turn.
+    std::deque<std::shared_ptr<Actoid>> planFor(Combatant *combatant)
+    {
+      auto [distances, shortestPaths] = battleMap->calcDijkstra(*combatant);
+      combatant->setShortestPathsCache(shortestPaths);
+      return combatant->calculateActionPlan(distances, shortestPaths);
+    }
+
+    // Index of the first actoid in the plan that satisfies `pred`, or -1 if none matches.
+    static int firstIndexWhere(const std::deque<std::shared_ptr<Actoid>> &plan,
+                               const std::function<bool(const std::shared_ptr<Actoid> &)> &pred)
+    {
+      for(int i = 0; i < static_cast<int>(plan.size()); ++i)
+        {
+          if(pred(plan[i]))
+            {
+              return i;
+            }
+        }
+      return -1;
+    }
+
+    // Scenario: a lone goblin sits 3 cells outside the greataxe's reach, so the barbarian must Rage, walk up and
+    // swing. Returns the planner's chosen plan in execution order.
+    std::deque<std::shared_ptr<Actoid>> planRageScenario()
+    {
+      auto *enemy = new Goblin(1); // heap-allocated like the other end-to-end plan tests (owned by the session)
+      session->addCombatant(barbarian, Color::BLUE);
+      session->addCombatant(enemy, Color::RED);
+      battleMap->buildBaseAdjacencyMatrix();
+      battleMap->setCombatantCoordinates(*barbarian, Coord{2, 3});
+      battleMap->setCombatantCoordinates(*enemy, Coord{6, 3}); // out of the greataxe's 1-cell reach
+      return planFor(barbarian);
     }
   };
 
@@ -237,5 +276,45 @@ namespace
     ASSERT_NE(barbAttack, nullptr);
     auto barbTypes = resolver.collectAttackRollTypes(barbAttack.get(), &enemy, barbarian);
     EXPECT_EQ(barbTypes.count(RollType::ADVANTAGE), 0u);
+  }
+
+  // ---------------------------------------------------------------------------------------------------------
+  // Rage ordering — a priority bonus action that buffs the rest of the turn must be activated FIRST.
+  //
+  // Rage is a PRIORITY_BONUS_ACTION, so buildPriorityTransitions wires it into the action DAG as
+  //
+  //     state 0 --Rage--> "Raged" --move(coord)--> postState --axe--> nop
+  //
+  // i.e. it can only ever appear at the head of a sequence: there is no edge that places Rage after a movement
+  // or an attack. These two tests pin that guarantee end-to-end through the planner (and therefore through the
+  // S6 movement/action split, which keeps Rage in the movement prefix and splices the deduped action suffix
+  // behind it). With the enemy out of melee reach, the chosen plan is [Rage, move..., axe]; Rage must precede
+  // both the AoO-incurring movement (so its damage resistance is already up) and the attack it is meant to buff.
+  // ---------------------------------------------------------------------------------------------------------
+
+  TEST_F(WildHeartBarbarianTest, RageIsActivatedBeforeMovingAndProvokingAoO)
+  {
+    auto plan = planRageScenario();
+
+    const int rageIdx = firstIndexWhere(plan, [](const std::shared_ptr<Actoid> &a) { return std::dynamic_pointer_cast<Rage>(a) != nullptr; });
+    const int moveIdx =
+      firstIndexWhere(plan, [](const std::shared_ptr<Actoid> &a) { return std::dynamic_pointer_cast<MovementIncrement>(a) != nullptr; });
+
+    ASSERT_GE(rageIdx, 0) << "the planner did not choose to Rage";
+    ASSERT_GE(moveIdx, 0) << "the planner did not move toward the out-of-reach enemy";
+    EXPECT_LT(rageIdx, moveIdx) << "Rage must be entered before moving so its damage resistance mitigates any opportunity attack";
+    EXPECT_EQ(rageIdx, 0) << "Rage should be the very first action of the turn";
+  }
+
+  TEST_F(WildHeartBarbarianTest, RageIsActivatedBeforeAttacking)
+  {
+    auto plan = planRageScenario();
+
+    const int rageIdx = firstIndexWhere(plan, [](const std::shared_ptr<Actoid> &a) { return std::dynamic_pointer_cast<Rage>(a) != nullptr; });
+    const int attackIdx = firstIndexWhere(plan, [](const std::shared_ptr<Actoid> &a) { return a->getAbilityType() == AbilityType::MELEE_ATTACK; });
+
+    ASSERT_GE(rageIdx, 0) << "the planner did not choose to Rage";
+    ASSERT_GE(attackIdx, 0) << "the planner did not choose to attack";
+    EXPECT_LT(rageIdx, attackIdx) << "Rage must be entered before the attack so the Rage Damage bonus applies to the swing";
   }
 } // namespace

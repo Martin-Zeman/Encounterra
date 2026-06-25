@@ -161,8 +161,30 @@ namespace enc
   {
     if(action->getFactory().getAbilityType() == AbilityType::STANDARD_MOVEMENT)
       {
-        std::cerr << combatant->_name << " doesn't have enough movement to enter difficult terrain" << std::endl;
-        combatant->setMovement(0); // This can be caused by difficult terrain which is ok, but we must avoid endless looping
+        // The planner can hand us a movement step that is no longer feasible at resolution time. Report the
+        // actual cause instead of always blaming difficult terrain (which is often absent from the map).
+        auto &battleMap = BattleMap::getInstance();
+        std::string reason = "its next step is blocked";
+        if(auto *movement = dynamic_cast<MovementIncrement *>(action.get()))
+          {
+            Coords targetPosition = battleMap.getCombatantCoordinates(*combatant) + movement->getIncrement();
+            const bool difficultTerrain = battleMap.isDifficultTerrainAt(targetPosition);
+            if(!targetPosition.areValidCoords(battleMap.getGridSize()))
+              {
+                reason = "its next step would leave the battle map";
+              }
+            else if(!battleMap.areEmptyOrSelf(targetPosition, *combatant))
+              {
+                reason = "its next step is occupied by another combatant";
+              }
+            else if(combatant->getMovement() < (difficultTerrain ? 2 : 1))
+              {
+                reason = difficultTerrain ? "it doesn't have enough movement to enter difficult terrain"
+                                          : "it has run out of movement";
+              }
+          }
+        std::cerr << combatant->_name << " can't complete its movement: " << reason << std::endl;
+        combatant->setMovement(0); // Avoid endless looping when the planned move turns out to be infeasible.
         return nullptr;
       }
 
@@ -685,6 +707,21 @@ namespace enc
 
       case AbilityType::HOLD_PERSON:
       case AbilityType::QUICKENED_HOLD_PERSON:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          // Hold Person only takes hold if the target fails its initial save. activate() registers the
+          // effect (via setConcentrationEffect) only on a failure, so we must NOT add it to the tracker
+          // unconditionally here: doing so leaves a lingering effect that re-rolls the save -- and prints
+          // "no longer paralyzed" -- at the end of the target's turns even though the spell never landed.
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
       case AbilityType::SPIKE_GROWTH:
       case AbilityType::FAERIE_FIRE:
       case AbilityType::FLAMING_SPHERE:

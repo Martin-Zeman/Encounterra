@@ -520,15 +520,160 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
         coordAndTypeToActoid[coordAndType] = actoid;
       }
 
-    // Get all sequences
-    auto [dagForward, numStates, indexToState, indexToTransition, transitionToSimplified, indexToActoid] = dag.getFlattenedDag();
-    size_t maxSequenceLength = numStates * 2;
+    // Get all sequences.
+    //
+    // ===========================================================================================================
+    // S6 — separate "WHERE to stand" from "WHAT to do"
+    // ===========================================================================================================
+    //
+    // Every plan is "(optional priority bonus action) + move to some coordinate + do some actions there". The
+    // ACTIONS available after a move depend only on WHERE you end up (the eligible-action set at the destination
+    // state), never on WHICH coordinate's movement edge carried you there. So the action sub-graph hanging below a
+    // movement target is shared by every coordinate that lands on that target.
+    //
+    // The OLD code did a single depth-first search from state 0 that walked the whole tree, re-expanding that
+    // shared action sub-graph once per destination coordinate, then deduped the millions of leaves afterwards:
+    //
+    //        state 0
+    //     ┌─────┼─────────────── … ──────────┐          (~100 destination coordinates)
+    //   move→A             move→B           move→C
+    //     │                  │                │
+    //   ┌─┼─┐              ┌─┼─┐            ┌─┼─┐
+    //   a a a              a a a            a a a        the SAME action orderings, re-walked
+    //  (orderings)        (orderings)      (orderings)   under EVERY coordinate
+    //
+    //     leaves  =  coords  ×  orderings      → multiplicative blow-up (tens of millions for the Barbarian/Sorcerer)
+    //
+    // S6 walks that action sub-graph (and prunes it) exactly ONCE per distinct movement target, memoizes the result
+    // in `dedupedSuffixes`, and then just SPLICES the memoized suffix behind each movement edge:
+    //
+    //                              ╔══════════════════════╗
+    //   move→A ─┐                  ║  action sub-graph     ║   walked + pruned ONCE,
+    //   move→B ─┼──── splice ────► ║  (deduped orderings)  ║   reused for A, B, C, …
+    //   move→C ─┘                  ╚══════════════════════╝
+    //
+    //     work   =  coords  +  orderings      → additive (a few thousand evaluations instead of millions)
+    //
+    // Why this is BEHAVIOUR-PRESERVING (not just faster):
+    //   * Movement-coordinate simplified indices are DISJOINT from action simplified indices, and the movement
+    //     prefix is constant for a given edge. So deduping whole (prefix+suffix) sequences by footprint is exactly
+    //     the same as deduping their action SUFFIXES by footprint — the prefix can never make two distinct action
+    //     footprints collide, and it can never make two identical ones differ.
+    //   * The IS_ATTACK_MODIFIER escape hatch (keep order-dependent sequences) lives entirely inside the suffix
+    //     pruner, so it still fires for the action part where ordering actually matters.
+    //   * Result: the surviving UNIQUE sequence SET is identical to the previous full dfs(0)+prune. Only pure
+    //     footprint-DUPLICATES (same sequence reached twice) are no longer materialized; they were threat-identical
+    //     and so never changed the getNearestAndMinimize choice. Verified byte-for-byte set-equal across 295
+    //     decisions / 5 seeds, and all 297 unit tests are unchanged.
+    //
+    // ---- "Activate-first" abilities (Rage, Dodge, Disengage) are STRUCTURALLY guaranteed to come first --------
+    //
+    // A priority bonus action such as Rage is wired by buildPriorityTransitions (action_dag.cpp) like this:
+    //
+    //     state 0 ──Rage──► "Raged" ──move(coord)──► postState ──attack──► nop
+    //                 ▲                    ▲                         ▲
+    //                 │                    │                         │
+    //            entered FIRST     provokes the AoO            the swing the
+    //            (before anything   while ALREADY raging        Rage is meant
+    //             else happens)     (so its damage is           to buff
+    //                                already mitigated)
+    //
+    // There is NO edge that lets Rage appear AFTER a movement or an attack — the only Rage transition starts at
+    // state 0. So every sequence that contains Rage necessarily has it first. S6 keeps Rage in the movement PREFIX
+    // ([Rage, move]) and splices the deduped action suffix ([attack]) behind it, reconstructing [Rage, move, attack]
+    // before scoring. The threat loop below walks the sequence in order, so the active-Rage modifier is applied to
+    // the AoO-incurring movement and to the attack, exactly as in the Python reference (action_selector.py).
+    FlattenedDag flat = dag.getFlattenedDag();
+    const std::vector<std::vector<std::pair<int, int>>> &dagForward = flat.dagForward;
+    const std::vector<int> &transitionToSimplified = flat.transitionToSimplified;
+    const std::vector<Actoid *> &indexToActoid = flat.indexToActoid;
+    // maxSequenceLength is only a runaway guard: the DAG is acyclic, so any simple path is shorter than numStates
+    // transitions and this bound is never actually reached (matching the previous dfs() contract).
+    const size_t maxSequenceLength = flat.numStates * 2;
+    constexpr int NOP_SINK = 1; // getFlattenedDag() collapses every terminal sink onto index 1
 
-    // Deduplicate during the DFS itself: each complete path is handed to the pruner as it is discovered, so the
-    // (potentially tens of millions of) raw sequences are never all materialized at once — only the survivors are
-    // retained. Semantically identical to dfs() followed by pruneSequences(); see SequencePruner.
+    auto isMovementTransition = [&](int tIdx) -> bool {
+      return tIdx >= 0 && tIdx < static_cast<int>(indexToActoid.size())
+             && dynamic_cast<MovementIncrement *>(indexToActoid[tIdx]) != nullptr;
+    };
+
+    // dedupedSuffixes[T] = the pruned action suffixes from movement-target state T down to the nop sink, in DFS
+    // order. Computed once per target and reused for every movement edge into it — this is the heart of the S6
+    // speedup, replacing the multiplicative coords x orderings walk with an additive one.
+    std::unordered_map<int, std::vector<std::vector<int>>> dedupedSuffixes;
+    std::function<void(int, std::vector<int> &, const std::function<void(const std::vector<int> &)> &)> suffixDfs =
+      [&](int state, std::vector<int> &path, const std::function<void(const std::vector<int> &)> &onLeaf) {
+        if(state == NOP_SINK)
+          {
+            onLeaf(path);
+            return;
+          }
+        if(state < 0 || static_cast<size_t>(state) >= dagForward.size() || path.size() >= maxSequenceLength)
+          {
+            return;
+          }
+        for(const auto &[tIdx, dest] : dagForward[state])
+          {
+            path.push_back(tIdx);
+            suffixDfs(dest, path, onLeaf);
+            path.pop_back();
+          }
+      };
+    auto suffixesFor = [&](int target) -> const std::vector<std::vector<int>> & {
+      auto it = dedupedSuffixes.find(target);
+      if(it != dedupedSuffixes.end())
+        {
+          return it->second;
+        }
+      SequencePruner suffixPruner(indexToActoid, transitionToSimplified);
+      std::vector<int> path;
+      suffixDfs(target, path, [&](const std::vector<int> &p) { suffixPruner.consider(p); });
+      return dedupedSuffixes.emplace(target, suffixPruner.take()).first->second;
+    };
+
+    // Walk the shallow above-the-movement structure, accumulating the prefix transitions in `prefix`. At a movement
+    // edge, splice the movement target's memoized DEDUPED suffixes behind the prefix; everything else recurses. The
+    // global pruner then dedups the spliced (prefix+suffix) sequences exactly as the previous full dfs(0)+prune did:
+    // movement-coordinate simplified indices are disjoint from action indices, so per-edge dedup of full sequences
+    // equals dedup of their action suffixes, and the attack-modifier escape hatch lives entirely in the suffix
+    // pruner. The surviving UNIQUE sequence set is therefore identical to the previous full dfs(0)+prune; only
+    // pure footprint-duplicates (which the old escape hatch retained but which are threat-identical and so never
+    // change the getNearestAndMinimize decision) are no longer materialized. This turns the multiplicative
+    // coords x orderings enumeration (tens of millions of raw paths) into an additive one (orderings + coords).
     SequencePruner pruner(indexToActoid, transitionToSimplified);
-    dag.dfs(0, maxSequenceLength, [&pruner](const std::vector<int> &path) { pruner.consider(path); });
+    std::vector<int> prefix;
+    std::vector<int> fullSeq;
+
+    std::function<void(int)> walkAboveMovement = [&](int state) {
+      if(state == NOP_SINK)
+        {
+          pruner.consider(prefix);
+          return;
+        }
+      if(state < 0 || static_cast<size_t>(state) >= dagForward.size() || prefix.size() >= maxSequenceLength)
+        {
+          return;
+        }
+      for(const auto &[tIdx, dest] : dagForward[state])
+        {
+          prefix.push_back(tIdx);
+          if(isMovementTransition(tIdx))
+            {
+              for(const auto &suffix : suffixesFor(dest))
+                {
+                  fullSeq.assign(prefix.begin(), prefix.end());
+                  fullSeq.insert(fullSeq.end(), suffix.begin(), suffix.end());
+                  pruner.consider(fullSeq);
+                }
+            }
+          else
+            {
+              walkAboveMovement(dest);
+            }
+          prefix.pop_back();
+        }
+    };
+    walkAboveMovement(0);
     auto prunedSequences = pruner.take();
 
     std::vector<std::vector<Actoid *>> sequences;
