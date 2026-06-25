@@ -225,7 +225,11 @@ namespace enc
 
   void EffectTracker::reset()
   {
-    for(const auto &effect : _effects)
+    // Iterate over a snapshot: deactivate() on a concentration effect calls breakConcentration(),
+    // which removes from _effects and would invalidate a live iterator over _effects (mirrors
+    // startOfTurnTick). The final clear() guarantees the tracker ends empty for the next iteration.
+    std::vector<std::shared_ptr<Effect>> snapshot = _effects;
+    for(const auto &effect : snapshot)
       {
         effect->deactivate();
       }
