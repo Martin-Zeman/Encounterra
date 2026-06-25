@@ -339,11 +339,11 @@ namespace enc
   }
 
   void StateMachine::dfsRecurse(int state, size_t maxSequenceLength, std::vector<int> &path,
-                                std::vector<std::vector<int>> &out) const
+                                const std::function<void(const std::vector<int> &)> &onLeaf) const
   {
     if(state == 1) // nop sink: a complete path
       {
-        out.push_back(path);
+        onLeaf(path);
         return;
       }
 
@@ -360,17 +360,24 @@ namespace enc
     for(const auto &[transition, nextState] : _dagForward[state])
       {
         path.push_back(transition);
-        dfsRecurse(nextState, maxSequenceLength, path, out);
+        dfsRecurse(nextState, maxSequenceLength, path, onLeaf);
         path.pop_back();
       }
+  }
+
+  void StateMachine::dfs(int currentState, size_t maxSequenceLength,
+                         const std::function<void(const std::vector<int> &)> &onLeaf) const
+  {
+    std::vector<int> path;
+    path.reserve(maxSequenceLength);
+    dfsRecurse(currentState, maxSequenceLength, path, onLeaf);
   }
 
   std::vector<std::vector<int>> StateMachine::dfs(int currentState, size_t maxSequenceLength) const
   {
     std::vector<std::vector<int>> sequences;
-    std::vector<int> path;
-    path.reserve(maxSequenceLength);
-    dfsRecurse(currentState, maxSequenceLength, path, sequences);
+    dfs(currentState, maxSequenceLength,
+        [&sequences](const std::vector<int> &path) { sequences.push_back(path); });
     return sequences;
   }
 

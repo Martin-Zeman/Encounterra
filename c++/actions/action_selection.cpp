@@ -34,102 +34,155 @@ namespace enc {
 namespace {
     // Serialization of a Misty Step movement path (produced by calcThreatForPathWithMistyStep), e.g. "ms_(3, 4)".
     const std::regex REGEX_MS_MOVEMENT_PATTERN(R"([mschdio_]+\((\d+), (\d+)\))");
+
+    // Streaming de-duplicator for DFS sequences. The dedup key is the SET of simplified-transition indices for a
+    // sequence (movement coords and actions alike; movement coord names like "(x, y)" keep their own simplified
+    // index). We encode that set as a fixed-size bitset (array<uint64_t, N>): bits are inherently sorted and
+    // unique, so dedup needs no per-sequence heap allocation, no sort, and no unique pass — just a hash-set probe.
+    // This is exactly equivalent to the previous frozenset-of-simplified-indices key but allocation-free.
+    //
+    // The escape hatch is preserved verbatim: a sequence whose footprint was already seen is still kept if it
+    // contains an IS_ATTACK_MODIFIER actoid (threat is order-dependent once a modifier is present, so distinct
+    // orderings must survive). Sequences are emitted in DFS order, identical to the previous batch pruner.
+    //
+    // PRUNER_MAX_WORDS * 64 bounds the simplified-index space handled by the fast path; anything larger falls back
+    // to a sorted-vector footprint (same semantics, just slower) so correctness holds for arbitrarily large maps.
+    constexpr int PRUNER_MAX_WORDS = 8; // up to 512 distinct simplified indices on the fast path
+
+    class SequencePruner {
+    public:
+      SequencePruner(const std::vector<enc::Actoid *> &indexToActoid,
+                     const std::vector<int> &transitionToSimplified, size_t reserveHint = 0)
+          : _indexToActoid(indexToActoid), _transitionToSimplified(transitionToSimplified),
+            _numTransitions(static_cast<int>(transitionToSimplified.size()))
+      {
+        int maxSimp = -1;
+        for(int s : transitionToSimplified)
+          {
+            maxSimp = std::max(maxSimp, s);
+          }
+        _numWords = (maxSimp >= 0) ? (maxSimp / 64 + 1) : 1;
+        _useBitset = (_numWords <= PRUNER_MAX_WORDS);
+        if(reserveHint)
+          {
+            if(_useBitset)
+              _bitsetSets.reserve(reserveHint);
+            else
+              _vecSets.reserve(reserveHint);
+            _pruned.reserve(reserveHint);
+          }
+      }
+
+      // Consider one DFS sequence; keeps it (moving or copying depending on the argument's value category) iff its
+      // footprint is new or it carries an attack modifier.
+      template <class Seq>
+      void consider(Seq &&sequence)
+      {
+        if(keep(sequence))
+          {
+            _pruned.push_back(std::forward<Seq>(sequence));
+          }
+      }
+
+      std::vector<std::vector<int>> take() { return std::move(_pruned); }
+
+    private:
+      using Key = std::array<uint64_t, PRUNER_MAX_WORDS>;
+
+      struct KeyHash {
+        size_t operator()(const Key &k) const
+        {
+          size_t h = 1469598103934665603ULL; // FNV-1a
+          for(uint64_t w : k)
+            {
+              h ^= w;
+              h *= 1099511628211ULL;
+            }
+          return h;
+        }
+      };
+
+      struct VecHash {
+        size_t operator()(const std::vector<int> &v) const
+        {
+          size_t h = v.size();
+          for(int x : v)
+            {
+              h ^= std::hash<int>{}(x) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
+            }
+          return h;
+        }
+      };
+
+      bool hasAttackModifier(const std::vector<int> &sequence) const
+      {
+        for(int tx : sequence)
+          {
+            if(tx >= 0 && tx < static_cast<int>(_indexToActoid.size()))
+              {
+                enc::Actoid *a = _indexToActoid[tx];
+                if(a && a->hasFlag(enc::ActoidFlags::IS_ATTACK_MODIFIER))
+                  {
+                    return true;
+                  }
+              }
+          }
+        return false;
+      }
+
+      bool keep(const std::vector<int> &sequence)
+      {
+        if(_useBitset)
+          {
+            Key footprint{};
+            for(int txIdx : sequence)
+              {
+                if(txIdx >= 0 && txIdx < _numTransitions)
+                  {
+                    int s = _transitionToSimplified[txIdx];
+                    footprint[s >> 6] |= (uint64_t{1} << (s & 63));
+                  }
+              }
+            return _bitsetSets.insert(footprint).second || hasAttackModifier(sequence);
+          }
+
+        _vecFootprint.clear();
+        for(int txIdx : sequence)
+          {
+            if(txIdx >= 0 && txIdx < _numTransitions)
+              {
+                _vecFootprint.push_back(_transitionToSimplified[txIdx]);
+              }
+          }
+        std::sort(_vecFootprint.begin(), _vecFootprint.end());
+        _vecFootprint.erase(std::unique(_vecFootprint.begin(), _vecFootprint.end()), _vecFootprint.end());
+        return _vecSets.insert(_vecFootprint).second || hasAttackModifier(sequence);
+      }
+
+      const std::vector<enc::Actoid *> &_indexToActoid;
+      const std::vector<int> &_transitionToSimplified;
+      int _numTransitions;
+      int _numWords = 1;
+      bool _useBitset = true;
+      std::unordered_set<Key, KeyHash> _bitsetSets;
+      std::unordered_set<std::vector<int>, VecHash> _vecSets;
+      std::vector<int> _vecFootprint;
+      std::vector<std::vector<int>> _pruned;
+    };
 }
 
 std::vector<std::vector<int>> pruneSequences(std::vector<std::vector<int>> sequences,
                                              const std::vector<Actoid *> &indexToActoid,
                                              const std::vector<int> &transitionToSimplified)
 {
-  // Dedup key is the set of simplified-transition indices (drops trailing level designators). When the
-  // simplified-index space fits in 64 entries (the overwhelmingly common case for a single combatant's
-  // turn DAG) we encode each footprint as a uint64_t bitmask: dedup then needs no per-sequence vector
-  // allocation, no sort/unique, no memcmp on keys — just an unordered_set<uint64_t>. We fall back to a
-  // sorted+uniqued std::vector<int> footprint only when an index >= 64 is present.
-  // transitionToSimplified and indexToActoid are dense vectors indexed by transition index (O(1) lookup).
-  const int numTransitions = static_cast<int>(transitionToSimplified.size());
-  int maxSimp = -1;
-  for(int s : transitionToSimplified)
-    {
-      maxSimp = std::max(maxSimp, s);
-    }
-
-  auto hasAttackModifier = [&](const std::vector<int> &sequence) {
-    for(int tx : sequence)
-      {
-        if(tx >= 0 && tx < static_cast<int>(indexToActoid.size()))
-          {
-            Actoid *a = indexToActoid[tx];
-            if(a && a->hasFlag(ActoidFlags::IS_ATTACK_MODIFIER))
-              {
-                return true;
-              }
-          }
-      }
-    return false;
-  };
-
-  std::vector<std::vector<int>> prunedSequences;
-  prunedSequences.reserve(sequences.size());
-
-  if(maxSimp < 64)
-    {
-      std::unordered_set<uint64_t> sequenceSets;
-      sequenceSets.reserve(sequences.size() * 2);
-      for(auto &sequence : sequences)
-        {
-          uint64_t footprint = 0;
-          for(int txIdx : sequence)
-            {
-              if(txIdx >= 0 && txIdx < numTransitions)
-                {
-                  footprint |= (uint64_t{1} << transitionToSimplified[txIdx]);
-                }
-            }
-
-          if(sequenceSets.insert(footprint).second || hasAttackModifier(sequence))
-            {
-              prunedSequences.push_back(std::move(sequence));
-            }
-        }
-      return prunedSequences;
-    }
-
-  // Fallback: simplified-index space exceeds 64; use a sorted+uniqued vector footprint.
-  struct VectorHash {
-    size_t operator()(const std::vector<int> &v) const
-    {
-      size_t h = v.size();
-      for(int x : v)
-        {
-          h ^= std::hash<int>{}(x) + 0x9e3779b97f4a7c15ULL + (h << 6) + (h >> 2);
-        }
-      return h;
-    }
-  };
-
-  std::unordered_set<std::vector<int>, VectorHash> sequenceSets;
-  sequenceSets.reserve(sequences.size());
-
-  std::vector<int> footprint;
+  // Batch wrapper around the streaming SequencePruner: dedup by the set of simplified-transition indices,
+  // preserving the attack-modifier escape hatch and DFS emission order. See SequencePruner for details.
+  SequencePruner pruner(indexToActoid, transitionToSimplified, sequences.size());
   for(auto &sequence : sequences)
     {
-      footprint.clear();
-      for(int txIdx : sequence)
-        {
-          if(txIdx >= 0 && txIdx < numTransitions)
-            {
-              footprint.push_back(transitionToSimplified[txIdx]);
-            }
-        }
-      std::sort(footprint.begin(), footprint.end());
-      footprint.erase(std::unique(footprint.begin(), footprint.end()), footprint.end());
-
-      if(sequenceSets.insert(footprint).second || hasAttackModifier(sequence))
-        {
-          prunedSequences.push_back(std::move(sequence));
-        }
+      pruner.consider(std::move(sequence));
     }
-  return prunedSequences;
+  return pruner.take();
 }
 
 CoordToSequenceIds createCoordToSequenceMapping(
@@ -470,9 +523,13 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
     // Get all sequences
     auto [dagForward, numStates, indexToState, indexToTransition, transitionToSimplified, indexToActoid] = dag.getFlattenedDag();
     size_t maxSequenceLength = numStates * 2;
-    
-    auto allSequences = dag.dfs(0, maxSequenceLength);
-    auto prunedSequences = pruneSequences(std::move(allSequences), indexToActoid, transitionToSimplified);
+
+    // Deduplicate during the DFS itself: each complete path is handed to the pruner as it is discovered, so the
+    // (potentially tens of millions of) raw sequences are never all materialized at once — only the survivors are
+    // retained. Semantically identical to dfs() followed by pruneSequences(); see SequencePruner.
+    SequencePruner pruner(indexToActoid, transitionToSimplified);
+    dag.dfs(0, maxSequenceLength, [&pruner](const std::vector<int> &path) { pruner.consider(path); });
+    auto prunedSequences = pruner.take();
 
     std::vector<std::vector<Actoid *>> sequences;
     for (const auto& arr : prunedSequences) {

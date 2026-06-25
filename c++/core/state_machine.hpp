@@ -7,6 +7,7 @@
 #include <utility>
 #include <algorithm>
 #include <stdexcept>
+#include <functional>
 // #include <ranges>
 
 namespace enc {
@@ -100,10 +101,19 @@ public:
     // Each returned sequence element is a transition index. Mirrors numba_functions.dfs.
     std::vector<std::vector<int>> dfs(int currentState, size_t maxSequenceLength) const;
 
+    // Streaming variant of dfs(): invokes onLeaf(path) for each complete path (path == the shared transition-index
+    // buffer) instead of collecting every sequence into a vector. Lets callers deduplicate/aggregate on the fly
+    // without materializing the (potentially tens of millions of) full sequence list. The buffer passed to onLeaf
+    // is only valid for the duration of the call; copy it if it needs to outlive the callback.
+    void dfs(int currentState, size_t maxSequenceLength,
+             const std::function<void(const std::vector<int> &)> &onLeaf) const;
+
   private:
     // Backtracking helper for dfs(): walks the DAG with a single shared `path` buffer (push/pop) so each
-    // complete path is materialized exactly once instead of copying the prefix at every branch.
-    void dfsRecurse(int state, size_t maxSequenceLength, std::vector<int> &path, std::vector<std::vector<int>> &out) const;
+    // complete path is materialized exactly once instead of copying the prefix at every branch. Each complete
+    // path is handed to onLeaf.
+    void dfsRecurse(int state, size_t maxSequenceLength, std::vector<int> &path,
+                    const std::function<void(const std::vector<int> &)> &onLeaf) const;
 
   public:
     // auto getAllTransitions() const
