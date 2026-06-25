@@ -19,6 +19,7 @@
 #include "abilities/pounce.hpp"
 #include "abilities/roar.hpp"
 #include "abilities/rage.hpp"
+#include "abilities/second_wind.hpp"
 #include "core/teams.hpp"
 #include "effects/effect_tracker.hpp"
 
@@ -315,7 +316,7 @@ namespace enc
         rolled = rollDice(d20);
       }
 
-    std::cout << attacker->_name << " attacks " << target->_name << " with " << factory._name << std::endl;
+    std::cout << attacker->_name << " attacks " << target->_name << " with " << attack->shorthandStr() << std::endl;
 
     int multiplier = 1;
     if(rolled == 1)
@@ -331,7 +332,23 @@ namespace enc
 
     if(rolled + factory.getToHit() >= target->getAC())
       {
-        int dmgDiceSum = rollDiceMulti(factory.getDmgDice());
+        const std::vector<Die> &dmgDice = factory.getDmgDice();
+        int dmgDiceSum;
+        // Great Weapon Fighting (2024): when rolling damage with a two-handed (or Versatile) melee weapon,
+        // treat any 1 or 2 on a weapon damage die as a 3. Only the first (weapon) damage-dice entry gets the
+        // floor; trailing entries such as a Battle Master Superiority Die are rolled normally.
+        if(factory.isTwoHanded() && attacker->hasPassiveAbility(AbilityType::GREAT_WEAPON_FIGHTING) && !dmgDice.empty())
+          {
+            dmgDiceSum = rollDiceWithFloor(dmgDice[0], 3);
+            if(dmgDice.size() > 1)
+              {
+                dmgDiceSum += rollDiceMulti(std::vector<Die>(dmgDice.begin() + 1, dmgDice.end()));
+              }
+          }
+        else
+          {
+            dmgDiceSum = rollDiceMulti(dmgDice);
+          }
         int baseDmg = multiplier * dmgDiceSum + factory.getDmgBonus();
         // Rage Damage (and similar flat ability bonuses) apply to Strength-based melee attacks. The flat
         // bonus is added once — it is not doubled on a critical hit.
@@ -367,6 +384,22 @@ namespace enc
 
     std::cout << "The attack misses " << target->_name << std::endl;
     applyGrazeOnMiss(factory, target);
+    // Battle Master Riposte: when missed, the target may spend its Reaction and one Superiority Die to make a
+    // melee weapon attack against the attacker (mirrors the Python prompt_after_miss_reaction). A Riposte
+    // cannot itself provoke another Riposte.
+    if(attack->getAbilityType() != AbilityType::RIPOSTE && target->hasReaction()
+       && target->hasPassiveAbility(AbilityType::BATTLE_MASTER_MANEUVERS))
+      {
+        if(AttackFactory *riposteFactory = target->getRiposteFactory())
+          {
+            auto die = riposteFactory->getResource();
+            if(die && (*die)->hasUses() && battleMap.getHopDistanceCombatants(*target, *attacker) <= riposteFactory->getRange())
+              {
+                auto riposte = riposteFactory->create(attacker);
+                resolveAction(riposte, target);
+              }
+          }
+      }
     return ActionResult::MISS;
   }
 
@@ -478,6 +511,7 @@ namespace enc
       case AbilityType::HASTE_MELEE_ATTACK:
       case AbilityType::HASTE_RANGED_ATTACK:
       case AbilityType::REACTION_ATTACK:
+      case AbilityType::RIPOSTE:
         {
           auto *attack = dynamic_cast<Attack *>(action.get());
           if(!attack)
@@ -538,7 +572,7 @@ namespace enc
           // Dexterity (Acrobatics) check against the escape DC, ending the condition on a success.
           int bonus = std::max(combatant->getAthletics(), combatant->getAcrobatics());
           std::cout << combatant->_name << " attempts to escape the grapple (DC " << grapple.dc << ")" << std::endl;
-          if(rollAbilityCheck(bonus, grapple.dc, RollType::STRAIGHT))
+          if(combatant->attemptAbilityCheck(bonus, grapple.dc, RollType::STRAIGHT))
             {
               std::cout << combatant->_name << " breaks free of the grapple" << std::endl;
               if(grapple.initiator != nullptr)
@@ -622,12 +656,23 @@ namespace enc
               return ActionResult::MISS;
             }
           std::cout << combatant->_name << " casts " << action->toString() << std::endl;
-          // All rays are concentrated on the single chosen target (matching the threat model); each is a
-          // separate spell attack and stops early if the target dies.
+          // Each ray is a separate spell attack.  All three must always be fired.  If the initial
+          // target dies mid-cast, redirect remaining rays to the next eligible enemy so no ray is
+          // silently wasted.
           Combatant *target = &scorchingRay->getTarget();
+          ScorchingRayFactory &srFactory = dynamic_cast<ScorchingRayFactory &>(scorchingRay->getFactory());
           ActionResult result = ActionResult::MISS;
-          for(int ray = 0; ray < ScorchingRay::getNumRays() && target->isAlive(); ++ray)
+          for(int ray = 0; ray < ScorchingRay::getNumRays(); ++ray)
             {
+              if(!target->isAlive())
+                {
+                  auto eligibleTargets = srFactory.getEligibleTargets();
+                  if(eligibleTargets.empty())
+                    {
+                      break;
+                    }
+                  target = eligibleTargets.front();
+                }
               ActionResult rayResult =
                   resolveRangedSpellAttack(combatant, scorchingRay->getToHit(), scorchingRay->getDmgDice(), ScorchingRayFactory::dmgType, target);
               if(rayResult == ActionResult::HIT)
@@ -801,6 +846,25 @@ namespace enc
           std::cout << combatant->_name << " casts " << action->toString() << " (heals " << healed << ")" << std::endl;
           return ActionResult::OTHER;
         }
+
+      case AbilityType::SECOND_WIND:
+        {
+          auto *secondWind = dynamic_cast<SecondWind *>(action.get());
+          if(!secondWind)
+            {
+              return ActionResult::MISS;
+            }
+          Combatant &target = secondWind->getTarget();
+          int healed = rollDice(secondWind->getHealDice()) + secondWind->getMod();
+          target.setCurrentHp(std::min(target.getMaxHp(), target.getCurrentHp() + healed));
+          std::cout << combatant->_name << " uses Second Wind (heals " << healed << ")" << std::endl;
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::ACTION_SURGE:
+        // Free action: the extra Action was already granted by useResources (setHasAction(true)).
+        std::cout << combatant->_name << " uses Action Surge" << std::endl;
+        return ActionResult::OTHER;
 
       case AbilityType::CURE_WOUNDS:
         {

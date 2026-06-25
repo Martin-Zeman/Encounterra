@@ -254,6 +254,32 @@ namespace enc
     return _passiveAbilities.contains(ability);
   }
 
+  bool Combatant::attemptAbilityCheck(int bonus, int dc, RollType rollType)
+  {
+    int roll = rollD20(rollType);
+    if(roll == 20 || roll + bonus >= dc)
+      {
+        return true;
+      }
+    // Tactical Mind: on a failed check, expend a use of Second Wind to add 1d10. The use is only consumed
+    // if the d10 turns the failure into a success.
+    if(hasPassiveAbility(AbilityType::TACTICAL_MIND))
+      {
+        auto it = _resources.find(AbilityType::SECOND_WIND);
+        if(it != _resources.end() && it->second->hasUses())
+          {
+            int bonusRoll = rollDice(Die{1, 10});
+            if(roll + bonus + bonusRoll >= dc)
+              {
+                it->second->useResource();
+                std::cout << _name << " uses Tactical Mind (adds " << bonusRoll << " to the ability check)" << std::endl;
+                return true;
+              }
+          }
+      }
+    return false;
+  }
+
   int Combatant::getSorceryPoints() const
   {
     auto it = _resources.find(AbilityType::METAMAGIC);

@@ -1,4 +1,8 @@
 #include "session.hpp"
+#include "combatants/fighter_lvl_1.hpp"
+#include "combatants/fighter_lvl_2.hpp"
+#include "combatants/battlemaster_fighter_lvl_3.hpp"
+#include "combatants/battlemaster_fighter_lvl_4.hpp"
 #include "combatants/battlemaster_fighter_lvl_5.hpp"
 #include "combatants/brown_bear.hpp"
 #include "combatants/stone_giant.hpp"
@@ -24,6 +28,10 @@ namespace enc
   Session::Session() : _teams(Teams::getInstance())
   {
     // Register all combatant types
+    registerCombatantType<FighterLvl1>();
+    registerCombatantType<FighterLvl2>();
+    registerCombatantType<BattlemasterFighterLvl3>();
+    registerCombatantType<BattlemasterFighterLvl4>();
     registerCombatantType<BattlemasterFighterLvl5>();
     registerCombatantType<BrownBear>();
     registerCombatantType<BugbearWarrior>();

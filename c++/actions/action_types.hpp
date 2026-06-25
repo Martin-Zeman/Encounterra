@@ -270,6 +270,7 @@ namespace enc
     CHANNEL_DIVINITY,
     UNDEAD_FORTITUDE,
     MARTIAL_ADVANTAGE,
+    TACTICAL_MIND,
 
     /* Meta Action */
     QUICKENED_SPELL,

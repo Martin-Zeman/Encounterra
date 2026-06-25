@@ -33,6 +33,9 @@ namespace enc
         result = combatant->hasBonusAction();
       else if(abilityType > AbilityType::HASTE_ACTION_DELIMITER && abilityType < AbilityType::PASSIVE_DELIMITER)
         result = combatant->hasHasteAction();
+      else if(abilityType == AbilityType::ACTION_SURGE)
+        // Free action: gated purely by its limited-use resource (checked in the switch below).
+        result = true;
       else
         return false;
 
@@ -149,6 +152,15 @@ namespace enc
             break;
           }
         case AbilityType::FIREBOLT: /*Nothing to do*/ break;
+        case AbilityType::SECOND_WIND:
+        case AbilityType::ACTION_SURGE:
+          {
+            if(auto resource = factory->getResource())
+              result = result && (*resource)->hasUses();
+            else
+              throw std::runtime_error("Second Wind / Action Surge factory must have an associated resource!");
+            break;
+          }
         default: break;
         }
       return result;
@@ -210,6 +222,7 @@ namespace enc
     collect(combatant->getActionFactoriesConst(), false);
     collect(combatant->getBonusActionFactoriesConst(), depth > 1);
     collect(combatant->getHasteActionFactoriesConst(), false);
+    collect(combatant->getFreeActionFactoriesConst(), false);
     return result;
   }
 

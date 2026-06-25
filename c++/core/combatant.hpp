@@ -46,6 +46,9 @@
 #include "abilities/rage.hpp"
 #include "abilities/reckless_attack.hpp"
 #include "abilities/on_hit_mastery.hpp"
+#include "abilities/second_wind.hpp"
+#include "abilities/action_surge.hpp"
+#include "abilities/riposte.hpp"
 #include "effects/effect.hpp"
 #include "core/state_machine.hpp"
 #include "core/attack_fsm.hpp"
@@ -225,6 +228,10 @@ namespace enc
     void addAbilityDmgBonus(int delta) { _abilityDmgBonus += delta; }
     void setSpeed(int speed) { _speed = speed; }
     bool hasPassiveAbility(AbilityType ability) const;
+    //! Make an ability check against @p dc using @p bonus, applying Tactical Mind (2024 Fighter, level 2):
+    //! on a failed check the fighter may expend a use of Second Wind to add 1d10, and the use is only spent
+    //! if that 1d10 turns the failure into a success.
+    bool attemptAbilityCheck(int bonus, int dc, RollType rollType = RollType::STRAIGHT);
     // Current number of Metamagic sorcery points (0 if the combatant has no Metamagic resource).
     int getSorceryPoints() const;
     // Spend Metamagic sorcery points (no-op if the combatant has no Metamagic resource).
@@ -264,6 +271,7 @@ namespace enc
     const std::vector<std::shared_ptr<ActoidFactory>> &getBonusActionFactoriesConst() { return _bonusActionFactories; }
     const std::vector<std::shared_ptr<ActoidFactory>> &getReactionFactoriesConst() { return _reactionFactories; }
     const std::vector<std::shared_ptr<ActoidFactory>> &getHasteActionFactoriesConst() { return _hasteActionFactories; }
+    const std::vector<std::shared_ptr<ActoidFactory>> &getFreeActionFactoriesConst() { return _freeActionFactories; }
     std::vector<std::shared_ptr<ActoidFactory>> &getActionFactories() { return _actionFactories; }
     std::vector<std::shared_ptr<ActoidFactory>> &getBonusActionFactories() { return _bonusActionFactories; }
     std::vector<std::shared_ptr<ActoidFactory>> &getReactionFactories() { return _reactionFactories; }
@@ -278,6 +286,8 @@ namespace enc
     }
     AttackFactory* getAoOFactory() { return _aoOFactory; }
     void setAoOFactory(AttackFactory* factory) { _aoOFactory = factory; }
+    //! On-demand Riposte reaction attack factory (Battle Master). Null if the combatant has no maneuvers.
+    AttackFactory* getRiposteFactory() { return _riposteFactory; }
     //! Class id of the beast currently shaped into (0 = not wild-shaped). Used to forbid reshaping into the same form.
     int getActiveWildshapeFormId() const { return _activeWildshapeFormId; }
     void setActiveWildshapeFormId(int classId) { _activeWildshapeFormId = classId; }
@@ -604,7 +614,16 @@ namespace enc
     std::shared_ptr<ActoidFactory> addQuickenedMagicMissile() { return nullptr; }
     std::shared_ptr<ActoidFactory> addQuickenedRayOfEnfeeblement() { return nullptr; }
     std::shared_ptr<ActoidFactory> addQuickenedSleep() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addSecondWind() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addSecondWind()
+    {
+      // 2024 Second Wind: a self-heal of 1d10 + Fighter level, refreshed on a Short or Long Rest (one use,
+      // mirroring the Python combatant).
+      auto resource = std::make_shared<Uses>(1, ResourceRefreshType::SHORT_REST);
+      _resources.insert({AbilityType::SECOND_WIND, resource});
+      auto factory = std::make_shared<SecondWindFactory>(this, resource.get(), _level);
+      _bonusActionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addHealingWord()
     {
       auto factory = std::make_shared<HealingWordFactory>(this, _spellslots.get(), getSpellcastingModifier());
@@ -653,8 +672,7 @@ namespace enc
     std::shared_ptr<ActoidFactory> addPreSwallowBiteReaction() { return nullptr; }
     std::shared_ptr<ActoidFactory> addUncannyDodge() { return nullptr; }
     std::shared_ptr<ActoidFactory> addParry() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addRiposte() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addReactionParalyzingMeleeAttack() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addRiposte() { return nullptr; }    std::shared_ptr<ActoidFactory> addReactionParalyzingMeleeAttack() { return nullptr; }
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
      */
@@ -738,9 +756,26 @@ namespace enc
     void addBlindsight() {}
     void addMagicResistance() {}
     void addCharmImmunity() {}
-    void addGreatWeaponFighting() {}
+    void addGreatWeaponFighting() { _passiveAbilities.insert(AbilityType::GREAT_WEAPON_FIGHTING); }
     void addDueling() {}
-    void addBattleMasterManeuvers() {}
+    //! Battle Master maneuvers (2024): registers the Superiority Dice resource (4/5/6 dice by level, refreshed
+    //! on a Short or Long Rest) and a Riposte reaction built from the fighter's opportunity attack with a
+    //! Superiority Die added to its damage. Must be called after the reaction (AoO) attack has been registered.
+    void addBattleMasterManeuvers()
+    {
+      _passiveAbilities.insert(AbilityType::BATTLE_MASTER_MANEUVERS);
+      auto resource = std::make_shared<Uses>(getSuperiorityDiceCount(_level), ResourceRefreshType::SHORT_REST);
+      _resources.insert({AbilityType::BATTLE_MASTER_MANEUVERS, resource});
+      if(_aoOFactory != nullptr)
+        {
+          std::vector<Die> dmgDice = _aoOFactory->getDmgDice();
+          dmgDice.push_back(getSuperiorityDie(_level));
+          auto riposte = std::make_shared<RiposteFactory>("Riposte", this, _aoOFactory->getToHit(), dmgDice, _aoOFactory->getDmgBonus(),
+                                                          _aoOFactory->getDmgType(), _aoOFactory->getRange(), resource.get());
+          _reactionFactories.emplace_back(riposte);
+          _riposteFactory = static_cast<AttackFactory *>(riposte.get());
+        }
+    }
     //! Draconic Resilience (2024): +3 HP at level 3 plus 1 per sorcerer level, and an unarmored AC of
     //! 10 + Dex + Cha. The final HP and AC are baked into the combatant's constructor stats, so this
     //! only registers the passive marker.
@@ -752,6 +787,11 @@ namespace enc
     void addChannelDivinity() {}
     void addUndeadFortitude();
     void addMartialAdvantage() {}
+    //! Tactical Mind (2024 Fighter, level 2): when the fighter fails an ability check it may expend a use of
+    //! Second Wind to add 1d10 to the check (the use is only spent if it turns the failure into a success).
+    //! The behaviour lives in attemptAbilityCheck(); this only registers the passive marker. Must be called
+    //! after addSecondWind() so the Second Wind resource exists.
+    void addTacticalMind() { _passiveAbilities.insert(AbilityType::TACTICAL_MIND); }
     //! Quickened Spell metamagic: for each eligible action spell already known, add a bonus-action
     //! quickened variant (reusing the same factory class with the quickened ability type). Must be
     //! called after the spells it should quicken have been added and after addMetamagic().
@@ -797,7 +837,17 @@ namespace enc
      * Non-action abilities
      * ----------------------------------------------------------------------------------------------------------------------------------------------
      */
-    void addActionSurge() {}
+    void addActionSurge()
+    {
+      // Action Surge is a Free Action gated by its own limited-use resource; the extra Action it grants is
+      // surfaced to the planner by the ActionSurge actoid's IS_ACTION_ENABLER flag together with the
+      // setHasAction(true) in useResources.
+      _passiveAbilities.insert(AbilityType::ACTION_SURGE);
+      auto resource = std::make_shared<Uses>(ActionSurgeFactory::getActionSurgeUses(_level), ResourceRefreshType::SHORT_REST);
+      _resources.insert({AbilityType::ACTION_SURGE, resource});
+      auto factory = std::make_shared<ActionSurgeFactory>(this, resource.get());
+      _freeActionFactories.emplace_back(factory);
+    }
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
      */
@@ -861,6 +911,8 @@ namespace enc
     std::vector<std::shared_ptr<ActoidFactory>> _hasteActionFactories;
     DirectThreatFactory *_dangerZoneAttack = nullptr;
     AttackFactory *_aoOFactory = nullptr;
+    AttackFactory *_riposteFactory = nullptr;
+    std::vector<std::shared_ptr<ActoidFactory>> _freeActionFactories;
     std::unordered_set<AbilityType> _passiveAbilities;
     std::unordered_map<SavingThrow, int> _savingThrows
       = {{SavingThrow::STR, 0}, {SavingThrow::DEX, 0}, {SavingThrow::CON, 0}, {SavingThrow::INT, 0}, {SavingThrow::WIS, 0}, {SavingThrow::CHA, 0}};

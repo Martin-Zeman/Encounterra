@@ -344,7 +344,20 @@ namespace enc
 
   int rollDiceWithReroll(const Die &die, int rerollMaxValue);
 
+  //! Roll a die group applying a per-die floor: any die result below @p floorValue counts as @p floorValue.
+  //! Used by the 2024 Great Weapon Fighting style ("treat any 1 or 2 on a damage die as a 3").
+  int rollDiceWithFloor(const Die &die, int floorValue);
+
+  //! Battle Master Superiority Die by Fighter level (d8 at 3-9, d10 at 10-17, d12 at 18-20).
+  Die getSuperiorityDie(int level);
+
+  //! Number of Battle Master Superiority Dice by Fighter level (4 at 3-6, 5 at 7-14, 6 at 15+).
+  int getSuperiorityDiceCount(int level);
+
   bool rollSavingThrow(int bonus, int dc, RollType rollType);
+
+  //! Roll a single d20, applying Advantage (highest of two) or Disadvantage (lowest of two).
+  int rollD20(RollType rollType);
 
   bool rollAbilityCheck(int bonus, int dc, RollType rollType);
 

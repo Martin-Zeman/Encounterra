@@ -255,6 +255,53 @@ int rollDiceWithReroll(const Die &die, int rerollMaxValue)
   return diceSum;
 }
 
+int rollDiceWithFloor(const Die &die, int floorValue)
+{
+  int numDice = die[0];
+  int diceSides = die[1];
+  std::uniform_int_distribution<> dis(1, diceSides);
+  auto &gen = getRNG();
+
+  int diceSum = 0;
+  for(int i = 0; i < numDice; ++i)
+    {
+      int rolled = dis(gen);
+      if(rolled < floorValue)
+        {
+          rolled = floorValue;
+        }
+      diceSum += rolled;
+    }
+
+  return diceSum;
+}
+
+Die getSuperiorityDie(int level)
+{
+  if(level >= 18)
+    {
+      return Die{1, 12};
+    }
+  if(level >= 10)
+    {
+      return Die{1, 10};
+    }
+  return Die{1, 8};
+}
+
+int getSuperiorityDiceCount(int level)
+{
+  if(level >= 15)
+    {
+      return 6;
+    }
+  if(level >= 7)
+    {
+      return 5;
+    }
+  return 4;
+}
+
 bool rollSavingThrow(int bonus, int dc, RollType rollType)
 {
   Die d20{1, 20};
@@ -286,32 +333,25 @@ bool rollSavingThrow(int bonus, int dc, RollType rollType)
   return roll + bonus >= dc;
 }
 
-bool rollAbilityCheck(int bonus, int dc, RollType rollType)
+int rollD20(RollType rollType)
 {
-  Die d20{1, 20};
   std::uniform_int_distribution<> dis(1, 20);
   auto &gen = getRNG();
 
-  int roll;
   switch(rollType)
     {
-    case RollType::STRAIGHT: roll = dis(gen); break;
-
-      case RollType::ADVANTAGE: {
-        int roll1 = dis(gen);
-        int roll2 = dis(gen);
-        roll = std::max(roll1, roll2);
-        break;
-      }
-
-      case RollType::DISADVANTAGE: {
-        int roll1 = dis(gen);
-        int roll2 = dis(gen);
-        roll = std::min(roll1, roll2);
-        break;
-      }
+    case RollType::ADVANTAGE: return std::max(dis(gen), dis(gen));
+    case RollType::DISADVANTAGE: return std::min(dis(gen), dis(gen));
+    case RollType::STRAIGHT:
+    default: return dis(gen);
     }
+}
 
+bool rollAbilityCheck(int bonus, int dc, RollType rollType)
+{
+  int roll = rollD20(rollType);
+  if(roll == 20)
+    return true;
   return roll + bonus >= dc;
 }
 

@@ -55,8 +55,7 @@ namespace enc
                         public LimitedDurationEffect,
                         public ActionEnablerEffect,
                         public AoeSquareEffect,
-                        public DirectThreat,
-                        public AoeThreat
+                        public DirectThreat
   {
   public:
     FlamingSphere(const Coord &coord, const FlamingSphereFactory &factory)

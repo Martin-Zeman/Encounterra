@@ -473,7 +473,7 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
     
     auto allSequences = dag.dfs(0, maxSequenceLength);
     auto prunedSequences = pruneSequences(std::move(allSequences), indexToActoid, transitionToSimplified);
-    
+
     std::vector<std::vector<Actoid *>> sequences;
     for (const auto& arr : prunedSequences) {
         std::vector<Actoid *> sequence;

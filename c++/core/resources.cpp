@@ -188,6 +188,17 @@ namespace enc
                 (*uses)->useResource();
               }
             break;
+          case AbilityType::SECOND_WIND:
+            // Consume one Second Wind use (refreshed on a Short or Long Rest). It uses no spell slot.
+            if(auto uses = actoid.getFactory().getResource())
+              {
+                (*uses)->useResource();
+              }
+            else
+              {
+                throw std::runtime_error("Second Wind factory must have an associated resource!");
+              }
+            break;
           case AbilityType::MISTY_STEP:
             if(auto resource = actoid.getFactory().getResource())
               {
@@ -224,6 +235,28 @@ namespace enc
     else if(abilityType > AbilityType::REACTION_DELIMITER && abilityType < AbilityType::HASTE_ACTION_DELIMITER)
       {
         combatant->setHasReaction(false);
+        if(abilityType == AbilityType::RIPOSTE)
+          {
+            // Riposte (Battle Master maneuver) spends one Superiority Die in addition to the reaction.
+            if(auto die = actoid.getFactory().getResource())
+              {
+                (*die)->useResource();
+              }
+            combatant->triggerAttackFsm(&actoid.getFactory());
+          }
+      }
+    // Free action category: Action Surge grants an extra Action.
+    else if(abilityType == AbilityType::ACTION_SURGE)
+      {
+        if(auto uses = actoid.getFactory().getResource())
+          {
+            (*uses)->useResource();
+          }
+        else
+          {
+            throw std::runtime_error("Action Surge factory must have an associated resource!");
+          }
+        combatant->setHasAction(true);
       }
     // Haste action category
     else if(abilityType > AbilityType::HASTE_ACTION_DELIMITER && abilityType < AbilityType::PASSIVE_DELIMITER)

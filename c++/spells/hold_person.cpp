@@ -8,6 +8,7 @@
 #include <memory>
 #include <limits>
 #include <algorithm>
+#include <iostream>
 
 namespace enc
 {
@@ -174,8 +175,13 @@ namespace enc
                                  reconcileRollTypes(target->getSavingThrowRollTypeMods(_factory.savingThrow)));
     if(!saved)
       {
+        std::cout << target->_name << " fails the Wisdom save and is paralyzed by " << shorthandStr() << std::endl;
         _factory._combatant->setConcentrationEffect(Effect::shared_from_this());
         target->applyCondition(Condition(Conditions::PARALYZED, _factory._combatant, this));
+      }
+    else
+      {
+        std::cout << target->_name << " succeeds on the Wisdom save against " << shorthandStr() << std::endl;
       }
   }
 
@@ -199,6 +205,10 @@ namespace enc
   {
     bool saved = rollSavingThrow(combatant->getSavingThrow(_factory.savingThrow), _factory._dc,
                                  reconcileRollTypes(combatant->getSavingThrowRollTypeMods(_factory.savingThrow)));
+    if(saved)
+      {
+        std::cout << combatant->_name << " succeeds on the Wisdom save and is no longer paralyzed by " << shorthandStr() << std::endl;
+      }
     return !saved; // true => failed (effect continues), false => saved (effect ends)
   }
 

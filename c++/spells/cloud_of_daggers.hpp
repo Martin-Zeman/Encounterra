@@ -47,7 +47,7 @@ namespace enc
     Die _dmgDice;
   };
 
-  class CloudOfDaggers : public Actoid, public LimitedDurationEffect, public AoeSquareEffect, public DirectThreat, public AoeThreat
+  class CloudOfDaggers : public Actoid, public LimitedDurationEffect, public AoeSquareEffect, public DirectThreat
   {
   public:
     CloudOfDaggers(const Coord &coord, const CloudOfDaggersFactory &factory)

@@ -41,6 +41,7 @@ namespace enc
     int getRange() const override { return _attackRange; }
     bool usesDex() { return _usesDex; }
     bool isTwoHanded() { return _twoHanded; }
+    void setTwoHanded(bool value) { _twoHanded = value; }
     int getToHit() const { return _toHit; }
     const std::vector<Die> &getDmgDice() const { return _dmgDice; }
     int getDmgBonus() const { return _dmgBonus; }
@@ -82,6 +83,7 @@ namespace enc
     Combatant &getTarget() const { return _target; }
     AttackFactory &getAttackFactory() const { return _factory; }
     void setRollType(RollType rollType) { _rollType = rollType; }
+    std::string shorthandStr() const;
 
   protected:
     Attack(AbilityType abilityType, Combatant &target, AttackFactory &factory, RollType rollType = RollType::STRAIGHT)
@@ -90,7 +92,6 @@ namespace enc
     {}
 
     std::string toString() const override;
-    std::string shorthandStr() const;
     double calculateThreat(const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
 

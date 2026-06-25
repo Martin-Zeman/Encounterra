@@ -50,7 +50,7 @@ namespace enc
     std::vector<Die> _dmgDice;
   };
 
-  class Moonbeam : public Actoid, public LimitedDurationEffect, public AoeSphericEffect, public DirectThreat, public AoeThreat
+  class Moonbeam : public Actoid, public LimitedDurationEffect, public AoeSphericEffect, public DirectThreat
   {
   public:
     Moonbeam(const Coord &coord, const MoonbeamFactory &factory)

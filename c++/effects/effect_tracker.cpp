@@ -1,11 +1,19 @@
 #include "effects/effect_tracker.hpp"
 #include "effects/aoe_square_effect.hpp"
 #include "effects/aoe_spheric_effect.hpp"
+#include <algorithm>
 
 namespace enc
 {
   std::weak_ptr<Effect> EffectTracker::add(std::shared_ptr<Effect> effect)
   {
+    // Avoid double-tracking the same effect. Concentration spells call setConcentrationEffect()
+    // during activate(), which re-adds an effect the action resolver already inserted. A duplicate
+    // entry would be processed twice each round and linger as a zombie after the original is removed.
+    if(std::find(_effects.begin(), _effects.end(), effect) != _effects.end())
+      {
+        return std::weak_ptr<Effect>(effect);
+      }
     _effects.push_back(effect);
     return std::weak_ptr<Effect>(effect);
   }
@@ -18,9 +26,12 @@ namespace enc
 
   void EffectTracker::startOfTurnTick(Combatant *combatant)
   {
+    // Iterate over a snapshot: deactivate() on a concentration effect calls breakConcentration(),
+    // which removes from _effects and would invalidate a live iterator over _effects.
+    std::vector<std::shared_ptr<Effect>> snapshot = _effects;
     std::vector<std::shared_ptr<Effect>> remainingEffects;
 
-    for(const auto &effect : _effects)
+    for(const auto &effect : snapshot)
       {
         if(effect->getInitiator() == combatant)
           {
@@ -38,9 +49,12 @@ namespace enc
 
   void EffectTracker::startOfTurn(Combatant *combatant)
   {
+    // Iterate over a snapshot: deactivateForCombatant() on a concentration effect calls
+    // breakConcentration(), which removes from _effects and would invalidate a live iterator.
+    std::vector<std::shared_ptr<Effect>> snapshot = _effects;
     std::vector<std::shared_ptr<Effect>> remainingEffects;
 
-    for(const auto &effect : _effects)
+    for(const auto &effect : snapshot)
       {
         if(effect->isAffecting(combatant))
           {
@@ -57,9 +71,13 @@ namespace enc
 
   void EffectTracker::endOfTurn(Combatant *combatant)
   {
+    // Iterate over a snapshot: a successful save calls deactivateForCombatant(), which for a
+    // concentration spell calls breakConcentration() -> remove(), mutating _effects mid-loop.
+    // Iterating _effects directly would invalidate the iterator and crash.
+    std::vector<std::shared_ptr<Effect>> snapshot = _effects;
     std::vector<std::shared_ptr<Effect>> remainingEffects;
 
-    for(const auto &effect : _effects)
+    for(const auto &effect : snapshot)
       {
         if(effect->isAffecting(combatant))
           {

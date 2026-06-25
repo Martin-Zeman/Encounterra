@@ -52,7 +52,7 @@ namespace enc
     SavingThrow _savingThrow;
   };
 
-  class FaerieFire : public Actoid, public LimitedDurationEffect, public AoeSquareEffect, public CombatantEffect, public DirectThreat, public AoeThreat
+  class FaerieFire : public Actoid, public LimitedDurationEffect, public AoeSquareEffect, public CombatantEffect, public DirectThreat
   {
   public:
     FaerieFire(const Coord &coord, const FaerieFireFactory &factory)

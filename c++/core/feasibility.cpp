@@ -64,6 +64,11 @@ namespace enc
           }
         return result;
       }
+    else if(abilityType == AbilityType::ACTION_SURGE)
+      {
+        // Free action: gated purely by its limited-use resource (checked in the switch below).
+        result = true;
+      }
     else
       {
         throw std::runtime_error("Unknown Ability Type in checkFeasibility!");
@@ -206,6 +211,23 @@ namespace enc
       }
       case AbilityType::FIREBOLT: /*Nothing to do*/ break;
 
+      case AbilityType::SECOND_WIND:
+      case AbilityType::ACTION_SURGE:
+      case AbilityType::RIPOSTE:
+      {
+        // Second Wind (Uses), Action Surge (Uses) and Riposte (Superiority Dice) are all gated by a flat
+        // limited-use resource and consume no spell slot.
+        if(auto resource = actoid.getFactory().getResource())
+          {
+            result &= (*resource)->hasUses();
+          }
+        else
+          {
+            throw std::runtime_error("Second Wind / Action Surge / Riposte factory must have an associated resource!");
+          }
+        break;
+      }
+
       default: break;
       }
     return result;
@@ -235,6 +257,11 @@ namespace enc
       {
         // Mirrors Python check_feasibility_light's Movement branch.
         return combatant->getMovement() > 0 && !combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::RESTRAINED});
+      }
+    else if(abilityType == AbilityType::ACTION_SURGE)
+      {
+        // Free action: gated purely by its limited-use resource (checked in the switch below).
+        result = true;
       }
     else
       {
@@ -374,6 +401,21 @@ namespace enc
         break;
       }
       case AbilityType::FIREBOLT: /*Nothing to do*/ break;
+
+      case AbilityType::SECOND_WIND:
+      case AbilityType::ACTION_SURGE:
+      case AbilityType::RIPOSTE:
+      {
+        if(auto resource = actoid.getFactory().getResource())
+          {
+            result &= (*resource)->hasUses();
+          }
+        else
+          {
+            throw std::runtime_error("Second Wind / Action Surge / Riposte factory must have an associated resource!");
+          }
+        break;
+      }
 
       default: break;
       }
