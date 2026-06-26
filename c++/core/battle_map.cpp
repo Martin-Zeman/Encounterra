@@ -645,7 +645,12 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
                     continue;
                   }
 
-                bool consider_accessibility = distances.size() > 0 ? distances[x * _size + y] < std::numeric_limits<double>::max() : true;
+                // The Dijkstra distance vector marks unreachable cells with the int sentinel (matching the
+                // dijkstra() implementation), so compare against that sentinel rather than double's max, which
+                // every finite int distance trivially undercuts (which would make this filter a no-op and let
+                // unreachable cells through - fatal for large movers whose footprint then leaves the grid).
+                bool consider_accessibility
+                  = distances.size() > 0 ? distances[x * _size + y] < static_cast<double>(std::numeric_limits<int>::max()) : true;
 
                 if(isEmptyOrSelf(x, y, combatantId) && consider_accessibility)
                   {
@@ -684,7 +689,10 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
                     continue;
                   }
 
-                bool consider_accessibility = distances.size() > 0 ? distances[x * _size + y] < std::numeric_limits<double>::max() : true;
+                // See getFreeCoordsInHopRange: unreachable cells carry the int sentinel, so compare against it
+                // (not double's max) or the accessibility filter degenerates to a no-op.
+                bool consider_accessibility
+                  = distances.size() > 0 ? distances[x * _size + y] < static_cast<double>(std::numeric_limits<int>::max()) : true;
 
                 if(isEmptyOrSelf(x, y, combatantId) && consider_accessibility)
                   {
