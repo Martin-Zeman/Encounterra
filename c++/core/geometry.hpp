@@ -14,8 +14,6 @@ namespace enc
 
   int getHopDistanceCoords(const Coords &coords1, const Coords &coords2);
 
-  blaze::DynamicMatrix<double> distanceMatrix(const Coords &coords1, const Coords &coords2);
-
   CoordVector inflateCoords(const Coords &coords, int inflate_to_dist);
 
   blaze::DynamicVector<double> linspace(double start, double end, size_t num);

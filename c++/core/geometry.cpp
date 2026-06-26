@@ -7,51 +7,62 @@
 namespace enc
 {
 
-  double getCartesianDistanceCoords(const Coords &coords1, const Coords &coords2) { return blaze::min(distanceMatrix(coords1, coords2)); }
+  double getCartesianDistanceCoords(const Coords &coords1, const Coords &coords2)
+  {
+    // Smallest Euclidean distance between any pair of sub-coords. Computed with a running min over the
+    // (tiny) coord vectors instead of materialising a per-call heap-allocated distance matrix. We track
+    // the squared distance and take a single sqrt at the end: sqrt is monotonic, so the min is identical.
+    const auto &coords1_vec = coords1.get();
+    const auto &coords2_vec = coords2.get();
+
+    double min_dist_sq = std::numeric_limits<double>::max();
+    for(const Coord &c1 : coords1_vec)
+      {
+        for(const Coord &c2 : coords2_vec)
+          {
+            const double dx = static_cast<double>(c1[0] - c2[0]);
+            const double dy = static_cast<double>(c1[1] - c2[1]);
+            const double dist_sq = dx * dx + dy * dy;
+            if(dist_sq < min_dist_sq)
+              {
+                min_dist_sq = dist_sq;
+              }
+          }
+      }
+
+    return std::sqrt(min_dist_sq);
+  }
 
   int getHopDistanceCoords(const Coords &coords1, const Coords &coords2)
   {
-    auto dist_mat = distanceMatrix(coords1, coords2);
-    double min_dist = std::numeric_limits<double>::max();
-    size_t min_row = 0, min_col = 0;
+    // Chebyshev distance between the Euclidean-closest pair of sub-coords. Computed with a running argmin
+    // over the (tiny) coord vectors instead of materialising a per-call heap-allocated distance matrix.
+    // Comparing squared distances preserves the argmin since sqrt is monotonic.
+    const auto &coords1_vec = coords1.get();
+    const auto &coords2_vec = coords2.get();
 
-    for(size_t i = 0; i < dist_mat.rows(); ++i)
+    double min_dist_sq = std::numeric_limits<double>::max();
+    size_t min_row = 0, min_col = 0;
+    for(size_t i = 0; i < coords1_vec.size(); ++i)
       {
-        for(size_t j = 0; j < dist_mat.columns(); ++j)
+        for(size_t j = 0; j < coords2_vec.size(); ++j)
           {
-            if(dist_mat(i, j) < min_dist)
+            const double dx = static_cast<double>(coords1_vec[i][0] - coords2_vec[j][0]);
+            const double dy = static_cast<double>(coords1_vec[i][1] - coords2_vec[j][1]);
+            const double dist_sq = dx * dx + dy * dy;
+            if(dist_sq < min_dist_sq)
               {
-                min_dist = dist_mat(i, j);
+                min_dist_sq = dist_sq;
                 min_row = i;
                 min_col = j;
               }
           }
       }
 
-    const auto &coords1_vec = coords1.get();
-    const auto &coords2_vec = coords2.get();
-
-    const Coord &sub1_closest_coord = coords1_vec[std::min(min_row, coords1_vec.size() - 1)];
-    const Coord &sub2_closest_coord = coords2_vec[std::min(min_col, coords2_vec.size() - 1)];
+    const Coord &sub1_closest_coord = coords1_vec[min_row];
+    const Coord &sub2_closest_coord = coords2_vec[min_col];
 
     return std::max(std::abs(sub1_closest_coord[0] - sub2_closest_coord[0]), std::abs(sub1_closest_coord[1] - sub2_closest_coord[1]));
-  }
-
-  blaze::DynamicMatrix<double> distanceMatrix(const Coords &coords1, const Coords &coords2)
-  {
-    size_t n = coords1.numCoords();
-    size_t m = coords2.numCoords();
-    blaze::DynamicMatrix<double> distances(n, m);
-
-    for(size_t i = 0; i < n; ++i)
-      {
-        for(size_t j = 0; j < m; ++j)
-          {
-            distances(i, j) = std::sqrt(std::pow(coords1(i, 0) - coords2(j, 0), 2) + std::pow(coords1(i, 1) - coords2(j, 1), 2));
-          }
-      }
-
-    return distances;
   }
 
   CoordVector inflateCoords(const Coords &coords, int inflate_to_dist)
