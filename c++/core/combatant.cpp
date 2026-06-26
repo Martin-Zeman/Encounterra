@@ -64,7 +64,14 @@ namespace enc
 
   void Combatant::onDie()
   {
-    // Implement functionality here...
+    // A combatant that dies stops sustaining the effects it initiated (e.g. a raging Wild Heart barbarian's Rage,
+    // whose Wolf aspect grants nearby allies Advantage on attacks). removeCombatantIfDead() calls this right before
+    // it erases the combatant from the battle map's coordinate cache, so without this cleanup the Effect lingers in
+    // the EffectTracker with a dangling initiator: a later attack-roll check that looks up the dead initiator's
+    // position (collectAttackRollTypes -> getHopDistanceCombatants -> _combatantCoordinateCache.at) then throws
+    // std::out_of_range. This mirrors the cleanup the RoundManager already performs for an acting combatant that
+    // dies on its own turn; routing it through onDie() applies it uniformly to combatants that die as a target.
+    EffectTracker::getInstance().combatantDied(this);
   }
 
   void Combatant::onEndOfTurn() { _dmgTypesTookLastRound.clear(); }
