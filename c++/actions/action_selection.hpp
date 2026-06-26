@@ -25,7 +25,11 @@ namespace enc
   using MovementTransitionMap = std::unordered_map<Actoid *, std::pair<Coord, MovementThreatType>>;
   using TransitionToEligibleCoords = std::unordered_map<Actoid *, CoordVector>;
   using SequenceToThreat = std::unordered_map<size_t, std::pair<std::vector<double>, double>>; // first part is the movement component of the threat, second is the action component
-  using TransitionStepThreat = std::unordered_map<size_t, std::unordered_map<size_t, double>>;
+  // Sequence indices are dense in [0, sequences.size()), so the step-threat store is a flat vector indexed by the
+  // sequence index rather than an unordered_map. This removes the per-decision allocator churn (bucket-node allocs)
+  // that dominated the threat hot path in perf. A sequence that produced no step threats keeps an empty inner map,
+  // which find()/iteration treat identically to the old missing outer key.
+  using TransitionStepThreat = std::vector<std::unordered_map<size_t, double>>;
   using CoordToSequenceIds = std::unordered_map<std::pair<Coord, MovementThreatType>, std::vector<size_t>>;
   // Maps a Misty Step movement transition (by actoid identity) to its serialized movement path.
   using TransitionToMsPath = std::unordered_map<Actoid *, std::vector<std::string>>;

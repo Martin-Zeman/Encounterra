@@ -275,17 +275,18 @@ getNearestAndMinimize(std::vector<std::vector<Actoid *>> &sequences, const std::
         auto& sequence = sequences[idx];
         std::vector<Actoid *> newSequence;
 
-        auto outerIt = sequenceIdxToTransitionStepThreat.find(idx);
+        // sequenceIdxToTransitionStepThreat[idx] is the flat-vector slot for this sequence. A sequence that
+        // produced no step threats has an empty inner map here, which behaves identically to the old missing
+        // outer key (find below simply returns end() for every tIdx).
+        const auto& stepThreatMap = sequenceIdxToTransitionStepThreat[idx];
         for (size_t tIdx = 0; tIdx < sequence.size(); ++tIdx) {
             bool shouldKeep = false;
             bool hasStepThreat = false;
             double stepThreat = 0.0;
-            if (outerIt != sequenceIdxToTransitionStepThreat.end()) {
-                auto innerIt = outerIt->second.find(tIdx);
-                if (innerIt != outerIt->second.end()) {
-                    hasStepThreat = true;
-                    stepThreat = innerIt->second;
-                }
+            auto innerIt = stepThreatMap.find(tIdx);
+            if (innerIt != stepThreatMap.end()) {
+                hasStepThreat = true;
+                stepThreat = innerIt->second;
             }
 
             if (!hasStepThreat) {
@@ -518,7 +519,7 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
 
     TransitionToMsPath transitionNameToMsPath;
     SequenceToThreat sequenceToThreat;
-    TransitionStepThreat sequenceIdxToTransitionStepThreat;
+    // sequenceIdxToTransitionStepThreat is a flat vector sized once `sequences` is built below.
 
     Coords currentCoords = battleMap.getCombatantCoordinates(*combatant);
 
@@ -740,6 +741,10 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
         }
         sequences.push_back(std::move(sequence));
     }
+
+    // Flat, idx-keyed step-threat storage (idx in [0, sequences.size())). Sequences that produce no step threats
+    // keep an empty inner map, which getNearestAndMinimize treats identically to the old missing outer key.
+    TransitionStepThreat sequenceIdxToTransitionStepThreat(sequences.size());
 
     auto coordToSequenceIds = createCoordToSequenceMapping(sequences, movementTransitionToCoordAndType);
 
