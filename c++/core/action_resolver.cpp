@@ -408,8 +408,10 @@ namespace enc
     applyGrazeOnMiss(factory, target);
     // Battle Master Riposte: when missed, the target may spend its Reaction and one Superiority Die to make a
     // melee weapon attack against the attacker (mirrors the Python prompt_after_miss_reaction). A Riposte
-    // cannot itself provoke another Riposte.
+    // cannot itself provoke another Riposte. A combatant that is Incapacitated, Stunned or Paralyzed cannot
+    // take reactions (mirrors Python check_feasibility's Reaction branch).
     if(attack->getAbilityType() != AbilityType::RIPOSTE && target->hasReaction()
+       && !target->isAffectedByAny({Conditions::INCAPACITATED, Conditions::STUNNED, Conditions::PARALYZED})
        && target->hasPassiveAbility(AbilityType::BATTLE_MASTER_MANEUVERS))
       {
         if(AttackFactory *riposteFactory = target->getRiposteFactory())
@@ -503,7 +505,11 @@ namespace enc
         for(auto *candidate : aooCandidates)
           {
             AttackFactory *aooFactory = candidate->getAoOFactory();
-            if(aooFactory && candidate->hasReaction() && movingCombatant->isAlive())
+            // A combatant that is Incapacitated, Stunned or Paralyzed cannot take reactions (mirrors Python
+            // check_feasibility's Reaction branch), so it makes no opportunity attack.
+            if(aooFactory && candidate->hasReaction()
+               && !candidate->isAffectedByAny({Conditions::INCAPACITATED, Conditions::STUNNED, Conditions::PARALYZED})
+               && movingCombatant->isAlive())
               {
                 // The reaction is consumed inside resolveAction -> useResources (mirrors Python prompt_aoo,
                 // which leaves has_reaction for use_resources to clear). checkFeasibility still sees the

@@ -13,6 +13,7 @@
 #include "core/combatant.hpp"
 #include "core/resources.hpp"
 #include "effects/action_enabler_effect.hpp"
+#include "effects/effect_tracker.hpp"
 
 namespace enc
 {
@@ -149,6 +150,18 @@ namespace enc
             result = result && !combatant->isInnateSorceryActive();
             if(auto resource = factory->getResource())
               result = result && (*resource)->hasUses();
+            break;
+          }
+        case AbilityType::RAGE:
+          {
+            // Rage is a bonus action gated by its limited Rage uses AND the requirement that the barbarian is not
+            // already raging — re-entering would otherwise waste a use and re-log "enters a Rage" every turn
+            // (mirrors Python check_feasibility_light's BonusAction.RAGE case).
+            if(auto resource = factory->getResource())
+              result = result && (*resource)->hasUses();
+            else
+              throw std::runtime_error("Rage factory must have an associated resource!");
+            result = result && !EffectTracker::getInstance().isAffectingCombatant(combatant, EffectType::RAGE);
             break;
           }
         case AbilityType::FIREBOLT: /*Nothing to do*/ break;
