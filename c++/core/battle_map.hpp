@@ -125,7 +125,9 @@ namespace enc
     MapMatrix _baseAdjacencyMatrix;
     // blaze::DynamicMatrix<int> _occupancyGrid TODO: This may actually not be needed
     std::unordered_map<int, Coords> _combatantCoordinateCache;
-    static std::unique_ptr<BattleMap> _instance;
+    // thread_local: each worker thread gets its own independent BattleMap so simulations can run in
+    // parallel without sharing the (mutable, non-thread-safe) singleton state.
+    static thread_local std::unique_ptr<BattleMap> _instance;
     std::unordered_set<Coord> _impassableSet;
     std::unordered_set<Coord> _difficultSet;
     std::vector<Obstacle> _obstacles;

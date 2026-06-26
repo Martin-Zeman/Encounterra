@@ -3,6 +3,7 @@
 #include "core/types.hpp"
 #include <map>
 #include <cstdint>
+#include <random>
 #include <variant>
 #include <unordered_map>
 #include <unordered_set>
@@ -339,6 +340,10 @@ namespace enc
   double meanDmgAutoHit(const std::vector<Die> &dmgDice, bool isImmune = false, bool isResistant = false);
 
   int rollDice(const Die &dice);
+
+  //! Reseed the calling thread's dice RNG. Used to give each worker thread an independent, optionally
+  //! reproducible (ENC_SEED + thread index) random stream when distributing simulations across cores.
+  void seedThreadRNG(std::mt19937::result_type seed);
 
   int rollDiceMulti(const std::vector<Die> &diceList);
 

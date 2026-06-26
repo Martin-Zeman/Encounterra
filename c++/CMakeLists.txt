@@ -43,6 +43,10 @@ endif()
 
 find_package(LAPACK REQUIRED)
 
+# Required for std::thread (parallel, multi-core simulation runs in main.cpp).
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 #----GOOGLETEST BUILD----
 add_subdirectory(${GOOGLE_TEST_DIR})
 
@@ -66,7 +70,7 @@ add_library (${PROJECT_NAME}_lib ${SOURCES})
 add_library( blaze_target INTERFACE )
 target_link_libraries( blaze_target INTERFACE blaze::blaze )
 
-target_link_libraries(${PROJECT_NAME}_lib PUBLIC blaze_target OpenSSL::SSL OpenSSL::Crypto ${LAPACK_LIBRARIES})
+target_link_libraries(${PROJECT_NAME}_lib PUBLIC blaze_target OpenSSL::SSL OpenSSL::Crypto ${LAPACK_LIBRARIES} Threads::Threads)
 
 #----BINARY CREATION----
 add_executable(${PROJECT_NAME} "main.cpp")

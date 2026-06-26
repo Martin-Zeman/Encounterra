@@ -14,7 +14,7 @@
 namespace enc
 {
 
-  std::unique_ptr<BattleMap> BattleMap::_instance = nullptr;
+  thread_local std::unique_ptr<BattleMap> BattleMap::_instance = nullptr;
 
   BattleMap::BattleMap(size_t size = 15)
       : _size(size), _combatantGrid(size, size, -1), // Initialize combatantGrid with -1 (no combatant)
@@ -879,7 +879,9 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
             grappler->removeCondition(Conditions::GRAPPLING);
           }
         targetToRemove->onDie();
-        // spdlog::info("{} died", targetToRemove._name);
+        // Report the death immediately (on the line right after the damage that caused it). This is the
+        // single point every damage path funnels through, so it covers attacks, spells, on-hit riders and AoE.
+        std::cout << targetToRemove->_name << " dies" << std::endl;
         removeCombatant(*targetToRemove);
         return false;
       }

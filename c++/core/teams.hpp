@@ -61,7 +61,9 @@ namespace enc
     Teams(const Teams &) = delete;
     Teams &operator=(const Teams &) = delete;
 
-    static std::unique_ptr<Teams> _instance;
+    // thread_local: each worker thread gets its own independent Teams so simulations can run in
+    // parallel without sharing the (mutable, non-thread-safe) singleton state.
+    static thread_local std::unique_ptr<Teams> _instance;
     std::unordered_map<Color, std::vector<int>> _colorToCombatantIds;
     std::unordered_map<int, Color> _combatantIdToTeamColor;
     std::unordered_map<int, Combatant*> _idToCombatant;

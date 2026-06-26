@@ -3,7 +3,7 @@
 namespace enc
 {
 
-  std::unique_ptr<Teams> Teams::_instance = nullptr;
+  thread_local std::unique_ptr<Teams> Teams::_instance = nullptr;
 
   Teams &Teams::getInstance()
   {

@@ -17,9 +17,11 @@ namespace enc
     EffectTracker(const EffectTracker&) = delete;
     EffectTracker& operator=(const EffectTracker&) = delete;
 
-    // Singleton access method
+    // Singleton access method.
+    // thread_local: each worker thread gets its own independent EffectTracker so simulations can run in
+    // parallel without sharing the (mutable, non-thread-safe) singleton state.
     static EffectTracker& getInstance() {
-        static EffectTracker instance;
+        static thread_local EffectTracker instance;
         return instance;
     }
 

@@ -108,7 +108,9 @@ namespace enc
     // Method to generate instance ID
     int generateInstanceId() const
     {
-      static int nextId = 1;
+      // thread_local: each worker thread numbers its own combatants independently (deterministic per
+      // thread, no data race) so parallel simulations stay self-contained.
+      static thread_local int nextId = 1;
       return ++nextId;
     }
 

@@ -111,7 +111,8 @@ namespace enc
     return a[0] * b[1] - a[1] * b[0];
   };
 
-  std::mt19937 rng(std::random_device{}());
+  // thread_local: parallel simulations each own an independent generator (no data race, independent streams).
+  thread_local std::mt19937 rng(std::random_device{}());
   int randomInt(int min, int max) { return std::uniform_int_distribution<int>{min, max}(rng); }
 
   CoordVector convertPathToIncrements(const CoordVector &path)

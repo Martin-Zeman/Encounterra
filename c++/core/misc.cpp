@@ -55,7 +55,8 @@ namespace enc
 
   std::vector<int> generateOutcomes(const Die &die)
   {
-    static std::unordered_map<Die, std::vector<int>> cache;
+    // thread_local: each worker thread keeps its own cache so parallel simulations don't race on it.
+    static thread_local std::unordered_map<Die, std::vector<int>> cache;
 
     // Check if result is in cache
     auto it = cache.find(die);
@@ -102,7 +103,8 @@ namespace enc
 
   int percentileRoll(const Die &die, int percentile)
   {
-    static std::unordered_map<std::pair<Die, int>, int> cache;
+    // thread_local: each worker thread keeps its own cache so parallel simulations don't race on it.
+    static thread_local std::unordered_map<std::pair<Die, int>, int> cache;
 
     auto cache_key = std::make_pair(die, percentile);
     auto it = cache.find(cache_key);
@@ -231,7 +233,9 @@ int rollDiceMulti(const std::vector<Die> &diceList)
 // simulation run reproducible (useful for deterministic benchmarking and debugging).
 inline std::mt19937 &getRNG()
 {
-  static std::mt19937 gen = [] {
+  // thread_local: each worker thread owns an independent generator so parallel simulation runs are
+  // statistically independent and never race on the engine's internal state.
+  static thread_local std::mt19937 gen = [] {
     if(const char *seedEnv = std::getenv("ENC_SEED"))
       {
         return std::mt19937(static_cast<std::mt19937::result_type>(std::strtoul(seedEnv, nullptr, 10)));
@@ -241,6 +245,8 @@ inline std::mt19937 &getRNG()
   }();
   return gen;
 }
+
+void seedThreadRNG(std::mt19937::result_type seed) { getRNG().seed(seed); }
 
 int rollDiceWithReroll(const Die &die, int rerollMaxValue)
 {
