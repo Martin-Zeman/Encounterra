@@ -548,8 +548,8 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
     // in `dedupedSuffixes`, and then just SPLICES the memoized suffix behind each movement edge:
     //
     //                              ╔══════════════════════╗
-    //   move→A ─┐                  ║  action sub-graph     ║   walked + pruned ONCE,
-    //   move→B ─┼──── splice ────► ║  (deduped orderings)  ║   reused for A, B, C, …
+    //   move→A ─┐                  ║  action sub-graph    ║   walked + pruned ONCE,
+    //   move→B ─┼──── splice ────► ║  (deduped orderings) ║   reused for A, B, C, …
     //   move→C ─┘                  ╚══════════════════════╝
     //
     //     work   =  coords  +  orderings      → additive (a few thousand evaluations instead of millions)

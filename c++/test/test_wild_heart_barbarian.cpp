@@ -311,7 +311,10 @@ namespace
     auto plan = planRageScenario();
 
     const int rageIdx = firstIndexWhere(plan, [](const std::shared_ptr<Actoid> &a) { return std::dynamic_pointer_cast<Rage>(a) != nullptr; });
-    const int attackIdx = firstIndexWhere(plan, [](const std::shared_ptr<Actoid> &a) { return a->getAbilityType() == AbilityType::MELEE_ATTACK; });
+    // Any melee swing satisfies "Rage buffs the attack" — including the Reckless Attack variant (a MeleeAttack
+    // subclass tagged AbilityType::RECKLESS_ATTACK), which the planner prefers here because its Advantage yields
+    // the higher threat. Match on the MeleeAttack type rather than the exact MELEE_ATTACK ability id.
+    const int attackIdx = firstIndexWhere(plan, [](const std::shared_ptr<Actoid> &a) { return std::dynamic_pointer_cast<MeleeAttack>(a) != nullptr; });
 
     ASSERT_GE(rageIdx, 0) << "the planner did not choose to Rage";
     ASSERT_GE(attackIdx, 0) << "the planner did not choose to attack";
