@@ -13,6 +13,7 @@ namespace enc
 {
   class Combatant;
   class FlamingSphere;
+  class FlamingSphereRamFactory;
 
   /**
    * Flaming Sphere (2024): level 2. Creates a 5-foot-diameter sphere of fire within 60 feet. A creature that
@@ -99,6 +100,12 @@ namespace enc
   private:
     Coord _coord;
     const FlamingSphereFactory &_factory;
+    // The Flaming Sphere Ram bonus action this effect enables. The effect owns it persistently: enable() links
+    // it into the caster's bonus-action factories and disable() unlinks it, but the factory must outlive any
+    // FlamingSphereRam actoids created while it was linked (those actoids hold a reference to it). Tying its
+    // lifetime to this effect (which shares the action pool's lifetime) prevents a use-after-free when the
+    // proto-DAG builder enables, expands and then disables this enabler in a tight loop.
+    std::shared_ptr<FlamingSphereRamFactory> _ramFactory;
   };
 
   /**

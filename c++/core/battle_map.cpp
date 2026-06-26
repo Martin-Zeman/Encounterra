@@ -237,13 +237,22 @@ namespace enc
           }
       }
 
-    // Handle map edges for larger combatants
-    for(int i = (N - offset) * N; i < N * N; ++i)
+    // Handle map edges for larger combatants: a combatant larger than Medium occupies an (offset+1) block that
+    // extends toward higher x and y, so its root cannot sit in the top `offset` columns or rows without the
+    // footprint leaving the grid. Block every move whose destination lies in that edge band on either axis
+    // (matching the Python reference, which masks both the (N-offset):N x-band and y-band).
+    for(int toX = 0; toX < N; ++toX)
       {
-        for(int j = 0; j < N * N; ++j)
+        for(int toY = 0; toY < N; ++toY)
           {
-            mask(i, j) = 0;
-            mask(j, i) = 0;
+            if(toX >= N - offset || toY >= N - offset)
+              {
+                const int toIdx = toX * N + toY;
+                for(int from = 0; from < N * N; ++from)
+                  {
+                    mask(from, toIdx) = 0;
+                  }
+              }
           }
       }
 

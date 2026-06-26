@@ -139,8 +139,19 @@ namespace enc
 
   void FlamingSphere::enable()
   {
-    auto ramFactory = std::make_shared<FlamingSphereRamFactory>(_factory._combatant, _factory._dc, this);
-    _factory._combatant->getBonusActionFactories().emplace_back(ramFactory);
+    // Create the ram factory once and keep ownership on the effect itself, so unlinking it in disable() does
+    // not destroy it while FlamingSphereRam actoids built during this enabled window still reference it.
+    if(!_ramFactory)
+      {
+        _ramFactory = std::make_shared<FlamingSphereRamFactory>(_factory._combatant, _factory._dc, this);
+      }
+    auto &bonusFactories = _factory._combatant->getBonusActionFactories();
+    // Guard against double-linking if enable() is called without an intervening disable().
+    if(std::none_of(bonusFactories.begin(), bonusFactories.end(),
+                    [&](const std::shared_ptr<ActoidFactory> &factory) { return factory.get() == _ramFactory.get(); }))
+      {
+        bonusFactories.emplace_back(_ramFactory);
+      }
   }
 
   void FlamingSphere::disable()
