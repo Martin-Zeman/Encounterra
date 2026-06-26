@@ -469,7 +469,16 @@ namespace enc
         rolled = rollDice(d20);
       }
 
-    std::cout << caster->_name << " rolls a spell attack against " << target->_name << std::endl;
+    std::cout << caster->_name << " rolls a spell attack against " << target->_name;
+    if(finalModifier == RollType::ADVANTAGE)
+      {
+        std::cout << " at advantage";
+      }
+    else if(finalModifier == RollType::DISADVANTAGE)
+      {
+        std::cout << " at disadvantage";
+      }
+    std::cout << std::endl;
 
     if(rolled == 1)
       {
