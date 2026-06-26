@@ -296,6 +296,11 @@ getNearestAndMinimize(std::vector<std::vector<Actoid *>> &sequences, const std::
                 shouldKeep = true;
             } else if (sequence[tIdx] && sequence[tIdx]->hasFlag(ActoidFlags::IS_PRIORITY)) {
                 shouldKeep = true;
+            } else if (sequence[tIdx] && sequence[tIdx]->hasFlag(ActoidFlags::IS_ACTION_ENABLER)) {
+                // An action enabler (e.g. Action Surge) contributes no threat of its own — its value is the extra
+                // attacks it unlocks. Dropping it here would leave those follow-up attacks in the emitted sequence
+                // with no granted action, so they would be infeasible at execution. Always keep enablers.
+                shouldKeep = true;
             }
 
             if (shouldKeep) {
@@ -1003,6 +1008,21 @@ std::shared_ptr<Actoid> getAction(Combatant* combatant) {
     // Return first action from plan or nullptr if no actions possible
     if (combatant->getActionPlan().empty()) {
         return nullptr;
+    }
+
+    // When the combatant has run out of movement, the planner can still hand back a plan that leads with
+    // movement increments (e.g. a ranged attacker that would prefer to reposition but can't afford to). Rather
+    // than dispatching an infeasible move - which aborts the whole turn and wastes the still-unused action -
+    // drop the leading, now-impossible movement steps and fall through to the first real action (e.g. a bow
+    // shot from the current position).
+    if (combatant->getMovement() <= 0) {
+        auto& plan = combatant->getActionPlan();
+        while (!plan.empty() && std::dynamic_pointer_cast<MovementIncrement>(plan.front())) {
+            plan.pop_front();
+        }
+        if (plan.empty()) {
+            return nullptr;
+        }
     }
     
     auto action = combatant->getActionPlan().front();

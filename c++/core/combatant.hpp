@@ -658,7 +658,7 @@ namespace enc
     std::shared_ptr<ActoidFactory> addReactionAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice,
                                                      int dmgBonus, DamageType damageType, int attackRange)
     {
-      auto factory = std::make_shared<MeleeAttackFactory>("MeleeAttackFactory", name, owner, AbilityType::MELEE_ATTACK, toHit, dmgDice, dmgBonus,
+      auto factory = std::make_shared<MeleeAttackFactory>("MeleeAttackFactory", name, owner, AbilityType::REACTION_ATTACK, toHit, dmgDice, dmgBonus,
                                                           damageType, attackRange);
       _reactionFactories.emplace_back(factory);
       _aoOFactory = static_cast<AttackFactory *>(factory.get());

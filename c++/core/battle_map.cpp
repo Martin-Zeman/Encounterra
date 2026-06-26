@@ -738,7 +738,10 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
         _combatantGrid(x, y) = combatant._instanceId;
       }
 
+    const Coord root = newCoords.getRoot();
     _combatantCoordinateCache.insert_or_assign(combatant._instanceId, std::move(newCoords));
+
+    std::cout << combatant._name << " moved to [" << root[0] << " " << root[1] << "]" << std::endl;
   }
 
   void BattleMap::moveCombatant(const Combatant &combatant, const Coord &newCoord, bool log)
@@ -765,8 +768,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
 
     if(log)
       {
-        // Assuming you have a logger, you can log the movement here
-        // logger.info(combatant.name + " moved to (" + std::to_string(newCoordsData[0].first) + ", " + std::to_string(newCoordsData[0].second) + ")");
+        std::cout << combatant._name << " moved to [" << newCoordsData[0][0] << " " << newCoordsData[0][1] << "]" << std::endl;
       }
   }
 

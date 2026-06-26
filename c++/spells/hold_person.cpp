@@ -209,6 +209,10 @@ namespace enc
       {
         std::cout << combatant->_name << " succeeds on the Wisdom save and is no longer paralyzed by " << shorthandStr() << std::endl;
       }
+    else
+      {
+        std::cout << combatant->_name << " fails the Wisdom save and remains paralyzed by " << shorthandStr() << std::endl;
+      }
     return !saved; // true => failed (effect continues), false => saved (effect ends)
   }
 

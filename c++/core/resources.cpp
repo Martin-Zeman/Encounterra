@@ -257,6 +257,10 @@ namespace enc
             throw std::runtime_error("Action Surge factory must have an associated resource!");
           }
         combatant->setHasAction(true);
+        // The extra Action is a brand-new Action: a combatant with Extra Attack may attack the full number of
+        // times again, so restart the multiattack FSM (otherwise it stays at its terminal state and only a single
+        // post-surge attack would be feasible).
+        combatant->setAttackFsmState(AttackFsm::START);
       }
     // Haste action category
     else if(abilityType > AbilityType::HASTE_ACTION_DELIMITER && abilityType < AbilityType::PASSIVE_DELIMITER)
