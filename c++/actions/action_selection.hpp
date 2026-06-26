@@ -148,11 +148,8 @@ namespace enc
       built.
       :param combatant: the combatant for whom the DAG is modeled
       :param dag: finite state machine representing all possible actions for combatant
-      :param transition_name_to_action: dict mapping non-movement transition names -> action objects
-      :param transition_to_eligible_coords: dict mapping non-movement transition names -> their eligible coordinates
-      :param movement_transition_to_coord_and_type: dict mapping movement transition names -> target coord, MovementThreatType
       :param distances: potentially already pre-computed distances to all coords
-      :param shortest_paths: potentially already pre-computed shortest paths to all coords
+      :param shortestPaths: potentially already pre-computed shortest paths to all coords
       :return: the longest path in the DAG as per the threat along its edges and nodes and a mapping of transitions names
       to special Misty Step paths
    */

@@ -11,6 +11,7 @@
 #include <limits>
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 #include <iostream>
 
 // Hash for CoordToSequenceIds
@@ -472,6 +473,35 @@ translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int>
 }
 
 
+namespace {
+  // Hop (Chebyshev) distance from the eligible coord that is Euclidean-closest to `target`. This is an allocation-free
+  // inlining of getHopDistanceCoords(Coords(eligible), Coords({target})) for the single-target case that dominates the
+  // feasibility check in findBestSequence's scoring loop: the original builds two Coords objects and a
+  // blaze::DynamicMatrix<double> (with sqrt/pow) on EVERY call, which perf attributed ~14% of total runtime to
+  // distanceMatrix + Coords::operator() + getHopDistanceCoords. The argmin and returned value are identical to the
+  // original (squared Euclidean is monotonic in Euclidean, strict-less keeps the first eligible coord on ties, and the
+  // Chebyshev result is integer-exact). `eligible` is assumed non-empty (the sole caller already returns early on an
+  // empty eligible set, exactly as the original code required to avoid an out-of-bounds index).
+  int hopDistFromClosest(const CoordVector &eligible, const Coord &target)
+  {
+    long bestEuclidSq = std::numeric_limits<long>::max();
+    int bestHop = 0;
+    for(const Coord &c : eligible)
+      {
+        const long dx = static_cast<long>(c[0]) - target[0];
+        const long dy = static_cast<long>(c[1]) - target[1];
+        const long euclidSq = dx * dx + dy * dy;
+        if(euclidSq < bestEuclidSq)
+          {
+            bestEuclidSq = euclidSq;
+            bestHop = std::max(std::abs(c[0] - target[0]), std::abs(c[1] - target[1]));
+          }
+      }
+    return bestHop;
+  }
+}
+
+
 std::optional<BestSequenceResult>
 findBestSequence(Combatant *combatant, const StateMachine &dag,
                  const ActoidOwnershipPool &actoidPool,
@@ -592,9 +622,34 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
     const size_t maxSequenceLength = flat.numStates * 2;
     constexpr int NOP_SINK = 1; // getFlattenedDag() collapses every terminal sink onto index 1
 
+    // S5 — per-transition type discrimination, computed ONCE here instead of via dynamic_cast on every action of
+    // every scored sequence. indexToActoid has only a few hundred entries, but the scoring loop below visits them
+    // thousands of times (12k+ sequences for the Fighter), so the RTTI casts dominated: perf attributed ~9% of total
+    // runtime to __dynamic_cast / __do_dyncast. These parallel arrays (indexed by transition index) reduce each
+    // per-action test to an O(1) array read. The results are EXACTLY what the casts returned, so behaviour is
+    // unchanged. NB: movement is detected with dynamic_cast<MovementIncrement*>, NOT the IS_MOVEMENT flag — Dodge and
+    // Disengage also carry IS_MOVEMENT but are not MovementIncrements, and the original scoring loop (which used the
+    // cast) treats them as regular scored actions, so the cast semantics must be preserved here.
+    const int numTransitions = static_cast<int>(indexToActoid.size());
+    std::vector<uint8_t> txEndsSequence(numTransitions, 0); // null actoid or DummyActoid -> stop scanning the sequence
+    std::vector<uint8_t> txIsMovement(numTransitions, 0);   // MovementIncrement -> handled separately, skip in scoring
+    std::vector<Threat *> txThreat(numTransitions, nullptr);
+    std::vector<AttackThreatModifier *> txAttackMod(numTransitions, nullptr);
+    for(int i = 0; i < numTransitions; ++i)
+      {
+        Actoid *a = indexToActoid[i];
+        if(!a || dynamic_cast<DummyActoid *>(a))
+          {
+            txEndsSequence[i] = 1;
+            continue;
+          }
+        txIsMovement[i] = dynamic_cast<MovementIncrement *>(a) != nullptr ? 1 : 0;
+        txThreat[i] = dynamic_cast<Threat *>(a);
+        txAttackMod[i] = dynamic_cast<AttackThreatModifier *>(a);
+      }
+
     auto isMovementTransition = [&](int tIdx) -> bool {
-      return tIdx >= 0 && tIdx < static_cast<int>(indexToActoid.size())
-             && dynamic_cast<MovementIncrement *>(indexToActoid[tIdx]) != nullptr;
+      return tIdx >= 0 && tIdx < numTransitions && txIsMovement[tIdx];
     };
 
     // dedupedSuffixes[T] = the pruned action suffixes from movement-target state T down to the nop sink, in DFS
@@ -765,10 +820,16 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
                 double feasibilityMultiplier = 1.0;
                 size_t deltaActionTIdx = 0;
 
-                for (size_t tIdx = 0; tIdx < sequences[idx].size(); ++tIdx) {
-                    Actoid* action = sequences[idx][tIdx];
-                    if (!action || dynamic_cast<DummyActoid *>(action)) break;
-                    if (dynamic_cast<MovementIncrement *>(action)) continue; // movement handled separately
+                // Iterate the transition-index sequence directly and use the per-transition type cache (txEndsSequence
+                // / txIsMovement / txThreat / txAttackMod) built once above, instead of dynamic_cast-ing every action.
+                // prunedSequences[idx] is 1:1 with sequences[idx] (the latter is just indexToActoid[item] per entry),
+                // so tIdx and the resolved Actoid* are identical to the previous code — behaviour is unchanged.
+                const std::vector<int> &txSeq = prunedSequences[idx];
+                for (size_t tIdx = 0; tIdx < txSeq.size(); ++tIdx) {
+                    const int txi = txSeq[tIdx];
+                    if (txi < 0 || txi >= numTransitions || txEndsSequence[txi]) break;
+                    if (txIsMovement[txi]) continue; // movement handled separately
+                    Actoid* action = indexToActoid[txi];
 
                     auto sharedIt = actoidToShared.find(action);
                     std::shared_ptr<Actoid> actionShared = sharedIt != actoidToShared.end() ? sharedIt->second : std::shared_ptr<Actoid>(action, [](Actoid*) {});
@@ -790,19 +851,26 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
                                         combatant->getMovement()) ? 1.0 : infeasibilityMultiplier;
                                     firstFeasibilityCheckDone = true;
                                 } else {
-                                    auto remainingDist = getHopDistanceCoords(Coords(eligibleCoords), Coords(CoordVector{coord}));
+                                    // Allocation-free equivalent of getHopDistanceCoords(eligibleCoords, {coord}):
+                                    // Chebyshev distance of the Euclidean-closest eligible cell to coord. The old call
+                                    // built two blaze matrices per evaluation (~14% of total runtime in perf).
+                                    int remainingDist = hopDistFromClosest(eligibleCoords, coord);
                                     feasibilityMultiplier = remainingDist <= combatant->getMovement() - 
                                         distances[coord[0] * battleMap.getGridSize() + coord[1]] ? 1.0 : infeasibilityMultiplier;
                                 }
                             }
                         }
 
-                        // Mirrors Python action.calculate_threat(consider_dist=..., movement_threat=...).
+                        // Mirrors Python action.calculate_threat(consider_dist=...). Only "considerDist" is ever read
+                        // by a C++ calculateThreat implementation (attack.cpp). The Python reference also threads a
+                        // movement_threat kwarg, but no C++ override consumes it, so it is intentionally not built here:
+                        // doing so copied sequenceToThreat[idx].first into a std::any (heap alloc) and added a red-black
+                        // tree node + string key on every one of the Fighter's ~69k per-decision threat calls, all for
+                        // a value nobody reads. Dropping it is behaviour-identical (verified by the unit suite).
                         Kwargs threatKwargs;
                         threatKwargs["considerDist"] = !battleMap.isWildshapeActive();
-                        threatKwargs["movement_threat"] = sequenceToThreat[idx].first;
                         double threat = 0.0;
-                        if (auto *threatIface = dynamic_cast<Threat *>(action)) {
+                        if (Threat *threatIface = txThreat[txi]) {
                             threat = threatIface->calculateThreat(threatKwargs);
                         }
                         threatAcc += threat;
@@ -813,7 +881,7 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
                             sequenceIdxToTransitionStepThreat[idx][deltaActionTIdx] += deltaThreat;
                         }
 
-                        if (auto *attackMod = dynamic_cast<AttackThreatModifier *>(action)) {
+                        if (AttackThreatModifier *attackMod = txAttackMod[txi]) {
                             deltaAction = attackMod;
                             deltaActionTIdx = tIdx;
                         }
@@ -840,24 +908,33 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
 
     // Sort sequences by total threat. Only sequences that received a threat score are considered
     // (mirrors Python's `sorted(sequence_to_threat, ...)`, which iterates the dict's keys).
-    std::vector<size_t> sortedSequences;
-    sortedSequences.reserve(sequenceToThreat.size());
-    for (const auto& [idx, _] : sequenceToThreat) {
-        sortedSequences.push_back(idx);
+    //
+    // The score of a sequence is a pure function of its sequenceToThreat entry, which is fixed by this point. The
+    // previous comparator recomputed it with TWO hash lookups (sequenceToThreat.find) on every comparison, so for the
+    // Fighter's ~12k sequences the O(n log n) comparisons dominated the sort (perf showed __introsort_loop at ~7%).
+    // Precompute each score exactly once, in the same order the keys were previously pushed, and sort (score, idx)
+    // pairs. std::sort sees the same initial sequence and the same comparison results for every pair, so the resulting
+    // order — including the arbitrary-but-deterministic ordering of equal-score ties that getNearestAndMinimize relies
+    // on — is byte-for-byte identical to the old find-based sort.
+    std::vector<std::pair<double, size_t>> scoredSequences;
+    scoredSequences.reserve(sequenceToThreat.size());
+    for (const auto& [idx, threatPair] : sequenceToThreat) {
+        const double score = (threatPair.first.empty() || threatPair.second <= 0)
+            ? -std::numeric_limits<double>::infinity()
+            : threatPair.first.back() + threatPair.second;
+        scoredSequences.emplace_back(score, idx);
     }
 
-    auto sequenceScore = [&](size_t idx) {
-        auto it = sequenceToThreat.find(idx);
-        if (it == sequenceToThreat.end() || it->second.first.empty() || it->second.second <= 0) {
-            return -std::numeric_limits<double>::infinity();
-        }
-        return it->second.first.back() + it->second.second;
-    };
-
-    std::sort(sortedSequences.begin(), sortedSequences.end(),
-        [&](size_t a, size_t b) {
-            return sequenceScore(a) > sequenceScore(b);
+    std::sort(scoredSequences.begin(), scoredSequences.end(),
+        [](const std::pair<double, size_t>& a, const std::pair<double, size_t>& b) {
+            return a.first > b.first;
         });
+
+    std::vector<size_t> sortedSequences;
+    sortedSequences.reserve(scoredSequences.size());
+    for (const auto& [score, idx] : scoredSequences) {
+        sortedSequences.push_back(idx);
+    }
 
     auto [nearestAndMinimizedSequence, maxThreat] = getNearestAndMinimize(
         sequences, sortedSequences, sequenceToThreat, distances,

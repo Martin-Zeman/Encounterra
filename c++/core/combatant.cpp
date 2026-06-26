@@ -88,7 +88,7 @@ namespace enc
         }
         for (auto& r : _resources)
         {
-          r.second.reset();
+          if (r.second) r.second->reset();
         }
         _alreadyUsedSpellslotThisTurn = false;
         if(_isShieldSpellActive)
@@ -104,7 +104,7 @@ namespace enc
         clearAllSavingThrowMods();
         for (auto& ammo : _ammo)
         {
-          ammo.second.reset();
+          if (ammo.second) ammo.second->reset();
         }
         _oneTimeAcbonus = 0 ; // Not really needed
         _actionPlan.clear();

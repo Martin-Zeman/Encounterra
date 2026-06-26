@@ -63,12 +63,12 @@ int main()
     RoundManager roundManager(combatants, 50);
 
     // Benchmark: run 100 iterations with all combat narration suppressed.
-    constexpr int iterations = 1;
-    // Logger::setLevel(LogLevel::NONE);
+    constexpr int iterations = 100;
+    Logger::setLevel(LogLevel::NONE);
     const auto start = std::chrono::steady_clock::now();
     roundManager.simulateN(iterations);
     const auto end = std::chrono::steady_clock::now();
-    // Logger::setLevel(LogLevel::INFO); // restore output so we can print the result
+    Logger::setLevel(LogLevel::INFO); // restore output so we can print the result
 
     const double seconds = std::chrono::duration<double>(end - start).count();
     std::cout << "--- C++ simulation (" << iterations << " iterations) took "
