@@ -10,6 +10,7 @@
 #include "combatants/draconic_sorcerer_lvl_3.hpp"
 #include "combatants/moon_druid_lvl_3.hpp"
 #include "combatants/battlemaster_fighter_lvl_5.hpp"
+#include "combatants/oath_of_vengeance_paladin_lvl_5.hpp"
 #include "combatants/wild_heart_barbarian_lvl_5.hpp"
 #include "effects/effect_tracker.hpp"
 
@@ -54,14 +55,14 @@ namespace
     auto *bugbearWarrior = new BugbearWarrior(1);
     auto *goblinRed1 = new Goblin(2);
     auto *goblinRed2 = new Goblin(3);
-    auto *goblinRed3 = new Goblin(4);
+    auto *paladinLvl5 = new OathOfVengeancePaladinLvl5(4);
     auto *sorcererLvl3 = new DraconicSorcererLvl3(5);
     auto *fighterLvl5 = new BattlemasterFighterLvl5(6);
     auto *barbarianLvl5 = new WildHeartBarbarianLvl5(7);
     auto *moonDruidLvl3 = new MoonDruidLvl3(8);
 
     session.addCombatant(bugbearWarrior, Color::BLUE);
-    session.addCombatant(goblinRed3, Color::BLUE);
+    session.addCombatant(paladinLvl5, Color::BLUE);
     session.addCombatant(fighterLvl5, Color::BLUE);
     session.addCombatant(moonDruidLvl3, Color::BLUE);
 
@@ -72,7 +73,7 @@ namespace
 
     battleMap.buildBaseAdjacencyMatrix();
     battleMap.setCombatantCoordinates(*bugbearWarrior, Coord{1, 7});
-    battleMap.setCombatantCoordinates(*goblinRed3, Coord{9, 8});
+    battleMap.setCombatantCoordinates(*paladinLvl5, Coord{9, 8});
     battleMap.setCombatantCoordinates(*fighterLvl5, Coord{5, 5});
     battleMap.setCombatantCoordinates(*moonDruidLvl3, Coord{3, 3});
 
@@ -81,7 +82,7 @@ namespace
     battleMap.setCombatantCoordinates(*sorcererLvl3, Coord{7, 9});
     battleMap.setCombatantCoordinates(*barbarianLvl5, Coord{9, 9});
 
-    std::vector<Combatant *> combatants = {bugbearWarrior, goblinRed1, goblinRed2, goblinRed3, sorcererLvl3, fighterLvl5, barbarianLvl5, moonDruidLvl3};
+    std::vector<Combatant *> combatants = {bugbearWarrior, goblinRed1, goblinRed2, paladinLvl5, sorcererLvl3, fighterLvl5, barbarianLvl5, moonDruidLvl3};
     RoundManager roundManager(combatants, 50);
 
     return roundManager.simulateN(iterations);

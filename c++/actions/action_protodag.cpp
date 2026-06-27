@@ -12,6 +12,7 @@
 #include "actions/action_selection.hpp"
 #include "core/combatant.hpp"
 #include "core/resources.hpp"
+#include "abilities/on_hit_divine_smite.hpp"
 #include "effects/action_enabler_effect.hpp"
 #include "effects/effect_tracker.hpp"
 
@@ -28,7 +29,9 @@ namespace enc
     {
       const AbilityType abilityType = factory->getAbilityType();
       bool result;
-      if(abilityType > AbilityType::NOP && abilityType < AbilityType::BONUS_ACTION_DELIMITER)
+      if(abilityType == AbilityType::DIVINE_SMITE)
+        result = combatant->hasBonusAction();
+      else if(abilityType > AbilityType::NOP && abilityType < AbilityType::BONUS_ACTION_DELIMITER)
         result = combatant->hasAction();
       else if(abilityType > AbilityType::BONUS_ACTION_DELIMITER && abilityType < AbilityType::REACTION_DELIMITER)
         result = combatant->hasBonusAction();
@@ -172,6 +175,11 @@ namespace enc
               result = result && (*resource)->hasUses();
             else
               throw std::runtime_error("Second Wind / Action Surge factory must have an associated resource!");
+            break;
+          }
+        case AbilityType::DIVINE_SMITE:
+          {
+            result = result && OnHitDivineSmite::canSmite(combatant);
             break;
           }
         default: break;

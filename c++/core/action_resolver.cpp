@@ -20,8 +20,12 @@
 #include "abilities/roar.hpp"
 #include "abilities/rage.hpp"
 #include "abilities/second_wind.hpp"
+#include "abilities/lay_on_hands.hpp"
+#include "abilities/on_hit_divine_smite.hpp"
+#include "abilities/vow_of_enmity.hpp"
 #include "core/teams.hpp"
 #include "effects/effect_tracker.hpp"
+#include <algorithm>
 
 namespace enc
 {
@@ -283,6 +287,15 @@ namespace enc
             break;
           }
       }
+    // Vow of Enmity: the paladin has Advantage on attack rolls against the vowed target.
+    for(const auto &effect : effectTracker.getEffectsByInitiator(attacker))
+      {
+        if(effect->getEffectType() == EffectType::VOW_OF_ENMITY && effect->isAffecting(target))
+          {
+            types.insert(RollType::ADVANTAGE);
+            break;
+          }
+      }
     return types;
   }
 
@@ -341,10 +354,25 @@ namespace enc
     std::cout << attacker->_name << " attacks " << target->_name << " with " << attack->shorthandStr() << std::endl;
 
     int multiplier = 1;
+    bool plannedDivineSmite = false;
+    if(attacker->hasPendingDivineSmite() && factory.hasFlag(FactoryFlags::IS_MELEE))
+      {
+        auto &plan = attacker->getActionPlan();
+        if(!plan.empty() && OnHitDivineSmite::isPendingSmiteMarker(plan.front()))
+          {
+            plan.pop_front();
+            plannedDivineSmite = true;
+          }
+      }
+
     if(rolled == 1)
       {
         std::cout << "Natural 1 rolled!" << std::endl;
         applyGrazeOnMiss(factory, target);
+        if(plannedDivineSmite)
+          {
+            attacker->clearPendingDivineSmite();
+          }
         return ActionResult::MISS;
       }
     else if(rolled >= 21 - factory.getCritRange())
@@ -385,6 +413,11 @@ namespace enc
         std::cout << "The attack " << (multiplier == 2 ? "CRITS" : "hits") << " " << target->_name << " for " << baseDmg << " damage"
                   << std::endl;
         std::vector<std::pair<int, DamageType>> compoundDmg = {{baseDmg, factory.getDmgType()}};
+        if(plannedDivineSmite)
+          {
+            auto smiteDmg = OnHitDivineSmite::consumeArmedSmite(attacker, target, multiplier, baseDmg);
+            compoundDmg.insert(compoundDmg.end(), smiteDmg.begin(), smiteDmg.end());
+          }
         attack->setRollType(finalModifier);
         target->receiveCompoundDmg(compoundDmg, multiplier);
         battleMap.removeCombatantIfDead(*target);
@@ -406,6 +439,10 @@ namespace enc
 
     std::cout << "The attack misses " << target->_name << std::endl;
     applyGrazeOnMiss(factory, target);
+    if(plannedDivineSmite)
+      {
+        attacker->clearPendingDivineSmite();
+      }
     // Battle Master Riposte: when missed, the target may spend its Reaction and one Superiority Die to make a
     // melee weapon attack against the attacker (mirrors the Python prompt_after_miss_reaction). A Riposte
     // cannot itself provoke another Riposte. A combatant that is Incapacitated, Stunned or Paralyzed cannot
@@ -629,6 +666,45 @@ namespace enc
       case AbilityType::DISENGAGE:
         // Minimal: the defensive effect is not applied yet, but the action is consumed by the planner.
         std::cout << combatant->_name << " takes the " << action->toString() << " action" << std::endl;
+        return ActionResult::OTHER;
+
+      case AbilityType::LAY_ON_HANDS:
+        {
+          auto *layOnHands = dynamic_cast<LayOnHands *>(action.get());
+          if(!layOnHands)
+            {
+              return ActionResult::MISS;
+            }
+          Combatant &target = layOnHands->getTarget();
+          if(layOnHands->removesPoison())
+            {
+              target.removeAllConditionsOfType(Conditions::POISONED);
+              std::cout << combatant->_name << " removes Poisoned from " << target._name << " with Lay on Hands" << std::endl;
+            }
+          else
+            {
+              int before = target.getCurrentHp();
+              target.setCurrentHp(std::min(target.getMaxHp(), target.getCurrentHp() + layOnHands->getHpAmount()));
+              std::cout << combatant->_name << " heals " << target._name << " for " << (target.getCurrentHp() - before)
+                        << " with Lay on Hands" << std::endl;
+            }
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::VOW_OF_ENMITY:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " uses " << action->toString() << std::endl;
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::DIVINE_SMITE:
+        std::cout << combatant->_name << " readies Divine Smite" << std::endl;
         return ActionResult::OTHER;
 
       case AbilityType::FIREBOLT:

@@ -4,6 +4,7 @@
 #include "core/battle_map.hpp"
 #include "actions/action_types.hpp"
 #include "actions/movement.hpp"
+#include "abilities/lay_on_hands.hpp"
 
 namespace enc
 {
@@ -11,6 +12,30 @@ namespace enc
   void useResources(Combatant *combatant, Actoid &actoid)
   {
     const AbilityType abilityType = actoid.getAbilityType();
+
+    if(abilityType == AbilityType::LAY_ON_HANDS)
+      {
+        combatant->setHasBonusAction(false);
+        if(auto resource = actoid.getFactory().getResource())
+          {
+            if(auto *layOnHands = dynamic_cast<LayOnHands *>(&actoid))
+              {
+                (*resource)->useResource(layOnHands->removesPoison() ? LayOnHandsFactory::poisonedRemovalCost : layOnHands->getHpAmount());
+              }
+          }
+        return;
+      }
+
+    if(abilityType == AbilityType::DIVINE_SMITE)
+      {
+        combatant->setHasBonusAction(false);
+        combatant->armDivineSmite();
+        if(auto freeSmite = combatant->getResource(AbilityType::DIVINE_SMITE); !freeSmite || !(*freeSmite)->hasUses())
+          {
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+          }
+        return;
+      }
 
     // Action category: NOP(0) < type < BONUS_ACTION_DELIMITER
     if(abilityType > AbilityType::NOP && abilityType < AbilityType::BONUS_ACTION_DELIMITER)
@@ -197,6 +222,16 @@ namespace enc
             else
               {
                 throw std::runtime_error("Second Wind factory must have an associated resource!");
+              }
+            break;
+          case AbilityType::VOW_OF_ENMITY:
+            if(auto uses = actoid.getFactory().getResource())
+              {
+                (*uses)->useResource();
+              }
+            else
+              {
+                throw std::runtime_error("Vow of Enmity factory must have an associated Channel Divinity resource!");
               }
             break;
           case AbilityType::MISTY_STEP:

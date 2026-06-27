@@ -2,6 +2,7 @@
 #include "actions/movement.hpp"
 #include "actions/dummy_actoid.hpp"
 #include "actions/break_grapple.hpp"
+#include "abilities/on_hit_divine_smite.hpp"
 #include "core/battle_map.hpp"
 #include "core/geometry.hpp"
 #include "effects/effect_tracker.hpp"
@@ -410,6 +411,7 @@ translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int>
   // The ownership pool is already keyed by actoid identity (Actoid* -> shared_ptr), so it doubles as the reverse
   // lookup used to recover the owning shared_ptr for each proto / non-movement action in the chosen sequence.
   const std::unordered_map<Actoid *, std::shared_ptr<Actoid>> &actoidToShared = actoidPool;
+  bool pendingDivineSmite = false;
 
   for(Actoid *action : sequence)
     {
@@ -422,6 +424,21 @@ translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int>
       if(sharedIt != actoidToShared.end())
         {
           actions.push_back(sharedIt->second);
+          if(action->getAbilityType() == AbilityType::DIVINE_SMITE)
+            {
+              pendingDivineSmite = true;
+            }
+          else if(pendingDivineSmite)
+            {
+              if(auto *attack = dynamic_cast<Attack *>(action))
+                {
+                  if(attack->getAttackFactory().hasFlag(FactoryFlags::IS_MELEE))
+                    {
+                      actions.push_back(OnHitDivineSmite::createPendingSmiteMarker());
+                      pendingDivineSmite = false;
+                    }
+                }
+            }
           continue;
         }
 
@@ -994,11 +1011,21 @@ std::shared_ptr<Actoid> getAction(Combatant* combatant) {
     // Check existing action plan
     if (!combatant->getActionPlan().empty()) {
         auto firstAction = combatant->getActionPlan().front();
+        while (OnHitDivineSmite::isPendingSmiteMarker(firstAction)) {
+            combatant->getActionPlan().pop_front();
+            if (combatant->getActionPlan().empty()) {
+                return nullptr;
+            }
+            firstAction = combatant->getActionPlan().front();
+        }
         if (auto movementIncrement = std::dynamic_pointer_cast<MovementIncrement>(firstAction)) {
             if (combatant->getMovement() > 0) {
                 combatant->getActionPlan().pop_front();
                 return movementIncrement;
             }
+        } else {
+            combatant->getActionPlan().pop_front();
+            return firstAction;
         }
     }
 
@@ -1017,7 +1044,7 @@ std::shared_ptr<Actoid> getAction(Combatant* combatant) {
     // shot from the current position).
     if (combatant->getMovement() <= 0) {
         auto& plan = combatant->getActionPlan();
-        while (!plan.empty() && std::dynamic_pointer_cast<MovementIncrement>(plan.front())) {
+        while (!plan.empty() && (std::dynamic_pointer_cast<MovementIncrement>(plan.front()) || OnHitDivineSmite::isPendingSmiteMarker(plan.front()))) {
             plan.pop_front();
         }
         if (plan.empty()) {

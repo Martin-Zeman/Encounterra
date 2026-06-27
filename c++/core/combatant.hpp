@@ -49,6 +49,9 @@
 #include "abilities/second_wind.hpp"
 #include "abilities/action_surge.hpp"
 #include "abilities/riposte.hpp"
+#include "abilities/lay_on_hands.hpp"
+#include "abilities/on_hit_divine_smite.hpp"
+#include "abilities/vow_of_enmity.hpp"
 #include "effects/effect.hpp"
 #include "core/state_machine.hpp"
 #include "core/attack_fsm.hpp"
@@ -153,6 +156,9 @@ namespace enc
     // Innate Sorcery (2024): while active the caster has advantage on its own spell attack rolls.
     bool isInnateSorceryActive() const { return _innateSorceryActive; }
     void setInnateSorceryActive(bool active) { _innateSorceryActive = active; }
+    bool hasPendingDivineSmite() const { return _pendingDivineSmite; }
+    void armDivineSmite() { _pendingDivineSmite = true; }
+    void clearPendingDivineSmite() { _pendingDivineSmite = false; }
     int getMeleeReactionRange() { return _meleeReactionRange; }
     Combatant *getCurrentForm();
     Combatant *getOriginalForm();
@@ -195,6 +201,15 @@ namespace enc
     bool isResistantTo(DamageType dmgType);
     bool isVulnerableTo(DamageType dmgType);
     Spellslots &getSpellslots() { return *_spellslots; }
+    std::optional<Resource *> getResource(AbilityType type)
+    {
+      auto it = _resources.find(type);
+      if(it == _resources.end())
+        {
+          return std::nullopt;
+        }
+      return it->second.get();
+    }
     int getLevel() const { return _level; }
     int getDC() const { return _dc; }
     //! The caster's spellcasting ability modifier, derived from the spell save DC (DC = 8 + proficiency +
@@ -209,6 +224,10 @@ namespace enc
           return true;
         }
       return std::holds_alternative<Monster>(_subtype) && std::get<Monster>(_subtype) == Monster::HUMANOID;
+    }
+    bool isMonsterType(Monster monsterType) const
+    {
+      return _type == CombatantType::MONSTER && std::holds_alternative<Monster>(_subtype) && std::get<Monster>(_subtype) == monsterType;
     }
     int getCurrentHp() const { return _currHp; }
     void setCurrentHp(int hp) { _currHp = hp; }
@@ -521,7 +540,14 @@ namespace enc
     std::shared_ptr<ActoidFactory> addParalyzingMeleeAttack() { return nullptr; }
     std::shared_ptr<ActoidFactory> addMenacingRangedAttack() { return nullptr; }
     std::shared_ptr<ActoidFactory> addPrecisionAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addLayOnHands() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addLayOnHands()
+    {
+      auto resource = std::make_shared<Uses>(LayOnHandsFactory::getPoolSize(_level), ResourceRefreshType::LONG_REST);
+      _resources.insert({AbilityType::LAY_ON_HANDS, resource});
+      auto factory = std::make_shared<LayOnHandsFactory>(this, resource.get());
+      _bonusActionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addCureWounds()
     {
       auto factory = std::make_shared<CureWoundsFactory>(this, _spellslots.get(), getSpellcastingModifier());
@@ -639,7 +665,19 @@ namespace enc
     std::shared_ptr<ActoidFactory> addBonusMenacingRangedAttack() { return nullptr; }
     std::shared_ptr<ActoidFactory> addShieldOfFaith() { return nullptr; }
     std::shared_ptr<ActoidFactory> addQuickenedCureWounds() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addVowOfEnmity() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addVowOfEnmity()
+    {
+      auto resource = getResource(AbilityType::CHANNEL_DIVINITY);
+      if(!resource)
+        {
+          auto channelDivinity = std::make_shared<Uses>(2, ResourceRefreshType::SHORT_REST);
+          _resources.insert({AbilityType::CHANNEL_DIVINITY, channelDivinity});
+          resource = channelDivinity.get();
+        }
+      auto factory = std::make_shared<VowOfEnmityFactory>(this, *resource);
+      _bonusActionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addAggressive() { return nullptr; }
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -759,7 +797,7 @@ namespace enc
     void addMagicResistance() {}
     void addCharmImmunity() {}
     void addGreatWeaponFighting() { _passiveAbilities.insert(AbilityType::GREAT_WEAPON_FIGHTING); }
-    void addDueling() {}
+    void addDueling() { _passiveAbilities.insert(AbilityType::DUELING); }
     //! Battle Master maneuvers (2024): registers the Superiority Dice resource (4/5/6 dice by level, refreshed
     //! on a Short or Long Rest) and a Riposte reaction built from the fighter's opportunity attack with a
     //! Superiority Die added to its damage. Must be called after the reaction (AoO) attack has been registered.
@@ -785,8 +823,19 @@ namespace enc
     //! Unarmored Defense (Barbarian): AC = 10 + Dex + Con while wearing no armor. The resulting AC is baked
     //! into the combatant's constructor stats, so this only registers the passive marker.
     void addUnarmoredDefense() { _passiveAbilities.insert(AbilityType::UNARMORED_DEFENSE); }
-    void addDivineSmite() {}
-    void addChannelDivinity() {}
+    void addDivineSmite()
+    {
+      _passiveAbilities.insert(AbilityType::DIVINE_SMITE);
+      auto resource = std::make_shared<Uses>(1, ResourceRefreshType::LONG_REST);
+      _resources.insert({AbilityType::DIVINE_SMITE, resource});
+      auto factory = std::make_shared<DivineSmiteFactory>(this, resource.get());
+      _bonusActionFactories.emplace_back(factory);
+    }
+    void addChannelDivinity()
+    {
+      _passiveAbilities.insert(AbilityType::CHANNEL_DIVINITY);
+      _resources.insert({AbilityType::CHANNEL_DIVINITY, std::make_shared<Uses>(_level >= 11 ? 3 : 2, ResourceRefreshType::SHORT_REST)});
+    }
     void addUndeadFortitude();
     void addMartialAdvantage() {}
     //! Tactical Mind (2024 Fighter, level 2): when the fighter fails an ability check it may expend a use of
@@ -891,6 +940,7 @@ namespace enc
     std::unordered_set<WeaponMastery> _masteriesUsedThisTurn;
     bool _isShieldSpellActive = false;
     bool _innateSorceryActive = false;
+    bool _pendingDivineSmite = false;
     int _meleeReactionRange = 1;
     int _speed;
     int _movement;

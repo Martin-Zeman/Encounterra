@@ -4,6 +4,7 @@
 #include "core/coords.hpp"
 #include "actions/action_types.hpp"
 #include "actions/movement.hpp"
+#include "abilities/on_hit_divine_smite.hpp"
 
 namespace enc
 {
@@ -20,7 +21,11 @@ namespace enc
   {
     bool result = false;
     AbilityType abilityType = actoid.getAbilityType();
-    if(abilityType > AbilityType::NOP && abilityType < AbilityType::BONUS_ACTION_DELIMITER)
+    if(abilityType == AbilityType::LAY_ON_HANDS || abilityType == AbilityType::DIVINE_SMITE)
+      {
+        result = combatant->hasBonusAction();
+      }
+    else if(abilityType > AbilityType::NOP && abilityType < AbilityType::BONUS_ACTION_DELIMITER)
       {
         result = combatant->hasAction();
       }
@@ -214,8 +219,10 @@ namespace enc
       case AbilityType::SECOND_WIND:
       case AbilityType::ACTION_SURGE:
       case AbilityType::RIPOSTE:
+      case AbilityType::LAY_ON_HANDS:
+      case AbilityType::VOW_OF_ENMITY:
       {
-        // Second Wind (Uses), Action Surge (Uses) and Riposte (Superiority Dice) are all gated by a flat
+        // These class abilities are all gated by a flat
         // limited-use resource and consume no spell slot.
         if(auto resource = actoid.getFactory().getResource())
           {
@@ -225,6 +232,11 @@ namespace enc
           {
             throw std::runtime_error("Second Wind / Action Surge / Riposte factory must have an associated resource!");
           }
+        break;
+      }
+      case AbilityType::DIVINE_SMITE:
+      {
+        result &= OnHitDivineSmite::canSmite(combatant);
         break;
       }
 
@@ -237,7 +249,11 @@ namespace enc
   {
     bool result = false;
     AbilityType abilityType = actoid.getAbilityType();
-    if(abilityType > AbilityType::NOP && abilityType < AbilityType::BONUS_ACTION_DELIMITER)
+    if(abilityType == AbilityType::LAY_ON_HANDS || abilityType == AbilityType::DIVINE_SMITE)
+      {
+        result = combatant->hasBonusAction();
+      }
+    else if(abilityType > AbilityType::NOP && abilityType < AbilityType::BONUS_ACTION_DELIMITER)
       {
         result = combatant->hasAction();
       }
@@ -405,6 +421,8 @@ namespace enc
       case AbilityType::SECOND_WIND:
       case AbilityType::ACTION_SURGE:
       case AbilityType::RIPOSTE:
+      case AbilityType::LAY_ON_HANDS:
+      case AbilityType::VOW_OF_ENMITY:
       {
         if(auto resource = actoid.getFactory().getResource())
           {
@@ -414,6 +432,11 @@ namespace enc
           {
             throw std::runtime_error("Second Wind / Action Surge / Riposte factory must have an associated resource!");
           }
+        break;
+      }
+      case AbilityType::DIVINE_SMITE:
+      {
+        result &= OnHitDivineSmite::canSmite(combatant);
         break;
       }
 

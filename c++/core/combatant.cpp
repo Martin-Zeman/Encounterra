@@ -104,6 +104,7 @@ namespace enc
         }
         _isShieldSpellActive = false;
         _innateSorceryActive = false;
+        _pendingDivineSmite = false;
         _conditions.clear();
         _dcConditions.clear();
         breakConcentration();
@@ -142,6 +143,7 @@ namespace enc
         _weaponDmgDealtThisTurn = 0;
         _isDisengaging = false;
         _masteriesUsedThisTurn.clear();
+        _pendingDivineSmite = false;
   }
 
   Combatant *Combatant::getCurrentForm() { return _currentWildshapeForm == nullptr ? _originalForm : _currentWildshapeForm; }
@@ -159,6 +161,7 @@ namespace enc
       bool alreadyUsedSpellslotThisTurn;
       int movement;
       int attackFsmState;
+      bool pendingDivineSmite;
       std::vector<std::pair<Resource *, int>> resourceUses; // factory resource -> current uses
       std::vector<std::pair<Spellslots *, std::unordered_map<int, int>>> spellslotUses; // spellslots -> per-level uses
     };
@@ -195,6 +198,7 @@ namespace enc
     snapshot.alreadyUsedSpellslotThisTurn = _alreadyUsedSpellslotThisTurn;
     snapshot.movement = _movement;
     snapshot.attackFsmState = _attackFsm.getState();
+    snapshot.pendingDivineSmite = _pendingDivineSmite;
     collectFactoryResources(_actionFactories, snapshot.resourceUses);
     collectFactoryResources(_bonusActionFactories, snapshot.resourceUses);
     collectFactoryResources(_hasteActionFactories, snapshot.resourceUses);
@@ -229,6 +233,7 @@ namespace enc
     _alreadyUsedSpellslotThisTurn = snapshot.alreadyUsedSpellslotThisTurn;
     _movement = snapshot.movement;
     _attackFsm.setState(snapshot.attackFsmState);
+    _pendingDivineSmite = snapshot.pendingDivineSmite;
     for(const auto &[resource, uses] : snapshot.resourceUses)
       {
         if(auto *asUses = dynamic_cast<Uses *>(resource))

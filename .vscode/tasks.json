@@ -24,11 +24,22 @@
             }
         },
         {
+            "label": "build release",
+            "type": "shell",
+            "command": "make -j8",
+            "options": {
+                "cwd": "/home/thisord/repos/Encounterra/c++/build-release"
+            },
+            "presentation": {
+                "reveal": "always",
+            }
+        },
+        {
             "label": "clean build release",
             "type": "shell",
             "command": "rm -rf * && cmake -DCMAKE_BUILD_TYPE=Release .. && make -j8",
             "options": {
-                "cwd": "/home/thisord/repos/Encounterra/c++/build"
+                "cwd": "/home/thisord/repos/Encounterra/c++/build-release"
             },
             "presentation": {
                 "reveal": "always",
@@ -46,11 +57,33 @@
             }
         },
         {
-            "label": "encounterra",
+            "label": "test",
+            "type": "shell",
+            "command": "make runtests",
+            "options": {
+                "cwd": "/home/thisord/repos/Encounterra/c++/build-release"
+            },
+            "presentation": {
+                "reveal": "always",
+            }
+        },
+        {
+            "label": "run debug encouterra",
             "type": "shell",
             "command": "./bin/encounterra",
             "options": {
                 "cwd": "/home/thisord/repos/Encounterra/c++/build"
+            },
+            "presentation": {
+                "reveal": "always",
+            }
+        },
+        {
+            "label": "run release encouterra",
+            "type": "shell",
+            "command": "./bin/encounterra",
+            "options": {
+                "cwd": "/home/thisord/repos/Encounterra/c++/build-release"
             },
             "presentation": {
                 "reveal": "always",
