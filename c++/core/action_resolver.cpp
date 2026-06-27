@@ -369,10 +369,6 @@ namespace enc
       {
         std::cout << "Natural 1 rolled!" << std::endl;
         applyGrazeOnMiss(factory, target);
-        if(plannedDivineSmite)
-          {
-            attacker->clearPendingDivineSmite();
-          }
         return ActionResult::MISS;
       }
     else if(rolled >= 21 - factory.getCritRange())
@@ -439,10 +435,6 @@ namespace enc
 
     std::cout << "The attack misses " << target->_name << std::endl;
     applyGrazeOnMiss(factory, target);
-    if(plannedDivineSmite)
-      {
-        attacker->clearPendingDivineSmite();
-      }
     // Battle Master Riposte: when missed, the target may spend its Reaction and one Superiority Die to make a
     // melee weapon attack against the attacker (mirrors the Python prompt_after_miss_reaction). A Riposte
     // cannot itself provoke another Riposte. A combatant that is Incapacitated, Stunned or Paralyzed cannot

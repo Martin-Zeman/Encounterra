@@ -11,9 +11,10 @@ namespace enc
   {
   public:
     MovementIncrement(const Coord &increment, bool incursAOO, ActoidFactory &factory)
-        : Actoid(factory, ActoidFlags::IS_MOVEMENT), _increment(increment), _incursAOO(incursAOO)
+        : Actoid(factory, ActoidFlags::IS_MOVEMENT), _increment(increment), _incursAOO(incursAOO), _movementType(factory.getAbilityType())
     {}
 
+    AbilityType getAbilityType() const override { return _movementType; }
     operator std::string() const { return "(" + std::to_string(_increment[0]) + "," + std::to_string(_increment[1]) + ")"; }
     const Coord &getIncrement() const { return _increment; }
     bool incursAOO() const { return _incursAOO; }
@@ -28,6 +29,7 @@ namespace enc
   private:
     Coord _increment;
     bool _incursAOO;
+    AbilityType _movementType;
   };
 
   class MovementFactory : public ActoidFactory
@@ -64,6 +66,7 @@ namespace enc
   public:
     explicit GetUpFromProne(ActoidFactory &factory) : Actoid(factory, ActoidFlags::IS_GET_UP_FROM_PRONE) {}
 
+    AbilityType getAbilityType() const override { return AbilityType::GET_UP_FROM_PRONE; }
     operator std::string() const { return "Get Up from Prone"; }
     std::string shorthandStr() const { return "Get Up from Prone"; }
 

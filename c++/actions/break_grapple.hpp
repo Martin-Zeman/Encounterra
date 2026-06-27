@@ -37,6 +37,7 @@ namespace enc
   public:
     explicit BreakGrapple(ActoidFactory &factory) : Actoid(factory, ActoidFlags::IS_BREAK_GRAPPLE) {}
 
+    AbilityType getAbilityType() const override { return AbilityType::BREAK_GRAPPLE; }
     std::string shorthandStr() const { return "Break Grapple"; }
 
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),

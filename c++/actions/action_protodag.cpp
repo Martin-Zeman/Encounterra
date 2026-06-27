@@ -297,7 +297,7 @@ namespace enc
         const bool sameAsPrevious = previousFas.has_value() && previousFas.value() == fas;
         ActionFootprint stateFootprint = actionsToFootprint(fas);
         if(sameAsPrevious)
-          stateFootprint.depthMarker = depth;
+          stateFootprint.depthMarker = 1;
 
         // The FSM transition name only feeds the flattened-DAG dedup/simplification path (indexToTransition). Build it
         // from the actoid's memoised value hash plus the depth, avoiding the expensive toString() rendering. The

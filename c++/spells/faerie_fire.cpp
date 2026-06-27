@@ -121,7 +121,7 @@ namespace enc
         combatant->removeCondition(Conditions::CANNOT_TURN_INVISIBLE, _factory._combatant);
       }
     _combatants.erase(std::remove(_combatants.begin(), _combatants.end(), combatant), _combatants.end());
-    return _combatants.empty();
+    return !_combatants.empty();
   }
 
   bool FaerieFire::isAffecting(Combatant *combatant) const

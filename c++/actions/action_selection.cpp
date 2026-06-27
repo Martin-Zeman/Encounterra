@@ -34,6 +34,38 @@ namespace std {
 namespace enc {
 
 namespace {
+    bool isDivineSmiteAction(const std::shared_ptr<Actoid> &action)
+    {
+        return action && (action->getAbilityType() == AbilityType::DIVINE_SMITE || action->toString() == "Divine Smite");
+    }
+
+    bool planStartsDivineSmiteAttackSequence(const std::deque<std::shared_ptr<Actoid>> &plan)
+    {
+        if(plan.empty() || !isDivineSmiteAction(plan.front()))
+          {
+            return false;
+          }
+
+        auto it = std::next(plan.begin());
+        while(it != plan.end() && std::dynamic_pointer_cast<MovementIncrement>(*it))
+          {
+            ++it;
+          }
+        if(it == plan.end())
+          {
+            return false;
+          }
+
+        auto attack = std::dynamic_pointer_cast<Attack>(*it);
+        if(!attack || !attack->getAttackFactory().hasFlag(FactoryFlags::IS_MELEE))
+          {
+            return false;
+          }
+
+        auto markerIt = std::next(it);
+        return markerIt != plan.end() && OnHitDivineSmite::isPendingSmiteMarker(*markerIt);
+    }
+
     // Serialization of a Misty Step movement path (produced by calcThreatForPathWithMistyStep), e.g. "ms_(3, 4)".
     const std::regex REGEX_MS_MOVEMENT_PATTERN(R"([mschdio_]+\((\d+), (\d+)\))");
 
@@ -412,6 +444,8 @@ translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int>
   // lookup used to recover the owning shared_ptr for each proto / non-movement action in the chosen sequence.
   const std::unordered_map<Actoid *, std::shared_ptr<Actoid>> &actoidToShared = actoidPool;
   bool pendingDivineSmite = false;
+  bool sawDivineSmite = false;
+  bool insertedPendingDivineSmite = false;
 
   for(Actoid *action : sequence)
     {
@@ -427,6 +461,7 @@ translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int>
           if(action->getAbilityType() == AbilityType::DIVINE_SMITE)
             {
               pendingDivineSmite = true;
+              sawDivineSmite = true;
             }
           else if(pendingDivineSmite)
             {
@@ -435,7 +470,7 @@ translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int>
                   if(attack->getAttackFactory().hasFlag(FactoryFlags::IS_MELEE))
                     {
                       actions.push_back(OnHitDivineSmite::createPendingSmiteMarker());
-                      pendingDivineSmite = false;
+                      insertedPendingDivineSmite = true;
                     }
                 }
             }
@@ -490,6 +525,13 @@ translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int>
           }
         default: std::cerr << "Unknown movement type: " << static_cast<int>(movementType) << '\n';
         }
+    }
+
+  if(sawDivineSmite && !insertedPendingDivineSmite)
+    {
+      actions.erase(std::remove_if(actions.begin(), actions.end(),
+                                   [](const auto &action) { return isDivineSmiteAction(action); }),
+                    actions.end());
     }
 
   return actions;
@@ -1023,7 +1065,8 @@ std::shared_ptr<Actoid> getAction(Combatant* combatant) {
                 combatant->getActionPlan().pop_front();
                 return movementIncrement;
             }
-        } else {
+        } else if (combatant->hasPendingDivineSmite() && combatant->getActionPlan().size() > 1
+                   && OnHitDivineSmite::isPendingSmiteMarker(*std::next(combatant->getActionPlan().begin()))) {
             combatant->getActionPlan().pop_front();
             return firstAction;
         }
@@ -1035,6 +1078,13 @@ std::shared_ptr<Actoid> getAction(Combatant* combatant) {
     // Return first action from plan or nullptr if no actions possible
     if (combatant->getActionPlan().empty()) {
         return nullptr;
+    }
+
+    if (isDivineSmiteAction(combatant->getActionPlan().front()) && !planStartsDivineSmiteAttackSequence(combatant->getActionPlan())) {
+        combatant->getActionPlan().pop_front();
+        if (combatant->getActionPlan().empty()) {
+            return nullptr;
+        }
     }
 
     // When the combatant has run out of movement, the planner can still hand back a plan that leads with

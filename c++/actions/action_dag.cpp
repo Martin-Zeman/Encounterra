@@ -1,5 +1,6 @@
 #include <algorithm>
 #include "actions/action_dag.hpp"
+#include "actions/attack.hpp"
 #include "actions/movement.hpp"
 #include "actions/dummy_actoid.hpp"
 #include "actions/dummy_actoid_factory.hpp"
@@ -60,10 +61,19 @@ namespace enc
               {
                 for(const auto &ft : stateMachine.getCurrentForwardTransitions())
                   {
-                    if(ft.first && !ft.first->hasFlag(ActoidFlags::IS_PRIORITY))
+                    if(!ft.first || ft.first->hasFlag(ActoidFlags::IS_PRIORITY))
                       {
-                        postTransitions.push_back(ft);
+                        continue;
                       }
+                    if(action->getAbilityType() == AbilityType::DIVINE_SMITE)
+                      {
+                        auto *attack = dynamic_cast<Attack *>(ft.first);
+                        if(attack == nullptr || !attack->getAttackFactory().hasFlag(FactoryFlags::IS_MELEE))
+                          {
+                            continue;
+                          }
+                      }
+                    postTransitions.push_back(ft);
                   }
                 stateMachine.reset();
               }
@@ -181,12 +191,16 @@ namespace enc
   {
     auto [eligibleTransitionsToState, coordToEligibleTransitions] = createMovementStates(stateMachine, transitionToEligibleCoords);
 
-    std::vector<StateId> newlyAddedStates;
+    std::vector<std::pair<StateId, AbilityType>> newlyAddedStates;
 
     for(const auto &[priorityAction, postTransitions] : postPriorityTransitions)
       {
         if(postTransitions.empty())
           {
+            if(priorityAction->getAbilityType() == AbilityType::DIVINE_SMITE)
+              {
+                continue;
+              }
             StateId nopState = stateMachine.getNextStateId();
             stateMachine.addNewState(nopState);
             stateMachine.addTransition(priorityAction, 0, nopState);
@@ -197,7 +211,7 @@ namespace enc
 
         StateId newPrioState = stateMachine.getNextStateId();
         stateMachine.addNewState(newPrioState);
-        newlyAddedStates.push_back(newPrioState);
+        newlyAddedStates.emplace_back(newPrioState, priorityAction->getAbilityType());
         stateMachine.addTransition(priorityAction, 0, newPrioState);
 
         for(const auto &[postAction, destState] : postTransitions)
@@ -221,10 +235,22 @@ namespace enc
           }
       }
 
-    for(const auto &newState : newlyAddedStates)
+    for(const auto &[newState, priorityType] : newlyAddedStates)
       {
         if(stateMachine.getForwardActoidTransitions(newState).empty())
           {
+            if(priorityType == AbilityType::DIVINE_SMITE)
+              {
+                for(const auto &[action, _] : stateMachine.getForwardActoidTransitions(0))
+                  {
+                    if(action && action->getAbilityType() == AbilityType::DIVINE_SMITE)
+                      {
+                        stateMachine.removeTransition(action, 0);
+                        break;
+                      }
+                  }
+                continue;
+              }
             StateId nopState = stateMachine.getNextStateId();
             stateMachine.addNewState(nopState);
             Actoid *dummy = makeSentinelActoid("dummy", syntheticActoids);

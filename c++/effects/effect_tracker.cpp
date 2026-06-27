@@ -160,13 +160,28 @@ namespace enc
 
   void EffectTracker::combatantDied(Combatant *combatant)
   {
-    auto initiatorEffects = getEffectsByInitiator(combatant);
-    for(const auto &effect : initiatorEffects)
+    // Work from a snapshot because deactivating concentration effects can recursively mutate _effects.
+    std::vector<std::shared_ptr<Effect>> snapshot = _effects;
+    std::vector<std::shared_ptr<Effect>> remainingEffects;
+
+    for(const auto &effect : snapshot)
       {
-        effect->deactivate();
+        if(effect->getInitiator() == combatant)
+          {
+            effect->deactivate();
+            continue;
+          }
+        else if(effect->isAffecting(combatant))
+          {
+            if(!effect->deactivateForCombatant(combatant))
+              {
+                continue;
+              }
+          }
+
+        remainingEffects.push_back(effect);
       }
-    _effects.erase(std::remove_if(_effects.begin(), _effects.end(), [combatant](const auto &effect) { return effect->getInitiator() == combatant; }),
-                   _effects.end());
+    _effects = std::move(remainingEffects);
   }
 
   // void createPostHasteLethargy(Combatant *initiator, Combatant *combatant)
