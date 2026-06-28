@@ -107,6 +107,8 @@ namespace enc
             break;
 
           case AbilityType::FAERIE_FIRE:
+          case AbilityType::BLESS:
+          case AbilityType::GUIDING_BOLT:
           case AbilityType::MAGIC_MISSILE:
           case AbilityType::MAGE_ARMOR:
           case AbilityType::SLEEP:
@@ -171,7 +173,11 @@ namespace enc
             combatant->consumeSorceryPoints(1); // Twinned Spell (2024) costs 1 sorcery point.
             break;
 
-          case AbilityType::FIREBOLT: /*Nothing to do*/ break;
+          case AbilityType::FIREBOLT:
+          case AbilityType::SACRED_FLAME:
+          case AbilityType::TOLL_THE_DEAD:
+            /*Nothing to do*/
+            break;
 
           default: break;
           }
@@ -200,6 +206,7 @@ namespace enc
               }
             break;
           case AbilityType::HEALING_WORD:
+          case AbilityType::SHIELD_OF_FAITH:
             if(auto resource = actoid.getFactory().getResource())
               {
                 (*resource)->useResource(1);

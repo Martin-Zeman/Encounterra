@@ -51,9 +51,8 @@ namespace enc
       {
         return 0.0;
       }
-    int dc = _dc + kwargs.count("dcBonus") ? std::any_cast<int>(kwargs.at("dcBonus")) : _dc;
     return std::min(static_cast<double>(target->getCurrentHp()),
-                    meanDmgDcAttack(dc, {_dmgDice}, false, target->getSavingThrow(SacredFlameFactory::savingThrow),
+                    meanDmgDcAttack(_dc, {_dmgDice}, false, target->getSavingThrow(SacredFlameFactory::savingThrow),
                                     target->isImmuneTo(SacredFlameFactory::dmgType), target->isResistantTo(SacredFlameFactory::dmgType)));
   }
 

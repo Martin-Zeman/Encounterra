@@ -176,6 +176,9 @@ namespace enc
       case AbilityType::CURE_WOUNDS:
       case AbilityType::THUNDERWAVE:
       case AbilityType::FAERIE_FIRE:
+      case AbilityType::BLESS:
+      case AbilityType::GUIDING_BOLT:
+      case AbilityType::SHIELD_OF_FAITH:
       case AbilityType::MAGIC_MISSILE:
       case AbilityType::MAGE_ARMOR:
       case AbilityType::SLEEP:
@@ -217,7 +220,11 @@ namespace enc
           }
         break;
       }
-      case AbilityType::FIREBOLT: /*Nothing to do*/ break;
+      case AbilityType::FIREBOLT:
+      case AbilityType::SACRED_FLAME:
+      case AbilityType::TOLL_THE_DEAD:
+        /*Nothing to do*/
+        break;
 
       case AbilityType::SECOND_WIND:
       case AbilityType::ACTION_SURGE:
@@ -381,6 +388,9 @@ namespace enc
       case AbilityType::CURE_WOUNDS:
       case AbilityType::THUNDERWAVE:
       case AbilityType::FAERIE_FIRE:
+      case AbilityType::BLESS:
+      case AbilityType::GUIDING_BOLT:
+      case AbilityType::SHIELD_OF_FAITH:
       case AbilityType::MAGIC_MISSILE:
       case AbilityType::MAGE_ARMOR:
       case AbilityType::SLEEP:
@@ -422,7 +432,11 @@ namespace enc
           }
         break;
       }
-      case AbilityType::FIREBOLT: /*Nothing to do*/ break;
+      case AbilityType::FIREBOLT:
+      case AbilityType::SACRED_FLAME:
+      case AbilityType::TOLL_THE_DEAD:
+        /*Nothing to do*/
+        break;
 
       case AbilityType::SECOND_WIND:
       case AbilityType::ACTION_SURGE:

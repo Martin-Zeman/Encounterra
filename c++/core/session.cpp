@@ -9,6 +9,7 @@
 #include "combatants/oath_of_vengeance_paladin_lvl_3.hpp"
 #include "combatants/oath_of_vengeance_paladin_lvl_4.hpp"
 #include "combatants/oath_of_vengeance_paladin_lvl_5.hpp"
+#include "combatants/cleric_lvl_1.hpp"
 #include "combatants/brown_bear.hpp"
 #include "combatants/stone_giant.hpp"
 #include "combatants/bugbear_warrior.hpp"
@@ -44,6 +45,7 @@ namespace enc
     registerCombatantType<OathOfVengeancePaladinLvl3>();
     registerCombatantType<OathOfVengeancePaladinLvl4>();
     registerCombatantType<OathOfVengeancePaladinLvl5>();
+    registerCombatantType<ClericLvl1>();
     registerCombatantType<BrownBear>();
     registerCombatantType<BugbearWarrior>();
     registerCombatantType<DraconicSorcererLvl1>();
@@ -104,6 +106,7 @@ namespace enc
   template void Session::addCombatant<OathOfVengeancePaladinLvl3>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<OathOfVengeancePaladinLvl4>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<OathOfVengeancePaladinLvl5>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<ClericLvl1>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<BrownBear>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<BugbearWarrior>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<DraconicSorcererLvl1>(Color, ResourceDepletionLevel);
@@ -129,6 +132,7 @@ namespace enc
   template void Session::addCombatant<OathOfVengeancePaladinLvl3>(OathOfVengeancePaladinLvl3*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<OathOfVengeancePaladinLvl4>(OathOfVengeancePaladinLvl4*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<OathOfVengeancePaladinLvl5>(OathOfVengeancePaladinLvl5*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<ClericLvl1>(ClericLvl1*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<BrownBear>(BrownBear*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<BugbearWarrior>(BugbearWarrior*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<DraconicSorcererLvl1>(DraconicSorcererLvl1*, Color, ResourceDepletionLevel);

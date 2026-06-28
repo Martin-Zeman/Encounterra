@@ -12,7 +12,12 @@
 #include "spells/misty_step.hpp"
 #include "spells/healing_word.hpp"
 #include "spells/cure_wounds.hpp"
+#include "spells/bless.hpp"
+#include "spells/guiding_bolt.hpp"
+#include "spells/sacred_flame.hpp"
+#include "spells/shield_of_faith.hpp"
 #include "spells/starry_wisp.hpp"
+#include "spells/toll_the_dead.hpp"
 #include "spells/flaming_sphere.hpp"
 #include "spells/moonbeam.hpp"
 #include "spells/thunderwave.hpp"
@@ -299,6 +304,11 @@ namespace enc
             break;
           }
       }
+    // Guiding Bolt: the next attack roll against the lit target has Advantage.
+    if(effectTracker.isAffectingCombatant(target, EffectType::GUIDING_BOLT))
+      {
+        types.insert(RollType::ADVANTAGE);
+      }
     return types;
   }
 
@@ -336,6 +346,11 @@ namespace enc
             effectTracker.remove(effect);
             break;
           }
+      }
+    // Guiding Bolt is consumed by the next attack roll made against the target.
+    if(effectTracker.isAffectingCombatant(target, EffectType::GUIDING_BOLT))
+      {
+        effectTracker.removeEffectFromCombatantByType(target, EffectType::GUIDING_BOLT);
       }
     RollType finalModifier = reconcileRollTypes(types);
 
@@ -377,6 +392,13 @@ namespace enc
     else if(rolled >= 21 - factory.getCritRange())
       {
         multiplier = 2;
+      }
+
+    for(const auto &bonusDie : attacker->getToHitDiceMods())
+      {
+        int bonusDiceRoll = rollDice(bonusDie);
+        std::cout << "Adding " << bonusDiceRoll << " from bonus " << bonusDie << " to the attack roll" << std::endl;
+        rolled += bonusDiceRoll;
       }
 
     if(rolled + factory.getToHit() >= target->getAC())
@@ -484,6 +506,10 @@ namespace enc
       {
         types.insert(RollType::DISADVANTAGE);
       }
+    if(EffectTracker::getInstance().isAffectingCombatant(target, EffectType::GUIDING_BOLT))
+      {
+        types.insert(RollType::ADVANTAGE);
+      }
     RollType finalModifier = reconcileRollTypes(types);
 
     Die d20{1, 20};
@@ -518,6 +544,18 @@ namespace enc
         return ActionResult::MISS;
       }
     int multiplier = (rolled == 20) ? 2 : 1;
+
+    for(const auto &bonusDie : caster->getToHitDiceMods())
+      {
+        int bonusDiceRoll = rollDice(bonusDie);
+        std::cout << "Adding " << bonusDiceRoll << " from bonus " << bonusDie << " to the spell attack roll" << std::endl;
+        rolled += bonusDiceRoll;
+      }
+
+    if(EffectTracker::getInstance().isAffectingCombatant(target, EffectType::GUIDING_BOLT))
+      {
+        EffectTracker::getInstance().removeEffectFromCombatantByType(target, EffectType::GUIDING_BOLT);
+      }
 
     if(rolled + toHit >= target->getAC())
       {
@@ -718,6 +756,52 @@ namespace enc
           return resolveRangedSpellAttack(combatant, firebolt->getToHit(), firebolt->getDmgDice(), FireboltFactory::dmgType, &firebolt->getTarget());
         }
 
+      case AbilityType::SACRED_FLAME:
+        {
+          auto *sacredFlame = dynamic_cast<SacredFlame *>(action.get());
+          if(!sacredFlame)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          int damage = rollDice(sacredFlame->getDmgDice());
+          resolveDmgSavingThrow(SacredFlameFactory::savingThrow, sacredFlame->getDc(), "Sacred Flame", damage, SacredFlameFactory::dmgType,
+                                &sacredFlame->getTarget(), /*halfOnSuccess=*/false, /*isSpellEffect=*/true);
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::TOLL_THE_DEAD:
+        {
+          auto *tollTheDead = dynamic_cast<TollTheDead *>(action.get());
+          if(!tollTheDead)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          int damage = rollDice(tollTheDead->getDmgDice());
+          resolveDmgSavingThrow(TollTheDeadFactory::savingThrow, tollTheDead->getDc(), "Toll the Dead", damage, TollTheDeadFactory::dmgType,
+                                &tollTheDead->getTarget(), /*halfOnSuccess=*/false, /*isSpellEffect=*/true);
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::GUIDING_BOLT:
+        {
+          auto *guidingBolt = dynamic_cast<GuidingBolt *>(action.get());
+          if(!guidingBolt)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          ActionResult result = resolveRangedSpellAttack(combatant, guidingBolt->getToHit(), guidingBolt->getDmgDice(), GuidingBoltFactory::dmgType,
+                                                         &guidingBolt->getTarget());
+          if(result == ActionResult::HIT && guidingBolt->getTarget().isAlive())
+            {
+              auto effect = std::make_shared<GuidingBoltEffect>(combatant, &guidingBolt->getTarget());
+              EffectTracker::getInstance().add(effect);
+            }
+          return result;
+        }
+
       case AbilityType::STARRY_WISP:
         {
           auto *starryWisp = dynamic_cast<StarryWisp *>(action.get());
@@ -861,8 +945,10 @@ namespace enc
 
       case AbilityType::SPIKE_GROWTH:
       case AbilityType::FAERIE_FIRE:
+      case AbilityType::BLESS:
       case AbilityType::FLAMING_SPHERE:
       case AbilityType::MOONBEAM:
+      case AbilityType::SHIELD_OF_FAITH:
         {
           auto effect = std::dynamic_pointer_cast<Effect>(action);
           if(!effect)
@@ -1152,6 +1238,7 @@ ActionResult ActionResolver::resolveAction(const std::shared_ptr<Actoid>& action
           case EffectType::VOW_OF_ENMITY:
           case EffectType::RAY_OF_FROST:
           case EffectType::STARRY_WISP:
+          case EffectType::GUIDING_BOLT:
           case EffectType::PARALYZING_ATTACK_PARALYZED:
             // TODO: track if the barbarian attacked or received damage
             break;

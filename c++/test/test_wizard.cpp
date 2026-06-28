@@ -99,6 +99,10 @@ namespace
     placeCombatants();
     auto *factory = findFactory(wizard->getActionFactoriesConst(), AbilityType::MAGE_ARMOR);
     ASSERT_NE(factory, nullptr);
+    auto *threatFactory = dynamic_cast<ThreatModifierFactory *>(factory);
+    ASSERT_NE(threatFactory, nullptr);
+    EXPECT_EQ(dynamic_cast<DirectThreatFactory *>(factory), nullptr);
+    EXPECT_GT(threatFactory->calculateThreatToTarget(wizard, {}), 0.0);
     auto action = factory->create(static_cast<void *>(wizard));
 
     ActionResolver resolver;
