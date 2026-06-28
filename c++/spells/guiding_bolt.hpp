@@ -24,7 +24,6 @@ namespace enc
     static constexpr bool concentration = false;
     static constexpr SpellType type = SpellType::HARMFUL;
     static constexpr DamageType dmgType = DamageType::Radiant;
-    static constexpr double ADVANTAGE_THREAT = 3.0;
 
     GuidingBoltFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource);
 

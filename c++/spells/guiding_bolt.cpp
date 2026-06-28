@@ -1,10 +1,65 @@
 #include "spells/guiding_bolt.hpp"
 #include "core/battle_map.hpp"
 #include "core/combatant.hpp"
+#include "core/teams.hpp"
 #include <algorithm>
+#include <stdexcept>
 
 namespace enc
 {
+  namespace
+  {
+    double bestAdvantageDeltaForAlly(Combatant *ally, Combatant *target)
+    {
+      ThreatModifiers advantage;
+      advantage.set(ThreatModifierType::ROLL_TYPE, RollType::ADVANTAGE);
+
+      double best = 0.0;
+      auto collect = [&](const std::vector<std::shared_ptr<ActoidFactory>> &factories) {
+        for(const auto &factory : factories)
+          {
+            if(!factory->hasFlag(FactoryFlags::IS_ATTACK_LIKE))
+              {
+                continue;
+              }
+            if(auto *directThreat = dynamic_cast<DirectThreatFactory *>(factory.get()))
+              {
+                best = std::max(best, directThreat->calculateThreatToTargetDelta(target, advantage));
+              }
+          }
+      };
+      collect(ally->getActionFactoriesConst());
+      collect(ally->getBonusActionFactoriesConst());
+      collect(ally->getHasteActionFactoriesConst());
+      return best;
+    }
+
+    double averageAllyAdvantageThreat(Combatant *caster, Combatant *target)
+    {
+      std::vector<Combatant *> allies;
+      try
+        {
+          allies = Teams::getInstance().getAliveNonSwallowedAllies(*caster);
+        }
+      catch(const std::out_of_range &)
+        {
+          return 0.0;
+        }
+
+      if(allies.empty())
+        {
+          return 0.0;
+        }
+
+      double total = 0.0;
+      for(auto *ally : allies)
+        {
+          total += bestAdvantageDeltaForAlly(ally, target);
+        }
+      return total / static_cast<double>(allies.size());
+    }
+  }
+
   GuidingBoltFactory::GuidingBoltFactory(int toHit, AbilityType abilityType, Combatant *caster, Resource *resource)
       : DirectThreatFactory("GuidingBoltFactory", "Guiding Bolt", caster, abilityType), _toHit(toHit), _resource(resource)
   {
@@ -48,7 +103,7 @@ namespace enc
     return std::min(static_cast<double>(target->getCurrentHp()),
                     meanDmg(toHitTotal, {_dmgDice}, 0, target->getAC(), target->isImmuneTo(GuidingBoltFactory::dmgType),
                             target->isResistantTo(GuidingBoltFactory::dmgType), ROLL_TYPE_CRIT_DELTA.at(rollType)))
-           + GuidingBoltFactory::ADVANTAGE_THREAT;
+           + averageAllyAdvantageThreat(_combatant, target);
   }
 
   double GuidingBoltFactory::calculateThreatToTargetDelta(Combatant *target, const ThreatModifiers &modifiers) const

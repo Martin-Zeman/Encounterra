@@ -183,4 +183,42 @@ namespace
     resolver.resolveAction(attack, cleric);
     EXPECT_FALSE(EffectTracker::getInstance().isAffectingCombatant(target, EffectType::GUIDING_BOLT));
   }
+
+  TEST_F(ClericLvl1Test, GuidingBoltThreatUsesAverageAllyAdvantageDelta)
+  {
+    auto *cleric = new ClericLvl1(1);
+    auto *ally = new Goblin(1);
+    auto *target = new Ogre(1);
+    Session session;
+    session.addCombatant(cleric, Color::BLUE);
+    session.addCombatant(ally, Color::BLUE);
+    session.addCombatant(target, Color::RED);
+    BattleMap::getInstance().setCombatantCoordinates(*cleric, Coord{5, 5});
+    BattleMap::getInstance().setCombatantCoordinates(*ally, Coord{5, 6});
+    BattleMap::getInstance().setCombatantCoordinates(*target, Coord{7, 6});
+    BattleMap::getInstance().buildBaseAdjacencyMatrix();
+
+    auto *factory = findFactory(cleric->getActionFactoriesConst(), AbilityType::GUIDING_BOLT);
+    auto *guidingBoltFactory = dynamic_cast<GuidingBoltFactory *>(factory);
+    ASSERT_NE(guidingBoltFactory, nullptr);
+
+    ThreatModifiers advantage;
+    advantage.set(ThreatModifierType::ROLL_TYPE, RollType::ADVANTAGE);
+    double bestAllyDelta = 0.0;
+    for(const auto &allyFactory : ally->getActionFactoriesConst())
+      {
+        if(auto *direct = dynamic_cast<DirectThreatFactory *>(allyFactory.get()))
+          {
+            if(allyFactory->hasFlag(FactoryFlags::IS_ATTACK_LIKE))
+              {
+                bestAllyDelta = std::max(bestAllyDelta, direct->calculateThreatToTargetDelta(target, advantage));
+              }
+          }
+      }
+
+    const double baseGuidingBoltThreat =
+        meanDmg(5, {Die{4, 6}}, 0, target->getAC(), target->isImmuneTo(GuidingBoltFactory::dmgType),
+                target->isResistantTo(GuidingBoltFactory::dmgType), 1);
+    EXPECT_DOUBLE_EQ(guidingBoltFactory->calculateThreatToTarget(target, {}), baseGuidingBoltThreat + bestAllyDelta);
+  }
 }
