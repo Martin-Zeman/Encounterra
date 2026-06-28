@@ -654,6 +654,11 @@ namespace enc
           return ActionResult::OTHER;
         }
 
+      case AbilityType::GET_UP_FROM_PRONE:
+        combatant->removeCondition(Conditions::PRONE);
+        std::cout << combatant->_name << " gets up from Prone" << std::endl;
+        return ActionResult::OTHER;
+
       case AbilityType::DODGE:
       case AbilityType::DISENGAGE:
         // Minimal: the defensive effect is not applied yet, but the action is consumed by the planner.
@@ -696,7 +701,6 @@ namespace enc
         }
 
       case AbilityType::DIVINE_SMITE:
-        std::cout << combatant->_name << " readies Divine Smite" << std::endl;
         return ActionResult::OTHER;
 
       case AbilityType::FIREBOLT:

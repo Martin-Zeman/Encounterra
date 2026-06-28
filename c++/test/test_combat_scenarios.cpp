@@ -239,4 +239,50 @@ namespace
     runTurn(&attacker);
     EXPECT_LT(target.getCurrentHp(), 200);
   }
+
+  TEST_F(CombatScenarioTest, GetUpFromProneClearsProneAndDoesNotRepeat)
+  {
+    Goblin prone("Prone");
+    Goblin enemy("Enemy");
+    teams->addCombatantToTeam(prone, Color::BLUE);
+    teams->addCombatantToTeam(enemy, Color::RED);
+    battleMap->buildBaseAdjacencyMatrix();
+    battleMap->setCombatantCoordinates(prone, Coord{5, 5});
+    battleMap->setCombatantCoordinates(enemy, Coord{6, 5});
+
+    prone.applyCondition(Condition(Conditions::PRONE, &enemy, nullptr, &prone));
+    prone.newTurn();
+    prone.setMovement(5);
+
+    auto action = getAction(&prone);
+    ASSERT_NE(action, nullptr);
+    ASSERT_EQ(action->getAbilityType(), AbilityType::GET_UP_FROM_PRONE);
+
+    EXPECT_EQ(resolver.resolveAction(action, &prone), ActionResult::OTHER);
+    EXPECT_FALSE(prone.isAffectedBy(Conditions::PRONE));
+    EXPECT_EQ(prone.getMovement(), 5 - std::max(1, prone.getSpeed() / 2));
+
+    auto nextAction = getAction(&prone);
+    ASSERT_NE(nextAction, nullptr);
+    EXPECT_NE(nextAction->getAbilityType(), AbilityType::GET_UP_FROM_PRONE);
+  }
+
+  TEST_F(CombatScenarioTest, GetUpFromProneRequiresHalfSpeedMovement)
+  {
+    Goblin prone("Prone");
+    Goblin enemy("Enemy");
+    teams->addCombatantToTeam(prone, Color::BLUE);
+    teams->addCombatantToTeam(enemy, Color::RED);
+    battleMap->buildBaseAdjacencyMatrix();
+    battleMap->setCombatantCoordinates(prone, Coord{5, 5});
+    battleMap->setCombatantCoordinates(enemy, Coord{6, 5});
+
+    prone.applyCondition(Condition(Conditions::PRONE, &enemy, nullptr, &prone));
+    prone.newTurn();
+    prone.setMovement(1);
+
+    auto action = getAction(&prone);
+    ASSERT_NE(action, nullptr);
+    EXPECT_NE(action->getAbilityType(), AbilityType::GET_UP_FROM_PRONE);
+  }
 } // namespace

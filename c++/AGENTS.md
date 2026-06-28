@@ -1,4 +1,4 @@
-# Copilot Instructions — Encounterra
+# Encounterra
 
 ## Project Overview
 
@@ -10,6 +10,7 @@ This repository holds the core simulation engine, which is designed for extensib
 The architecture heavily relies on inheritance patterns for its modularity. This concept is used heavily for all abilities and spells.
 The main idea of the AI which controls the combatans is a so-called concept of 'threat'. For simple damage-dealing abilities the threat is equal to the average damage dealt times the probability of hitting the target. For more complex abilities the threat is calculated using custom logic. But every action as well as movement gets evaluated in terms of threat. An action tree is constructed for the combatants before each actoid is taken. An actoid can either be an action, bonus action, free action, movement increment or just a single attack. The tree is then traversed to find the path with the highest cumulative threat. Potential incoming threat has a negative value while potential outgoing threat has a positive value. The combatant then takes the first actoid on the path with the highest cumulative threat. For the next actoid the tree is reconstructed and the process is repeated until the combatant runs out of resources or there are no more actoids with positive cumulative threat. This allows the combatant to adapt to the changing combat situation based on the outcome of previous actoids.
 Actoids are created by factories. Both the factories and actoids inherit from various base classes.  Multiple inheritance is used heavily. Abitilites, actions, attacks and spells inherit from different threat interface classes such as DirectThread or AttackThreatModifier, while factories inherit from ThreatModifierFactory, DirectThreatFactory etc.
+Every most new spells and abilities added will need to be added to c++/actions/action_types.hpp, c++/core/feasibility.cpp, c++/core/resources.cpp, c++/core/action_resolver.cpp at the least.
 
 ## Python Implementation
 

@@ -51,7 +51,7 @@ namespace enc
           }
         else if(abilityType == AbilityType::GET_UP_FROM_PRONE)
           {
-            result = combatant->getMovement() >= combatant->getSpeed() / 2;
+            result = combatant->getMovement() >= std::max(1, combatant->getSpeed() / 2);
           }
         else if(abilityType == AbilityType::STANDARD_MOVEMENT || abilityType == AbilityType::DISENGAGED_MOVEMENT)
           {

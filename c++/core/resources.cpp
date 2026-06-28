@@ -5,6 +5,7 @@
 #include "actions/action_types.hpp"
 #include "actions/movement.hpp"
 #include "abilities/lay_on_hands.hpp"
+#include <algorithm>
 
 namespace enc
 {
@@ -337,7 +338,8 @@ namespace enc
       }
     else if(abilityType == AbilityType::GET_UP_FROM_PRONE)
       {
-        combatant->setMovement(combatant->getMovement() - combatant->getSpeed() / 2);
+        int getUpCost = std::max(1, combatant->getSpeed() / 2);
+        combatant->setMovement(combatant->getMovement() - getUpCost);
       }
   }
 

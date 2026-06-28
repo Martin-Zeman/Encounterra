@@ -153,7 +153,8 @@ namespace enc
       {
         dmg *= 2;
       }
-    std::cout << attacker->_name << " uses Divine Smite of level " << chosenLevel << " on " << target->_name << std::endl;
+    std::cout << attacker->_name << " uses Divine Smite of level " << chosenLevel << " on " << target->_name << " for " << dmg
+              << " Radiant damage" << std::endl;
     return {{dmg, DamageType::Radiant}};
   }
 

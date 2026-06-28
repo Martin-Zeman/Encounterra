@@ -1041,8 +1041,7 @@ std::shared_ptr<Actoid> getAction(Combatant* combatant) {
     }
 
     // Check if we need to get up from prone
-    if (combatant->isAffectedBy(Conditions::PRONE) && 
-        combatant->getMovement() >= combatant->getSpeed() / 2) {
+    if (combatant->isAffectedBy(Conditions::PRONE) && combatant->getMovement() >= std::max(1, combatant->getSpeed() / 2)) {
         return GetUpFactory(combatant).create(nullptr);
     }
 

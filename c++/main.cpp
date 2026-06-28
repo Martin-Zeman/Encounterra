@@ -54,7 +54,7 @@ namespace
 
     auto *bugbearWarrior = new BugbearWarrior(1);
     auto *goblinRed1 = new Goblin(2);
-    auto *goblinRed2 = new Goblin(3);
+    // auto *goblinRed2 = new Goblin(3);
     auto *paladinLvl5 = new OathOfVengeancePaladinLvl5(4);
     auto *sorcererLvl3 = new DraconicSorcererLvl3(5);
     auto *fighterLvl5 = new BattlemasterFighterLvl5(6);
@@ -62,12 +62,12 @@ namespace
     auto *moonDruidLvl3 = new MoonDruidLvl3(8);
 
     session.addCombatant(bugbearWarrior, Color::BLUE);
-    session.addCombatant(paladinLvl5, Color::BLUE);
     session.addCombatant(fighterLvl5, Color::BLUE);
     session.addCombatant(moonDruidLvl3, Color::BLUE);
 
+    session.addCombatant(paladinLvl5, Color::RED);
     session.addCombatant(goblinRed1, Color::RED);
-    session.addCombatant(goblinRed2, Color::RED);
+    // session.addCombatant(goblinRed2, Color::RED);
     session.addCombatant(sorcererLvl3, Color::RED);
     session.addCombatant(barbarianLvl5, Color::RED);
 
@@ -78,11 +78,11 @@ namespace
     battleMap.setCombatantCoordinates(*moonDruidLvl3, Coord{3, 3});
 
     battleMap.setCombatantCoordinates(*goblinRed1, Coord{13, 7});
-    battleMap.setCombatantCoordinates(*goblinRed2, Coord{11, 6});
+    // battleMap.setCombatantCoordinates(*goblinRed2, Coord{11, 6});
     battleMap.setCombatantCoordinates(*sorcererLvl3, Coord{7, 9});
     battleMap.setCombatantCoordinates(*barbarianLvl5, Coord{9, 9});
 
-    std::vector<Combatant *> combatants = {bugbearWarrior, goblinRed1, goblinRed2, paladinLvl5, sorcererLvl3, fighterLvl5, barbarianLvl5, moonDruidLvl3};
+    std::vector<Combatant *> combatants = {bugbearWarrior, goblinRed1,/* goblinRed2,*/ paladinLvl5, sorcererLvl3, fighterLvl5, barbarianLvl5, moonDruidLvl3};
     RoundManager roundManager(combatants, 50);
 
     return roundManager.simulateN(iterations);
