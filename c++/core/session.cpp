@@ -26,6 +26,7 @@
 #include "combatants/giant_spider.hpp"
 #include "combatants/tiger.hpp"
 #include "combatants/lion.hpp"
+#include "combatants/wizard_lvl_1.hpp"
 
 namespace enc
 {
@@ -60,6 +61,7 @@ namespace enc
     registerCombatantType<GiantSpider>();
     registerCombatantType<Tiger>();
     registerCombatantType<Lion>();
+    registerCombatantType<WizardLvl1>();
     // Register other combatant types...
   }
 
@@ -119,6 +121,7 @@ namespace enc
   template void Session::addCombatant<GiantSpider>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<Tiger>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<Lion>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<WizardLvl1>(Color, ResourceDepletionLevel);
 
   template void Session::addCombatant<BattlemasterFighterLvl5>(BattlemasterFighterLvl5*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<PaladinLvl1>(PaladinLvl1*, Color, ResourceDepletionLevel);
@@ -143,6 +146,7 @@ namespace enc
   template void Session::addCombatant<GiantSpider>(GiantSpider*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<Tiger>(Tiger*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<Lion>(Lion*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<WizardLvl1>(WizardLvl1*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<Combatant>(Combatant*, Color, ResourceDepletionLevel);
 
   // Add more explicit instantiations for other combatant types

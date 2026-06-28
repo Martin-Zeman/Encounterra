@@ -10,7 +10,6 @@
 #include "abilities/wildshape.hpp"
 
 #include <algorithm>
-
 namespace enc
 {
 
@@ -151,6 +150,37 @@ namespace enc
 
   namespace
   {
+    void wakeFromDamage(Combatant *combatant, std::vector<Condition> &conditions)
+    {
+      std::vector<Effect *> wakeEffects;
+      bool hadMarkerWithoutEffect = false;
+      for(const auto &condition : conditions)
+        {
+          if(containsCondition(condition.conditionComposite, Conditions::AWAKENED_BY_DMG))
+            {
+              if(condition.effect.has_value() && condition.effect.value() != nullptr)
+                {
+                  wakeEffects.push_back(condition.effect.value());
+                }
+              else
+                {
+                  hadMarkerWithoutEffect = true;
+                }
+            }
+        }
+
+      std::sort(wakeEffects.begin(), wakeEffects.end());
+      wakeEffects.erase(std::unique(wakeEffects.begin(), wakeEffects.end()), wakeEffects.end());
+      for(auto *effect : wakeEffects)
+        {
+          effect->deactivateForCombatant(combatant);
+        }
+      if(hadMarkerWithoutEffect)
+        {
+          combatant->removeCondition(Conditions::AWAKENED_BY_DMG);
+        }
+    }
+
     // Snapshot of the resource state preserved across speculative proto-DAG exploration.
     struct ResourceSnapshot
     {
@@ -307,6 +337,10 @@ namespace enc
 
   void Combatant::applyCondition(const Condition &condition)
   {
+    if(isImmuneToCondition(condition.conditionComposite))
+      {
+        return;
+      }
     _conditions.push_back(condition);
     if(containsCondition(condition.conditionComposite, Conditions::SWALLOWED))
       {
@@ -316,6 +350,10 @@ namespace enc
 
   void Combatant::applyDCCondition(const ConditionWithDC &dcCondition)
   {
+    if(isImmuneToCondition(dcCondition.conditionComposite))
+      {
+        return;
+      }
     _dcConditions.push_back(dcCondition);
     if(containsCondition(dcCondition.conditionComposite, Conditions::SWALLOWED))
       {
@@ -515,7 +553,29 @@ namespace enc
 
     void Combatant::addSavingThrowDiceMod(SavingThrow type, const Die &mod) { _savingThrowsDiceMod[type].push_back(mod); }
 
+    void Combatant::removeSavingThrowDiceMod(SavingThrow type, const Die &mod)
+    {
+      auto it = _savingThrowsDiceMod.find(type);
+      if(it != _savingThrowsDiceMod.end())
+        {
+          auto modIt = std::find(it->second.begin(), it->second.end(), mod);
+          if(modIt != it->second.end())
+            {
+              it->second.erase(modIt);
+            }
+        }
+    }
+
     void Combatant::clearSavingThrowDiceMods(SavingThrow type) { _savingThrowsDiceMod[type].clear(); }
+
+    void Combatant::removeToHitDiceMod(const Die &mod)
+    {
+      auto it = std::find(_toHitDiceMod.begin(), _toHitDiceMod.end(), mod);
+      if(it != _toHitDiceMod.end())
+        {
+          _toHitDiceMod.erase(it);
+        }
+    }
 
     const std::unordered_set<RollType> &Combatant::getSavingThrowRollTypeMods(SavingThrow type) const
     {
@@ -542,6 +602,7 @@ namespace enc
       _savingThrowsFlatMod.clear();
       _savingThrowsDiceMod.clear();
       _savingThrowsRollTypeMod.clear();
+      _toHitDiceMod.clear();
     }
 
     // Private helper for damage calculations
@@ -613,7 +674,7 @@ int Combatant::receiveDmg(int dmg, DamageType dmg_type, int multiplier) {
         
         if (isAffectedBy(Conditions::AWAKENED_BY_DMG)) {
             std::cout << _name << " is awakened by taking damage" << std::endl;
-            removeCondition(Conditions::AWAKENED_BY_DMG);
+            wakeFromDamage(this, _conditions);
         }
     }
     
@@ -656,7 +717,7 @@ int Combatant::receiveCompoundDmg(const std::vector<std::pair<int, DamageType>>&
         
         if (isAffectedBy(Conditions::AWAKENED_BY_DMG)) {
             std::cout << _name << " is awakened by taking damage" << std::endl;
-            removeCondition(Conditions::AWAKENED_BY_DMG);
+            wakeFromDamage(this, _conditions);
         }
     }
 

@@ -127,6 +127,9 @@ namespace enc
         case AbilityType::CURE_WOUNDS:
         case AbilityType::THUNDERWAVE:
         case AbilityType::FAERIE_FIRE:
+        case AbilityType::MAGE_ARMOR:
+        case AbilityType::MAGIC_MISSILE:
+        case AbilityType::SLEEP:
           {
             if(auto resource = factory->getResource())
               result = result && (*resource)->hasUses(1);

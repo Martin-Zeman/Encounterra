@@ -75,9 +75,10 @@ namespace {
     // unique, so dedup needs no per-sequence heap allocation, no sort, and no unique pass — just a hash-set probe.
     // This is exactly equivalent to the previous frozenset-of-simplified-indices key but allocation-free.
     //
-    // The escape hatch is preserved verbatim: a sequence whose footprint was already seen is still kept if it
-    // contains an IS_ATTACK_MODIFIER actoid (threat is order-dependent once a modifier is present, so distinct
-    // orderings must survive). Sequences are emitted in DFS order, identical to the previous batch pruner.
+    // The escape hatch is preserved for order-sensitive attack modifiers: a sequence whose footprint was already
+    // seen is still kept if it contains an IS_ATTACK_MODIFIER actoid whose threat depends on action ordering.
+    // Divine Smite is intentionally excluded from that escape hatch. It is represented in planning as a bonus-action
+    // reservation plus pending hit markers, so keeping duplicate footprints for it only multiplies equivalent plans.
     //
     // PRUNER_MAX_WORDS * 64 bounds the simplified-index space handled by the fast path; anything larger falls back
     // to a sorted-vector footprint (same semantics, just slower) so correctness holds for arbitrarily large maps.
@@ -148,14 +149,14 @@ namespace {
         }
       };
 
-      bool hasAttackModifier(const std::vector<int> &sequence) const
+      bool hasOrderSensitiveAttackModifier(const std::vector<int> &sequence) const
       {
         for(int tx : sequence)
           {
             if(tx >= 0 && tx < static_cast<int>(_indexToActoid.size()))
               {
                 enc::Actoid *a = _indexToActoid[tx];
-                if(a && a->hasFlag(enc::ActoidFlags::IS_ATTACK_MODIFIER))
+                if(a && a->hasFlag(enc::ActoidFlags::IS_ATTACK_MODIFIER) && a->getAbilityType() != enc::AbilityType::DIVINE_SMITE)
                   {
                     return true;
                   }
@@ -177,7 +178,7 @@ namespace {
                     footprint[s >> 6] |= (uint64_t{1} << (s & 63));
                   }
               }
-            return _bitsetSets.insert(footprint).second || hasAttackModifier(sequence);
+            return _bitsetSets.insert(footprint).second || hasOrderSensitiveAttackModifier(sequence);
           }
 
         _vecFootprint.clear();
@@ -190,7 +191,7 @@ namespace {
           }
         std::sort(_vecFootprint.begin(), _vecFootprint.end());
         _vecFootprint.erase(std::unique(_vecFootprint.begin(), _vecFootprint.end()), _vecFootprint.end());
-        return _vecSets.insert(_vecFootprint).second || hasAttackModifier(sequence);
+        return _vecSets.insert(_vecFootprint).second || hasOrderSensitiveAttackModifier(sequence);
       }
 
       const std::vector<enc::Actoid *> &_indexToActoid;

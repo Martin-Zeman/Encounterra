@@ -107,13 +107,16 @@ namespace enc
             break;
 
           case AbilityType::FAERIE_FIRE:
+          case AbilityType::MAGIC_MISSILE:
+          case AbilityType::MAGE_ARMOR:
+          case AbilityType::SLEEP:
             if(auto resource = actoid.getFactory().getResource())
               {
                 (*resource)->useResource(1);
               }
             else
               {
-                throw std::runtime_error("Faerie Fire factory must have an associated resource!");
+                throw std::runtime_error("Level 1 spell factory must have an associated resource!");
               }
             combatant->setAlreadyUsedSpellslotThisTurn(true);
             break;

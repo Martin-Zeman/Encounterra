@@ -38,10 +38,12 @@ namespace enc
     INNATE_SORCERY,
     MOONBEAM,
     STARRY_WISP,
+    MAGE_ARMOR,
     ROAR_FRIGHTENED,
     SLOWED,
     SAPPED,
     VEXED,
+    GUIDING_BOLT,
   };
 
   class Effect : public std::enable_shared_from_this<Effect>

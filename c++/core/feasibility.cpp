@@ -176,6 +176,9 @@ namespace enc
       case AbilityType::CURE_WOUNDS:
       case AbilityType::THUNDERWAVE:
       case AbilityType::FAERIE_FIRE:
+      case AbilityType::MAGIC_MISSILE:
+      case AbilityType::MAGE_ARMOR:
+      case AbilityType::SLEEP:
       {
         if(auto resource = actoid.getFactory().getResource())
           {
@@ -378,6 +381,9 @@ namespace enc
       case AbilityType::CURE_WOUNDS:
       case AbilityType::THUNDERWAVE:
       case AbilityType::FAERIE_FIRE:
+      case AbilityType::MAGIC_MISSILE:
+      case AbilityType::MAGE_ARMOR:
+      case AbilityType::SLEEP:
       {
         if(auto resource = actoid.getFactory().getResource())
           {

@@ -16,6 +16,9 @@
 #include "spells/flaming_sphere.hpp"
 #include "spells/moonbeam.hpp"
 #include "spells/thunderwave.hpp"
+#include "spells/magic_missile.hpp"
+#include "spells/mage_armor.hpp"
+#include "spells/sleep.hpp"
 #include "abilities/pounce.hpp"
 #include "abilities/roar.hpp"
 #include "abilities/rage.hpp"
@@ -756,6 +759,53 @@ namespace enc
           return result;
         }
 
+      case AbilityType::MAGIC_MISSILE:
+        {
+          auto *magicMissile = dynamic_cast<MagicMissile *>(action.get());
+          if(!magicMissile)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          for(auto *target : magicMissile->getTargets())
+            {
+              if(target != nullptr && target->isAlive())
+                {
+                  int damage = rollDice(MagicMissileFactory::dmgDice) + MagicMissileFactory::dmgBonus;
+                  target->receiveDmg(damage, MagicMissileFactory::dmgType);
+                }
+            }
+          return ActionResult::HIT;
+        }
+
+      case AbilityType::MAGE_ARMOR:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          EffectTracker::getInstance().add(effect);
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::SLEEP:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          // Sleep becomes a tracked concentration effect only if at least one creature fails the initial
+          // save; activate() calls setConcentrationEffect(), which adds it to the EffectTracker. Adding it
+          // here would leave an inert tracked effect when every target saves.
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
       case AbilityType::SCORCHING_RAY:
       case AbilityType::QUICKENED_SCORCHING_RAY:
         {
@@ -1095,6 +1145,7 @@ ActionResult ActionResolver::resolveAction(const std::shared_ptr<Actoid>& action
           case EffectType::BLESS:
           case EffectType::REGENERATION:
           case EffectType::SLEEP:
+          case EffectType::MAGE_ARMOR:
           case EffectType::SHIELD_OF_FAITH:
           case EffectType::SHILLELAGH:
           case EffectType::MENACING_ATTACK_FRIGHTENED:

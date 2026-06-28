@@ -36,8 +36,16 @@
 #include "spells/innate_sorcery.hpp"
 #include "spells/healing_word.hpp"
 #include "spells/cure_wounds.hpp"
+#include "spells/bless.hpp"
+#include "spells/guiding_bolt.hpp"
+#include "spells/sacred_flame.hpp"
+#include "spells/shield_of_faith.hpp"
 #include "spells/starry_wisp.hpp"
+#include "spells/toll_the_dead.hpp"
 #include "spells/thunderwave.hpp"
+#include "spells/magic_missile.hpp"
+#include "spells/mage_armor.hpp"
+#include "spells/sleep.hpp"
 #include "abilities/on_hit_grapple.hpp"
 #include "abilities/on_hit_prone.hpp"
 #include "abilities/on_hit_saving_throw_dmg.hpp"
@@ -196,6 +204,7 @@ namespace enc
     void breakConcentration();
     bool isConcentrating() const;
     bool isAffectedByAny(const std::vector<Conditions> &conditions) const;
+    bool isImmuneToCondition(Conditions condition) const { return containsCondition(_conditionImmunities, condition); }
     void setResourceDepletionLevel(ResourceDepletionLevel level) { _resouceDepletionLevel = level; }
     bool isImmuneTo(DamageType dmgType);
     bool isResistantTo(DamageType dmgType);
@@ -280,7 +289,12 @@ namespace enc
     void clearSavingThrowFlatMods(SavingThrow type);
     const std::vector<Die> &getSavingThrowDiceMods(SavingThrow type) const;
     void addSavingThrowDiceMod(SavingThrow type, const Die &mod);
+    void removeSavingThrowDiceMod(SavingThrow type, const Die &mod);
     void clearSavingThrowDiceMods(SavingThrow type);
+    const std::vector<Die> &getToHitDiceMods() const { return _toHitDiceMod; }
+    void addToHitDiceMod(const Die &mod) { _toHitDiceMod.push_back(mod); }
+    void removeToHitDiceMod(const Die &mod);
+    void clearToHitDiceMods() { _toHitDiceMod.clear(); }
     const std::unordered_set<RollType> &getSavingThrowRollTypeMods(SavingThrow type) const;
     void addSavingThrowRollTypeMod(SavingThrow type, RollType rollType);
     void removeSavingThrowRollTypeMod(SavingThrow type, RollType rollType);
@@ -502,7 +516,12 @@ namespace enc
     std::shared_ptr<ActoidFactory> addTwinnedHoldPerson() { return nullptr; }
     std::shared_ptr<ActoidFactory> addShockingGrasp() { return nullptr; }
     std::shared_ptr<ActoidFactory> addTwinnedShockingGrasp() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addMagicMissile() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addMagicMissile()
+    {
+      auto factory = std::make_shared<MagicMissileFactory>(AbilityType::MAGIC_MISSILE, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addGrapple() { return nullptr; }
     std::shared_ptr<ActoidFactory> addGrappleAttack() { return nullptr; }
 
@@ -524,10 +543,20 @@ namespace enc
       return factory;
     }
     std::shared_ptr<ActoidFactory> addVampiricBite() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addBless() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addBless()
+    {
+      auto factory = std::make_shared<BlessFactory>(AbilityType::BLESS, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addRayOfEnfeeblement() { return nullptr; }
     std::shared_ptr<ActoidFactory> addTwinnedRayOfEnfeeblement() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addSleep() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addSleep()
+    {
+      auto factory = std::make_shared<SleepFactory>(_dc, AbilityType::SLEEP, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addShakeAllyAwake() { return nullptr; }
     std::shared_ptr<ActoidFactory> addThunderwave() { return nullptr; }
     std::shared_ptr<ActoidFactory> addThunderwave(int dc)
@@ -558,9 +587,33 @@ namespace enc
     std::shared_ptr<ActoidFactory> addConicBreathWeapon() { return nullptr; }
     std::shared_ptr<ActoidFactory> addConicBreathWeaponAttack() { return nullptr; }
     std::shared_ptr<ActoidFactory> addLineBreathWeapon() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addSacredFlame()
+    {
+      auto factory = std::make_shared<SacredFlameFactory>(_dc, AbilityType::SACRED_FLAME, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    std::shared_ptr<ActoidFactory> addTollTheDead()
+    {
+      auto factory = std::make_shared<TollTheDeadFactory>(_dc, AbilityType::TOLL_THE_DEAD, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    std::shared_ptr<ActoidFactory> addGuidingBolt()
+    {
+      auto factory = std::make_shared<GuidingBoltFactory>(_spellToHit, AbilityType::GUIDING_BOLT, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addRayOfFrost()
     {
       auto factory = std::make_shared<RayOfFrostFactory>(_spellToHit, AbilityType::RAY_OF_FROST, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    std::shared_ptr<ActoidFactory> addMageArmor(int armoredBaseAc)
+    {
+      auto factory = std::make_shared<MageArmorFactory>(this, _spellslots.get(), armoredBaseAc);
       _actionFactories.emplace_back(factory);
       return factory;
     }
@@ -663,7 +716,12 @@ namespace enc
     std::shared_ptr<ActoidFactory> addQuickenedThunderwave() { return nullptr; }
     std::shared_ptr<ActoidFactory> addBonusMenacingMeleeAttack() { return nullptr; }
     std::shared_ptr<ActoidFactory> addBonusMenacingRangedAttack() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addShieldOfFaith() { return nullptr; }
+    std::shared_ptr<ActoidFactory> addShieldOfFaith()
+    {
+      auto factory = std::make_shared<ShieldOfFaithFactory>(this, _spellslots.get());
+      _bonusActionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addQuickenedCureWounds() { return nullptr; }
     std::shared_ptr<ActoidFactory> addVowOfEnmity()
     {
@@ -971,6 +1029,7 @@ namespace enc
     std::unordered_map<SavingThrow, std::vector<int>> _savingThrowsFlatMod;
     std::unordered_map<SavingThrow, std::vector<Die>> _savingThrowsDiceMod;
     std::unordered_map<SavingThrow, std::unordered_set<RollType>> _savingThrowsRollTypeMod;
+    std::vector<Die> _toHitDiceMod;
     std::unordered_set<DamageType> _dmgTypesTookLastRound;
     Combatant *_originalForm = this;
     Combatant *_currentWildshapeForm = nullptr;
