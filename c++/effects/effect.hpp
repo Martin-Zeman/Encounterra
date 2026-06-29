@@ -44,6 +44,10 @@ namespace enc
     SAPPED,
     VEXED,
     GUIDING_BOLT,
+    BANE,
+    CHARM_PERSON,
+    COLOR_SPRAY,
+    BARDIC_INSPIRATION,
   };
 
   class Effect : public std::enable_shared_from_this<Effect>

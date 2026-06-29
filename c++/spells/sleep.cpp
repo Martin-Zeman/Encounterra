@@ -142,6 +142,9 @@ namespace enc
             _awaitingSecondSave.insert(target);
             std::cout << target->_name << " is Incapacitated by Sleep" << std::endl;
           }
+          else{
+            std::cout << target->_name << " saved against Sleep." << std::endl;
+          }
       }
     if(!_combatants.empty())
       {

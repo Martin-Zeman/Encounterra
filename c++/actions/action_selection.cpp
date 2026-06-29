@@ -34,38 +34,6 @@ namespace std {
 namespace enc {
 
 namespace {
-    bool isDivineSmiteAction(const std::shared_ptr<Actoid> &action)
-    {
-        return action && (action->getAbilityType() == AbilityType::DIVINE_SMITE || action->toString() == "Divine Smite");
-    }
-
-    bool planStartsDivineSmiteAttackSequence(const std::deque<std::shared_ptr<Actoid>> &plan)
-    {
-        if(plan.empty() || !isDivineSmiteAction(plan.front()))
-          {
-            return false;
-          }
-
-        auto it = std::next(plan.begin());
-        while(it != plan.end() && std::dynamic_pointer_cast<MovementIncrement>(*it))
-          {
-            ++it;
-          }
-        if(it == plan.end())
-          {
-            return false;
-          }
-
-        auto attack = std::dynamic_pointer_cast<Attack>(*it);
-        if(!attack || !attack->getAttackFactory().hasFlag(FactoryFlags::IS_MELEE))
-          {
-            return false;
-          }
-
-        auto markerIt = std::next(it);
-        return markerIt != plan.end() && OnHitDivineSmite::isPendingSmiteMarker(*markerIt);
-    }
-
     // Serialization of a Misty Step movement path (produced by calcThreatForPathWithMistyStep), e.g. "ms_(3, 4)".
     const std::regex REGEX_MS_MOVEMENT_PATTERN(R"([mschdio_]+\((\d+), (\d+)\))");
 
@@ -77,8 +45,8 @@ namespace {
     //
     // The escape hatch is preserved for order-sensitive attack modifiers: a sequence whose footprint was already
     // seen is still kept if it contains an IS_ATTACK_MODIFIER actoid whose threat depends on action ordering.
-    // Divine Smite is intentionally excluded from that escape hatch. It is represented in planning as a bonus-action
-    // reservation plus pending hit markers, so keeping duplicate footprints for it only multiplies equivalent plans.
+    // Vow of Enmity is excluded: it grants Advantage for the whole turn regardless of ordering, so keeping
+    // duplicate footprints for it only multiplies equivalent plans (and previously caused a combinatorial blow-up).
     //
     // PRUNER_MAX_WORDS * 64 bounds the simplified-index space handled by the fast path; anything larger falls back
     // to a sorted-vector footprint (same semantics, just slower) so correctness holds for arbitrarily large maps.
@@ -156,7 +124,7 @@ namespace {
             if(tx >= 0 && tx < static_cast<int>(_indexToActoid.size()))
               {
                 enc::Actoid *a = _indexToActoid[tx];
-                if(a && a->hasFlag(enc::ActoidFlags::IS_ATTACK_MODIFIER) && a->getAbilityType() != enc::AbilityType::DIVINE_SMITE)
+                if(a && a->hasFlag(enc::ActoidFlags::IS_ATTACK_MODIFIER) && a->getAbilityType() != enc::AbilityType::VOW_OF_ENMITY)
                   {
                     return true;
                   }
@@ -444,9 +412,6 @@ translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int>
   // The ownership pool is already keyed by actoid identity (Actoid* -> shared_ptr), so it doubles as the reverse
   // lookup used to recover the owning shared_ptr for each proto / non-movement action in the chosen sequence.
   const std::unordered_map<Actoid *, std::shared_ptr<Actoid>> &actoidToShared = actoidPool;
-  bool pendingDivineSmite = false;
-  bool sawDivineSmite = false;
-  bool insertedPendingDivineSmite = false;
 
   for(Actoid *action : sequence)
     {
@@ -459,22 +424,6 @@ translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int>
       if(sharedIt != actoidToShared.end())
         {
           actions.push_back(sharedIt->second);
-          if(action->getAbilityType() == AbilityType::DIVINE_SMITE)
-            {
-              pendingDivineSmite = true;
-              sawDivineSmite = true;
-            }
-          else if(pendingDivineSmite)
-            {
-              if(auto *attack = dynamic_cast<Attack *>(action))
-                {
-                  if(attack->getAttackFactory().hasFlag(FactoryFlags::IS_MELEE))
-                    {
-                      actions.push_back(OnHitDivineSmite::createPendingSmiteMarker());
-                      insertedPendingDivineSmite = true;
-                    }
-                }
-            }
           continue;
         }
 
@@ -526,13 +475,6 @@ translateSequenceToActions(Combatant *combatant, const blaze::DynamicVector<int>
           }
         default: std::cerr << "Unknown movement type: " << static_cast<int>(movementType) << '\n';
         }
-    }
-
-  if(sawDivineSmite && !insertedPendingDivineSmite)
-    {
-      actions.erase(std::remove_if(actions.begin(), actions.end(),
-                                   [](const auto &action) { return isDivineSmiteAction(action); }),
-                    actions.end());
     }
 
   return actions;
@@ -1053,22 +995,11 @@ std::shared_ptr<Actoid> getAction(Combatant* combatant) {
     // Check existing action plan
     if (!combatant->getActionPlan().empty()) {
         auto firstAction = combatant->getActionPlan().front();
-        while (OnHitDivineSmite::isPendingSmiteMarker(firstAction)) {
-            combatant->getActionPlan().pop_front();
-            if (combatant->getActionPlan().empty()) {
-                return nullptr;
-            }
-            firstAction = combatant->getActionPlan().front();
-        }
         if (auto movementIncrement = std::dynamic_pointer_cast<MovementIncrement>(firstAction)) {
             if (combatant->getMovement() > 0) {
                 combatant->getActionPlan().pop_front();
                 return movementIncrement;
             }
-        } else if (combatant->hasPendingDivineSmite() && combatant->getActionPlan().size() > 1
-                   && OnHitDivineSmite::isPendingSmiteMarker(*std::next(combatant->getActionPlan().begin()))) {
-            combatant->getActionPlan().pop_front();
-            return firstAction;
         }
     }
 
@@ -1080,13 +1011,6 @@ std::shared_ptr<Actoid> getAction(Combatant* combatant) {
         return nullptr;
     }
 
-    if (isDivineSmiteAction(combatant->getActionPlan().front()) && !planStartsDivineSmiteAttackSequence(combatant->getActionPlan())) {
-        combatant->getActionPlan().pop_front();
-        if (combatant->getActionPlan().empty()) {
-            return nullptr;
-        }
-    }
-
     // When the combatant has run out of movement, the planner can still hand back a plan that leads with
     // movement increments (e.g. a ranged attacker that would prefer to reposition but can't afford to). Rather
     // than dispatching an infeasible move - which aborts the whole turn and wastes the still-unused action -
@@ -1094,7 +1018,7 @@ std::shared_ptr<Actoid> getAction(Combatant* combatant) {
     // shot from the current position).
     if (combatant->getMovement() <= 0) {
         auto& plan = combatant->getActionPlan();
-        while (!plan.empty() && (std::dynamic_pointer_cast<MovementIncrement>(plan.front()) || OnHitDivineSmite::isPendingSmiteMarker(plan.front()))) {
+        while (!plan.empty() && std::dynamic_pointer_cast<MovementIncrement>(plan.front())) {
             plan.pop_front();
         }
         if (plan.empty()) {

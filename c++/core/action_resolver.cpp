@@ -23,6 +23,13 @@
 #include "spells/thunderwave.hpp"
 #include "spells/magic_missile.hpp"
 #include "spells/mage_armor.hpp"
+#include "spells/vicious_mockery.hpp"
+#include "spells/dissonant_whispers.hpp"
+#include "spells/bane.hpp"
+#include "spells/charm_person.hpp"
+#include "spells/color_spray.hpp"
+#include "abilities/bardic_inspiration.hpp"
+#include "abilities/cutting_words.hpp"
 #include "spells/sleep.hpp"
 #include "abilities/pounce.hpp"
 #include "abilities/roar.hpp"
@@ -372,16 +379,6 @@ namespace enc
     std::cout << attacker->_name << " attacks " << target->_name << " with " << attack->shorthandStr() << std::endl;
 
     int multiplier = 1;
-    bool plannedDivineSmite = false;
-    if(attacker->hasPendingDivineSmite() && factory.hasFlag(FactoryFlags::IS_MELEE))
-      {
-        auto &plan = attacker->getActionPlan();
-        if(!plan.empty() && OnHitDivineSmite::isPendingSmiteMarker(plan.front()))
-          {
-            plan.pop_front();
-            plannedDivineSmite = true;
-          }
-      }
 
     if(rolled == 1)
       {
@@ -434,11 +431,6 @@ namespace enc
         std::cout << "The attack " << (multiplier == 2 ? "CRITS" : "hits") << " " << target->_name << " for " << baseDmg << " damage"
                   << std::endl;
         std::vector<std::pair<int, DamageType>> compoundDmg = {{baseDmg, factory.getDmgType()}};
-        if(plannedDivineSmite)
-          {
-            auto smiteDmg = OnHitDivineSmite::consumeArmedSmite(attacker, target, multiplier, baseDmg);
-            compoundDmg.insert(compoundDmg.end(), smiteDmg.begin(), smiteDmg.end());
-          }
         attack->setRollType(finalModifier);
         target->receiveCompoundDmg(compoundDmg, multiplier);
         battleMap.removeCombatantIfDead(*target);
@@ -613,6 +605,7 @@ namespace enc
       {
       case AbilityType::MELEE_ATTACK:
       case AbilityType::RANGED_ATTACK:
+      case AbilityType::SMITE_MELEE_ATTACK:
       case AbilityType::BONUS_MELEE_ATTACK:
       case AbilityType::BONUS_RANGED_ATTACK:
       case AbilityType::HASTE_MELEE_ATTACK:
@@ -741,9 +734,6 @@ namespace enc
           return ActionResult::OTHER;
         }
 
-      case AbilityType::DIVINE_SMITE:
-        return ActionResult::OTHER;
-
       case AbilityType::FIREBOLT:
       case AbilityType::QUICKENED_FIREBOLT:
         {
@@ -783,6 +773,81 @@ namespace enc
                                 &tollTheDead->getTarget(), /*halfOnSuccess=*/false, /*isSpellEffect=*/true);
           return ActionResult::OTHER;
         }
+
+      case AbilityType::VICIOUS_MOCKERY:
+        {
+          auto *viciousMockery = dynamic_cast<ViciousMockery *>(action.get());
+          if(!viciousMockery)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          int damage = rollDice(viciousMockery->getDmgDice());
+          resolveDmgSavingThrow(ViciousMockeryFactory::savingThrow, viciousMockery->getDc(), "Vicious Mockery", damage,
+                                ViciousMockeryFactory::dmgType, &viciousMockery->getTarget(), /*halfOnSuccess=*/false, /*isSpellEffect=*/true);
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::DISSONANT_WHISPERS:
+        {
+          auto *dissonantWhispers = dynamic_cast<DissonantWhispers *>(action.get());
+          if(!dissonantWhispers)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          int damage = rollDice(dissonantWhispers->getDmgDice());
+          resolveDmgSavingThrow(DissonantWhispersFactory::savingThrow, dissonantWhispers->getDc(), "Dissonant Whispers", damage,
+                                DissonantWhispersFactory::dmgType, &dissonantWhispers->getTarget(), /*halfOnSuccess=*/true, /*isSpellEffect=*/true);
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::BANE:
+      case AbilityType::CHARM_PERSON:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          // Bane / Charm Person only land on creatures that fail their initial save; activate() registers
+          // the effect, so we must not add it unconditionally (see Hold Person).
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::COLOR_SPRAY:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          EffectTracker::getInstance().add(effect);
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::BARDIC_INSPIRATION:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " grants " << action->toString() << std::endl;
+          EffectTracker::getInstance().add(effect);
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::CUTTING_WORDS:
+        // Reaction: spends a Bardic Inspiration die to weaken a foe's roll. No tracked effect.
+        std::cout << combatant->_name << " uses Cutting Words" << std::endl;
+        return ActionResult::OTHER;
+
 
       case AbilityType::GUIDING_BOLT:
         {
@@ -1240,6 +1305,10 @@ ActionResult ActionResolver::resolveAction(const std::shared_ptr<Actoid>& action
           case EffectType::STARRY_WISP:
           case EffectType::GUIDING_BOLT:
           case EffectType::PARALYZING_ATTACK_PARALYZED:
+          case EffectType::BANE:
+          case EffectType::CHARM_PERSON:
+          case EffectType::COLOR_SPRAY:
+          case EffectType::BARDIC_INSPIRATION:
             // TODO: track if the barbarian attacked or received damage
             break;
 

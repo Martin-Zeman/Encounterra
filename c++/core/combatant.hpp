@@ -46,6 +46,13 @@
 #include "spells/magic_missile.hpp"
 #include "spells/mage_armor.hpp"
 #include "spells/sleep.hpp"
+#include "spells/vicious_mockery.hpp"
+#include "spells/dissonant_whispers.hpp"
+#include "spells/bane.hpp"
+#include "spells/charm_person.hpp"
+#include "spells/color_spray.hpp"
+#include "abilities/bardic_inspiration.hpp"
+#include "abilities/cutting_words.hpp"
 #include "abilities/on_hit_grapple.hpp"
 #include "abilities/on_hit_prone.hpp"
 #include "abilities/on_hit_saving_throw_dmg.hpp"
@@ -60,6 +67,7 @@
 #include "abilities/lay_on_hands.hpp"
 #include "abilities/on_hit_divine_smite.hpp"
 #include "abilities/vow_of_enmity.hpp"
+#include "actions/smite_melee_attack.hpp"
 #include "effects/effect.hpp"
 #include "core/state_machine.hpp"
 #include "core/attack_fsm.hpp"
@@ -593,6 +601,36 @@ namespace enc
       _actionFactories.emplace_back(factory);
       return factory;
     }
+    std::shared_ptr<ActoidFactory> addViciousMockery()
+    {
+      auto factory = std::make_shared<ViciousMockeryFactory>(_dc, AbilityType::VICIOUS_MOCKERY, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    std::shared_ptr<ActoidFactory> addDissonantWhispers()
+    {
+      auto factory = std::make_shared<DissonantWhispersFactory>(_dc, AbilityType::DISSONANT_WHISPERS, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    std::shared_ptr<ActoidFactory> addBane()
+    {
+      auto factory = std::make_shared<BaneFactory>(_dc, AbilityType::BANE, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    std::shared_ptr<ActoidFactory> addCharmPerson()
+    {
+      auto factory = std::make_shared<CharmPersonFactory>(_dc, AbilityType::CHARM_PERSON, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    std::shared_ptr<ActoidFactory> addColorSpray()
+    {
+      auto factory = std::make_shared<ColorSprayFactory>(_dc, AbilityType::COLOR_SPRAY, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addTollTheDead()
     {
       auto factory = std::make_shared<TollTheDeadFactory>(_dc, AbilityType::TOLL_THE_DEAD, this, _spellslots.get());
@@ -722,6 +760,19 @@ namespace enc
       _bonusActionFactories.emplace_back(factory);
       return factory;
     }
+    std::shared_ptr<ActoidFactory> addBardicInspiration()
+    {
+      auto resource = getResource(AbilityType::BARDIC_INSPIRATION);
+      if(!resource)
+        {
+          auto pool = std::make_shared<Uses>(BardicInspirationFactory::getUses(getSpellcastingModifier()), ResourceRefreshType::LONG_REST);
+          _resources.insert({AbilityType::BARDIC_INSPIRATION, pool});
+          resource = pool.get();
+        }
+      auto factory = std::make_shared<BardicInspirationFactory>(AbilityType::BARDIC_INSPIRATION, this, resource.value());
+      _bonusActionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addQuickenedCureWounds() { return nullptr; }
     std::shared_ptr<ActoidFactory> addVowOfEnmity()
     {
@@ -764,6 +815,19 @@ namespace enc
     std::shared_ptr<ActoidFactory> addShield()
     {
       auto factory = std::make_shared<ShieldFactory>(this, _spellslots.get());
+      _reactionFactories.emplace_back(factory);
+      return factory;
+    }
+    std::shared_ptr<ActoidFactory> addCuttingWords()
+    {
+      auto resource = getResource(AbilityType::BARDIC_INSPIRATION);
+      if(!resource)
+        {
+          auto pool = std::make_shared<Uses>(BardicInspirationFactory::getUses(getSpellcastingModifier()), ResourceRefreshType::LONG_REST);
+          _resources.insert({AbilityType::BARDIC_INSPIRATION, pool});
+          resource = pool.get();
+        }
+      auto factory = std::make_shared<CuttingWordsFactory>(this, resource.value());
       _reactionFactories.emplace_back(factory);
       return factory;
     }
@@ -881,13 +945,27 @@ namespace enc
     //! Unarmored Defense (Barbarian): AC = 10 + Dex + Con while wearing no armor. The resulting AC is baked
     //! into the combatant's constructor stats, so this only registers the passive marker.
     void addUnarmoredDefense() { _passiveAbilities.insert(AbilityType::UNARMORED_DEFENSE); }
+    //! Divine Smite (2024): register the passive marker plus the once-per-long-rest free cast, then add a
+    //! smite-consuming variant of every melee / unarmed attack already known. The variant uses both the Action
+    //! and the Bonus Action and resolves the radiant damage on hit; the planner picks at most one per turn and
+    //! the multiattack FSM delegates to the original attack so the remaining attacks resolve normally.
     void addDivineSmite()
     {
       _passiveAbilities.insert(AbilityType::DIVINE_SMITE);
       auto resource = std::make_shared<Uses>(1, ResourceRefreshType::LONG_REST);
       _resources.insert({AbilityType::DIVINE_SMITE, resource});
-      auto factory = std::make_shared<DivineSmiteFactory>(this, resource.get());
-      _bonusActionFactories.emplace_back(factory);
+      std::vector<std::shared_ptr<ActoidFactory>> smiteVariants;
+      for(const auto &af : _actionFactories)
+        {
+          if(auto *melee = dynamic_cast<MeleeAttackFactory *>(af.get()))
+            {
+              smiteVariants.push_back(std::make_shared<SmiteMeleeAttackFactory>(*melee, af.get()));
+            }
+        }
+      for(auto &variant : smiteVariants)
+        {
+          _actionFactories.emplace_back(variant);
+        }
     }
     void addChannelDivinity()
     {

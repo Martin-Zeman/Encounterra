@@ -96,6 +96,11 @@ namespace enc
                 pac->applyCondition(Condition(Conditions::CANNOT_TURN_INVISIBLE, _factory._combatant, this, pac));
               }
             _combatants.push_back(pac);
+            std::cout << pac->_name << " failed the save and is affected by Faerie Fire." << std::endl;
+          }
+          else
+          {
+            std::cout << pac->_name << " saved against Faerie Fire." << std::endl;
           }
       }
     if(anyFailed)

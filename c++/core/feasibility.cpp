@@ -4,6 +4,7 @@
 #include "core/coords.hpp"
 #include "actions/action_types.hpp"
 #include "actions/movement.hpp"
+#include "actions/smite_melee_attack.hpp"
 #include "abilities/on_hit_divine_smite.hpp"
 
 namespace enc
@@ -104,6 +105,20 @@ namespace enc
         else
           {
             throw std::runtime_error("Attack factory has no ammo!");
+          }
+        break;
+      }
+      case AbilityType::SMITE_MELEE_ATTACK:
+      {
+        // A smite variant is a melee attack that also reserves the Bonus Action and a free cast / spell slot.
+        Attack &attack = dynamic_cast<Attack &>(actoid);
+        auto *smite = dynamic_cast<SmiteMeleeAttackFactory *>(&attack.getFactory());
+        const ActoidFactory *base = smite ? smite->getBaseFactory() : &attack.getFactory();
+        result = result || (!combatant->isAttackFsmAtStart() && combatant->attackFsmHasTransition(base));
+        result &= combatant->hasBonusAction() && OnHitDivineSmite::canSmite(combatant);
+        if(auto ammo = attack.getFactory().getResource())
+          {
+            result &= (*ammo)->hasUses();
           }
         break;
       }
@@ -316,6 +331,19 @@ namespace enc
         else
           {
             throw std::runtime_error("Attack factory has no ammo!");
+          }
+        break;
+      }
+      case AbilityType::SMITE_MELEE_ATTACK:
+      {
+        Attack &attack = dynamic_cast<Attack &>(actoid);
+        auto *smite = dynamic_cast<SmiteMeleeAttackFactory *>(&attack.getFactory());
+        const ActoidFactory *base = smite ? smite->getBaseFactory() : &attack.getFactory();
+        result = result || (!combatant->isAttackFsmAtStart() && combatant->attackFsmHasTransition(base));
+        result &= combatant->hasBonusAction() && OnHitDivineSmite::canSmite(combatant);
+        if(auto ammo = attack.getFactory().getResource())
+          {
+            result &= (*ammo)->hasUses();
           }
         break;
       }

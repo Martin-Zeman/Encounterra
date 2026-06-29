@@ -14,6 +14,7 @@
 #include "core/action_resolver.hpp"
 #include "core/battle_map.hpp"
 #include "core/conditions.hpp"
+#include "core/resources.hpp"
 #include "core/teams.hpp"
 #include "effects/effect_tracker.hpp"
 #include <algorithm>
@@ -74,13 +75,13 @@ namespace
       return nullptr;
     }
 
-    static std::shared_ptr<DivineSmiteFactory> divineSmiteFactory(Combatant *c)
+    static std::shared_ptr<ActoidFactory> smiteAttackFactory(Combatant *c)
     {
-      for(const auto &factory : c->getBonusActionFactoriesConst())
+      for(const auto &factory : c->getActionFactoriesConst())
         {
-          if(auto smite = std::dynamic_pointer_cast<DivineSmiteFactory>(factory))
+          if(factory->getAbilityType() == AbilityType::SMITE_MELEE_ATTACK)
             {
-              return smite;
+              return factory;
             }
         }
       return nullptr;
@@ -154,33 +155,33 @@ namespace
     EXPECT_TRUE(paladin.hasPassiveAbility(AbilityType::DIVINE_SMITE));
     ASSERT_TRUE(paladin.getResource(AbilityType::DIVINE_SMITE).has_value());
     EXPECT_EQ(paladin.getResource(AbilityType::DIVINE_SMITE).value()->getUses(), 1);
-    EXPECT_NE(divineSmiteFactory(&paladin), nullptr);
+    EXPECT_NE(smiteAttackFactory(&paladin), nullptr);
 
     AttackFactory *battleaxe = weaponWithMastery(&paladin, WeaponMastery::TOPPLE);
     ASSERT_NE(battleaxe, nullptr);
     EXPECT_EQ(battleaxe->getDmgBonus(), 5);
-    EXPECT_EQ(battleaxe->getOnHits().size(), 1u); // Topple mastery; Divine Smite is planned as a Bonus Action spell.
+    EXPECT_EQ(battleaxe->getOnHits().size(), 1u); // Topple mastery; Divine Smite lives on the smite attack variant.
   }
 
-  TEST_F(PaladinTest, DivineSmiteReadiesWithBonusActionAndUsesFreeCastOnHit)
+  TEST_F(PaladinTest, DivineSmiteAttackConsumesActionBonusAndUsesFreeCastOnHit)
   {
     PaladinLvl2 paladin(1);
     Ogre target(1);
     target.setCurrentHp(100);
-    auto smiteFactory = divineSmiteFactory(&paladin);
+    auto smiteFactory = smiteAttackFactory(&paladin);
     ASSERT_NE(smiteFactory, nullptr);
 
-    ActionResolver resolver;
-    auto smiteActoid = smiteFactory->create(nullptr);
-    resolver.resolveAction(smiteActoid, &paladin);
+    // Spending the smite attack consumes both the Action and the Bonus Action.
+    auto smiteActoid = smiteFactory->create(static_cast<void *>(&target));
+    useResources(&paladin, *smiteActoid);
+    EXPECT_FALSE(paladin.hasAction());
     EXPECT_FALSE(paladin.hasBonusAction());
-    EXPECT_TRUE(paladin.hasPendingDivineSmite());
 
+    // The on-hit rider spends the once-per-rest free cast first, leaving spell slots intact.
     auto beforeSlots = paladin.getSpellslots().getUses(1);
-    auto damage = OnHitDivineSmite::consumeArmedSmite(&paladin, &target, 1, 0);
-
+    OnHitDivineSmite rider;
+    auto damage = rider.hit(&paladin, nullptr, &target, 1, 0);
     EXPECT_FALSE(damage.empty());
-    EXPECT_FALSE(paladin.hasPendingDivineSmite());
     EXPECT_EQ(paladin.getResource(AbilityType::DIVINE_SMITE).value()->getUses(), 0);
     EXPECT_EQ(paladin.getSpellslots().getUses(1), beforeSlots);
   }
@@ -189,12 +190,13 @@ namespace
   {
     PaladinLvl2 paladin(1);
     Ogre target(1);
+    target.setAC(-100);
     target.setCurrentHp(100);
     paladin.getResource(AbilityType::DIVINE_SMITE).value()->useResource();
-    paladin.armDivineSmite();
 
     auto beforeSlots = paladin.getSpellslots().getUses(1);
-    auto damage = OnHitDivineSmite::consumeArmedSmite(&paladin, &target, 1, 0);
+    OnHitDivineSmite rider;
+    auto damage = rider.hit(&paladin, nullptr, &target, 1, 0);
 
     EXPECT_FALSE(damage.empty());
     EXPECT_EQ(paladin.getSpellslots().getUses(1), beforeSlots - 1);
@@ -256,17 +258,9 @@ namespace
 
         auto plan = planFor(&paladin);
         auto smiteIt = std::find_if(plan.begin(), plan.end(), [](const std::shared_ptr<Actoid> &a) {
-          return a->getAbilityType() == AbilityType::DIVINE_SMITE;
+          return a->getAbilityType() == AbilityType::SMITE_MELEE_ATTACK;
         });
-        auto attackIt = std::find_if(plan.begin(), plan.end(), [](const std::shared_ptr<Actoid> &a) {
-          return a->getAbilityType() == AbilityType::MELEE_ATTACK;
-        });
-        ASSERT_NE(smiteIt, plan.end()) << "The planner should reserve the Bonus Action for Divine Smite";
-        ASSERT_NE(attackIt, plan.end()) << "The plan should include a melee attack after readying Divine Smite";
-        EXPECT_LT(std::distance(plan.begin(), smiteIt), std::distance(plan.begin(), attackIt));
-        auto markerIt = std::next(attackIt);
-        ASSERT_NE(markerIt, plan.end()) << "The attack should be followed by a pending-smite marker";
-        EXPECT_TRUE(OnHitDivineSmite::isPendingSmiteMarker(*markerIt));
+        ASSERT_NE(smiteIt, plan.end()) << "The planner should choose a smite attack variant";
 
         ActionResolver resolver;
         const int freeSmitesBefore = paladin.getResource(AbilityType::DIVINE_SMITE).value()->getUses();
@@ -281,10 +275,10 @@ namespace
               }
           }
       }
-    EXPECT_TRUE(sawSmiteUsed) << "With AC forced very low, a planned melee hit should consume Divine Smite";
+    EXPECT_TRUE(sawSmiteUsed) << "With AC forced very low, a planned smite attack should consume Divine Smite";
   }
 
-  TEST_F(PaladinTest, DivineSmiteDoesNotTriggerWithoutPendingSmiteMarker)
+  TEST_F(PaladinTest, NormalMeleeAttackDoesNotSpendDivineSmite)
   {
     bool sawUnmarkedHit = false;
     for(int attempt = 0; attempt < 80 && !sawUnmarkedHit; ++attempt)
@@ -303,26 +297,20 @@ namespace
         BattleMap::getInstance().setCombatantCoordinates(paladin, Coord{5, 5});
         BattleMap::getInstance().setCombatantCoordinates(target, Coord{5, 6});
 
-        auto smiteFactory = divineSmiteFactory(&paladin);
-        ASSERT_NE(smiteFactory, nullptr);
         AttackFactory *battleaxe = weaponWithMastery(&paladin, WeaponMastery::TOPPLE);
         ASSERT_NE(battleaxe, nullptr);
-
-        ActionResolver resolver;
-        resolver.resolveAction(smiteFactory->create(nullptr), &paladin);
-        ASSERT_TRUE(paladin.hasPendingDivineSmite());
         const int freeSmitesBefore = paladin.getResource(AbilityType::DIVINE_SMITE).value()->getUses();
 
+        ActionResolver resolver;
         auto attack = battleaxe->create(static_cast<void *>(&target));
         ActionResult result = resolver.resolveAction(attack, &paladin);
         EXPECT_EQ(paladin.getResource(AbilityType::DIVINE_SMITE).value()->getUses(), freeSmitesBefore);
         if(result == ActionResult::HIT)
           {
             sawUnmarkedHit = true;
-            EXPECT_TRUE(paladin.hasPendingDivineSmite());
           }
       }
-    EXPECT_TRUE(sawUnmarkedHit) << "With AC forced very low, at least one unmarked attack should hit without spending Divine Smite";
+    EXPECT_TRUE(sawUnmarkedHit) << "With AC forced very low, at least one base attack should hit without spending Divine Smite";
   }
 
   TEST_F(PaladinTest, LevelFiveAddsOathSpellsAndExtraAttack)

@@ -4,6 +4,7 @@
 #include "core/battle_map.hpp"
 #include "actions/action_types.hpp"
 #include "actions/movement.hpp"
+#include "actions/smite_melee_attack.hpp"
 #include "abilities/lay_on_hands.hpp"
 #include <algorithm>
 
@@ -30,11 +31,6 @@ namespace enc
     if(abilityType == AbilityType::DIVINE_SMITE)
       {
         combatant->setHasBonusAction(false);
-        combatant->armDivineSmite();
-        if(auto freeSmite = combatant->getResource(AbilityType::DIVINE_SMITE); !freeSmite || !(*freeSmite)->hasUses())
-          {
-            combatant->setAlreadyUsedSpellslotThisTurn(true);
-          }
         return;
       }
 
@@ -56,6 +52,25 @@ namespace enc
                 (*ammo)->useResource();
               }
             combatant->triggerAttackFsm(&actoid.getFactory());
+            break;
+
+          case AbilityType::SMITE_MELEE_ATTACK:
+            // Divine Smite attack variant: reserves the Bonus Action on top of the Action; the free cast /
+            // spell slot is spent by the OnHitDivineSmite rider only when the attack lands. The multiattack FSM
+            // is keyed on the original weapon attack, so delegate the transition to the base factory.
+            combatant->setHasBonusAction(false);
+            if(auto ammo = actoid.getFactory().getResource())
+              {
+                (*ammo)->useResource();
+              }
+            if(auto *smite = dynamic_cast<SmiteMeleeAttackFactory *>(&actoid.getFactory()); smite && smite->getBaseFactory())
+              {
+                combatant->triggerAttackFsm(smite->getBaseFactory());
+              }
+            else
+              {
+                combatant->triggerAttackFsm(&actoid.getFactory());
+              }
             break;
 
           case AbilityType::FIREBALL:

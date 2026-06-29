@@ -17,7 +17,6 @@ namespace enc
   const std::unordered_map<AbilityType, PriorityActionInfo> PRIORITY_BONUS_ACTIONS
     = {{AbilityType::CUNNING_DISENGAGE, {"cdi_", MovementThreatType::DISENGAGED}},
        {AbilityType::RAGE, {"m_", MovementThreatType::STANDARD}},
-       {AbilityType::DIVINE_SMITE, {"m_", MovementThreatType::STANDARD}},
        {AbilityType::AGGRESSIVE, {"m_", MovementThreatType::STANDARD}}};
 
   namespace
@@ -64,14 +63,6 @@ namespace enc
                     if(!ft.first || ft.first->hasFlag(ActoidFlags::IS_PRIORITY))
                       {
                         continue;
-                      }
-                    if(action->getAbilityType() == AbilityType::DIVINE_SMITE)
-                      {
-                        auto *attack = dynamic_cast<Attack *>(ft.first);
-                        if(attack == nullptr || !attack->getAttackFactory().hasFlag(FactoryFlags::IS_MELEE))
-                          {
-                            continue;
-                          }
                       }
                     postTransitions.push_back(ft);
                   }
