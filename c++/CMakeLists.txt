@@ -81,6 +81,15 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
 )
 
+#----STANDALONE RANDOM-MATCHUP TEST----
+# Separate executable: two randomly built teams (each 2-4 random combatants) fight.
+# NOT part of test_encounterra and NOT registered with ctest.
+add_executable(random_matchup "random_matchup.cpp")
+target_link_libraries(random_matchup ${PROJECT_NAME}_lib)
+set_target_properties(random_matchup PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+)
+
 #----TESTING----
 # Test each module separately
 add_subdirectory(test)
