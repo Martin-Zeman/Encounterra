@@ -38,6 +38,7 @@
 #include "abilities/lay_on_hands.hpp"
 #include "abilities/on_hit_divine_smite.hpp"
 #include "abilities/vow_of_enmity.hpp"
+#include "abilities/weapon_mastery_effects.hpp"
 #include "core/teams.hpp"
 #include "effects/effect_tracker.hpp"
 #include <algorithm>
@@ -140,6 +141,13 @@ namespace enc
             int bonusDiceRoll = rollDice(bonusDie);
             std::cout << "Adding " << bonusDiceRoll << " from bonus " << bonusDie << "to the roll" << std::endl;
             rolled += bonusDiceRoll;
+          }
+        // Subtract penalty dice (e.g. Bane's 1d4)
+        for(const auto &penaltyDie : target->getSavingThrowPenaltyDice(savingThrowType))
+          {
+            int penaltyRoll = rollDice(penaltyDie);
+            std::cout << "Subtracting " << penaltyRoll << " from penalty " << penaltyDie << " on the save" << std::endl;
+            rolled -= penaltyRoll;
           }
         saved = (rolled + stBonus >= dc);
       }
@@ -396,6 +404,13 @@ namespace enc
         int bonusDiceRoll = rollDice(bonusDie);
         std::cout << "Adding " << bonusDiceRoll << " from bonus " << bonusDie << " to the attack roll" << std::endl;
         rolled += bonusDiceRoll;
+      }
+
+    for(const auto &penaltyDie : attacker->getToHitPenaltyDice())
+      {
+        int penaltyRoll = rollDice(penaltyDie);
+        std::cout << "Subtracting " << penaltyRoll << " from penalty " << penaltyDie << " on the attack roll" << std::endl;
+        rolled -= penaltyRoll;
       }
 
     if(rolled + factory.getToHit() >= target->getAC())
@@ -783,8 +798,21 @@ namespace enc
             }
           std::cout << combatant->_name << " casts " << action->toString() << std::endl;
           int damage = rollDice(viciousMockery->getDmgDice());
-          resolveDmgSavingThrow(ViciousMockeryFactory::savingThrow, viciousMockery->getDc(), "Vicious Mockery", damage,
-                                ViciousMockeryFactory::dmgType, &viciousMockery->getTarget(), /*halfOnSuccess=*/false, /*isSpellEffect=*/true);
+          bool saved = resolveDmgSavingThrow(ViciousMockeryFactory::savingThrow, viciousMockery->getDc(), "Vicious Mockery", damage,
+                                             ViciousMockeryFactory::dmgType, &viciousMockery->getTarget(), /*halfOnSuccess=*/false, /*isSpellEffect=*/true);
+          if(!saved)
+            {
+              // On a failed save the target has Disadvantage on its next attack roll (modeled as Sapped).
+              Combatant *target = &viciousMockery->getTarget();
+              EffectTracker &effectTracker = EffectTracker::getInstance();
+              if(!effectTracker.isAffectingCombatant(target, EffectType::SAPPED))
+                {
+                  std::cout << target->_name << " has Disadvantage on its next attack roll from Vicious Mockery" << std::endl;
+                  auto sapped = std::make_shared<SappedEffect>(target);
+                  effectTracker.add(sapped);
+                  sapped->activate();
+                }
+            }
           return ActionResult::OTHER;
         }
 
@@ -797,8 +825,20 @@ namespace enc
             }
           std::cout << combatant->_name << " casts " << action->toString() << std::endl;
           int damage = rollDice(dissonantWhispers->getDmgDice());
-          resolveDmgSavingThrow(DissonantWhispersFactory::savingThrow, dissonantWhispers->getDc(), "Dissonant Whispers", damage,
-                                DissonantWhispersFactory::dmgType, &dissonantWhispers->getTarget(), /*halfOnSuccess=*/true, /*isSpellEffect=*/true);
+          bool saved = resolveDmgSavingThrow(DissonantWhispersFactory::savingThrow, dissonantWhispers->getDc(), "Dissonant Whispers", damage,
+                                             DissonantWhispersFactory::dmgType, &dissonantWhispers->getTarget(), /*halfOnSuccess=*/true,
+                                             /*isSpellEffect=*/true);
+          if(!saved)
+            {
+              // On a failed save the target must immediately use its Reaction, if available, to move as far away as it can.
+              Combatant *target = &dissonantWhispers->getTarget();
+              if(target->getCurrentHp() > 0 && target->hasReaction())
+                {
+                  std::cout << target->_name << " uses its Reaction to flee as far as possible from Dissonant Whispers" << std::endl;
+                  target->setHasReaction(false);
+                  dissonantWhispers->forceFlee(combatant);
+                }
+            }
           return ActionResult::OTHER;
         }
 

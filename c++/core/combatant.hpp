@@ -303,6 +303,14 @@ namespace enc
     void addToHitDiceMod(const Die &mod) { _toHitDiceMod.push_back(mod); }
     void removeToHitDiceMod(const Die &mod);
     void clearToHitDiceMods() { _toHitDiceMod.clear(); }
+    // Penalty dice (e.g. Bane's 1d4) are rolled and subtracted from the relevant roll. Stored separately
+    // from bonus dice because Die is unsigned and cannot represent a negative modifier directly.
+    const std::vector<Die> &getToHitPenaltyDice() const { return _toHitPenaltyDice; }
+    void addToHitPenaltyDie(const Die &mod) { _toHitPenaltyDice.push_back(mod); }
+    void removeToHitPenaltyDie(const Die &mod);
+    const std::vector<Die> &getSavingThrowPenaltyDice(SavingThrow type) const;
+    void addSavingThrowPenaltyDie(SavingThrow type, const Die &mod);
+    void removeSavingThrowPenaltyDie(SavingThrow type, const Die &mod);
     const std::unordered_set<RollType> &getSavingThrowRollTypeMods(SavingThrow type) const;
     void addSavingThrowRollTypeMod(SavingThrow type, RollType rollType);
     void removeSavingThrowRollTypeMod(SavingThrow type, RollType rollType);
@@ -1106,8 +1114,10 @@ namespace enc
       = {{SavingThrow::STR, 0}, {SavingThrow::DEX, 0}, {SavingThrow::CON, 0}, {SavingThrow::INT, 0}, {SavingThrow::WIS, 0}, {SavingThrow::CHA, 0}};
     std::unordered_map<SavingThrow, std::vector<int>> _savingThrowsFlatMod;
     std::unordered_map<SavingThrow, std::vector<Die>> _savingThrowsDiceMod;
+    std::unordered_map<SavingThrow, std::vector<Die>> _savingThrowsPenaltyDice;
     std::unordered_map<SavingThrow, std::unordered_set<RollType>> _savingThrowsRollTypeMod;
     std::vector<Die> _toHitDiceMod;
+    std::vector<Die> _toHitPenaltyDice;
     std::unordered_set<DamageType> _dmgTypesTookLastRound;
     Combatant *_originalForm = this;
     Combatant *_currentWildshapeForm = nullptr;

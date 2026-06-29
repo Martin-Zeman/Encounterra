@@ -103,17 +103,20 @@ namespace enc
 
   void Bane::applyPenalties(Combatant *combatant)
   {
+    // A target that failed the save subtracts 1d4 from its attack rolls and from every saving throw.
+    combatant->addToHitPenaltyDie(Bane::penaltyDie);
     for(SavingThrow savingThrow : {SavingThrow::STR, SavingThrow::DEX, SavingThrow::CON, SavingThrow::INT, SavingThrow::WIS, SavingThrow::CHA})
       {
-        combatant->addSavingThrowFlatMod(savingThrow, BaneFactory::FLAT_PENALTY);
+        combatant->addSavingThrowPenaltyDie(savingThrow, Bane::penaltyDie);
       }
   }
 
   void Bane::removePenalties(Combatant *combatant)
   {
+    combatant->removeToHitPenaltyDie(Bane::penaltyDie);
     for(SavingThrow savingThrow : {SavingThrow::STR, SavingThrow::DEX, SavingThrow::CON, SavingThrow::INT, SavingThrow::WIS, SavingThrow::CHA})
       {
-        combatant->addSavingThrowFlatMod(savingThrow, -BaneFactory::FLAT_PENALTY);
+        combatant->removeSavingThrowPenaltyDie(savingThrow, Bane::penaltyDie);
       }
   }
 

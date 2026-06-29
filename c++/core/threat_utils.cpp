@@ -222,6 +222,21 @@ namespace enc
 
   double getSavingThrowFailProb(int dc, int stBonus) { return std::max(0.0, std::min(1.0, (dc - 1 - stBonus) / 20.0)); }
 
+  bool isCharmedByTeamOf(const Combatant *attacker, Combatant *target)
+  {
+    if(!target->isAffectedBy(Conditions::CHARMED))
+      {
+        return false;
+      }
+    Combatant *charmer = target->getInitiatorOfCondition(Conditions::CHARMED);
+    if(!charmer)
+      {
+        return false;
+      }
+    return charmer == attacker || Teams::getInstance().areAllies(*attacker, *charmer);
+  }
+
+
   double getDangerZoneThreat(const Coords &coords, Combatant *combatant, int delta)
   {
     auto &battleMap = BattleMap::getInstance();

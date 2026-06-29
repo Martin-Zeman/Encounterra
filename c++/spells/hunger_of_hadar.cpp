@@ -8,6 +8,7 @@
 #include "core/conditions.hpp"
 #include "core/action_resolver.hpp"
 #include "core/geometry.hpp"
+#include "core/threat_utils.hpp"
 
 namespace enc
 {
@@ -120,8 +121,9 @@ namespace enc
                                                  target->isImmuneTo(DamageType::Acid), target->isResistantTo(DamageType::Acid)));
         totalThreat += 0.5 * avgDmg;
 
-        // Adjust for friendly fire
-        totalThreat *= (teams.areEnemies(*_factory._combatant, *target) ? 1.0 : -3.0);
+        // Adjust for friendly fire (creatures charmed by our side are friendly, so penalize like allies)
+        bool friendly = !teams.areEnemies(*_factory._combatant, *target) || isCharmedByTeamOf(_factory._combatant, target);
+        totalThreat *= (friendly ? -3.0 : 1.0);
       }
     return totalThreat;
   }

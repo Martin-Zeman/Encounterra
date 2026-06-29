@@ -35,8 +35,6 @@ namespace enc
     static constexpr SpellType type = SpellType::HARMFUL;
     static constexpr SavingThrow savingThrow = SavingThrow::CHA;
     static constexpr double ROUND_HORIZON = 3.0;
-    //! Flat saving-throw penalty applied to affected enemies (average of the 1d4 subtracted by Bane).
-    static constexpr int FLAT_PENALTY = -2;
 
     BaneFactory(int dc, AbilityType abilityType, Combatant *caster, Resource *resource);
 

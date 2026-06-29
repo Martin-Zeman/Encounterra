@@ -115,6 +115,12 @@ namespace enc
    */
   double getSavingThrowFailProb(int dc, int stBonus);
 
+  /**
+   *  True iff `target` is Charmed and the charmer is on `attacker`'s side. A creature charmed by your team is
+   *  friendly to you, so direct attacks/threats should avoid it and AoE should treat hitting it as friendly fire.
+   */
+  bool isCharmedByTeamOf(const Combatant *attacker, Combatant *target);
+
 /**
  *  Adds potential threat projected by the virtue of being near an enemy. It adds up all the projected threat for all
     enemies within their projection range.

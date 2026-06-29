@@ -60,11 +60,13 @@ namespace enc
         return 0.0;
       }
 
-    // Best single-target offence the charmed humanoid would otherwise turn on our team.
+    // Average single-target offence the charmed humanoid would otherwise turn on our team, across all of its
+    // direct-threat actions (best target per action). Charming it denies us that output for the duration.
     Teams &teams = Teams::getInstance();
     auto targetsEnemies = teams.getAliveNonSwallowedEnemies(*target);
-    double maxActionThreat = 0.0;
-    auto accumulateBest = [&](const std::vector<std::shared_ptr<ActoidFactory>> &factories) {
+    double threatSum = 0.0;
+    int actionCount = 0;
+    auto accumulate = [&](const std::vector<std::shared_ptr<ActoidFactory>> &factories) {
       for(const auto &factory : factories)
         {
           auto threatFactory = std::dynamic_pointer_cast<DirectThreatFactory>(factory);
@@ -72,24 +74,23 @@ namespace enc
             {
               continue;
             }
+          double bestForAction = 0.0;
           for(auto *enemy : targetsEnemies)
             {
-              maxActionThreat = std::max(maxActionThreat, threatFactory->calculateThreatToTarget(enemy, {}));
+              bestForAction = std::max(bestForAction, threatFactory->calculateThreatToTarget(enemy, {}));
             }
+          threatSum += bestForAction;
+          ++actionCount;
         }
     };
-    accumulateBest(target->getActionFactoriesConst());
-    accumulateBest(target->getBonusActionFactoriesConst());
+    accumulate(target->getActionFactoriesConst());
+    accumulate(target->getBonusActionFactoriesConst());
+    double avgActionThreat = actionCount > 0 ? threatSum / actionCount : 0.0;
 
+    // The target rolls the save with Advantage if it or its allies are fighting us, so failure needs two misses.
     double pFail = getSavingThrowFailProb(_dc, target->getSavingThrow(CharmPersonFactory::savingThrow));
-    double pFailAcc = pFail;
-    double total = 0.0;
-    for(int i = 0; i < CharmPersonFactory::ROUND_HORIZON; ++i)
-      {
-        total += maxActionThreat * pFailAcc;
-        pFailAcc *= pFail;
-      }
-    return total;
+    double pFailAdv = pFail * pFail;
+    return avgActionThreat * pFailAdv * CharmPersonFactory::ROUND_HORIZON;
   }
 
   double CharmPersonFactory::calculateMaxThreat() const
@@ -111,8 +112,10 @@ namespace enc
   void CharmPerson::activate(const Kwargs &kwargs)
   {
     Combatant *target = getCombatants()[0];
-    bool saved = rollSavingThrow(target->getSavingThrow(_factory.savingThrow), _factory._dc,
-                                 reconcileRollTypes(target->getSavingThrowRollTypeMods(_factory.savingThrow)));
+    // The target rolls with Advantage if it or its allies are fighting the caster's side, which is the case in combat.
+    auto rollTypes = target->getSavingThrowRollTypeMods(_factory.savingThrow);
+    rollTypes.insert(RollType::ADVANTAGE);
+    bool saved = rollSavingThrow(target->getSavingThrow(_factory.savingThrow), _factory._dc, reconcileRollTypes(rollTypes));
     if(!saved)
       {
         std::cout << target->_name << " fails the Wisdom save and is charmed by " << shorthandStr() << std::endl;

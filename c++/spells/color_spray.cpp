@@ -55,7 +55,9 @@ namespace enc
     for(auto *aff : affected)
       {
         double benefit = _factory.calculateThreatToTarget(aff, kwargs);
-        acc += (teams.areEnemies(*_factory._combatant, *aff) ? 1.0 : -3.0) * benefit;
+        // A creature charmed by our side is friendly: hitting it counts as friendly fire, like striking an ally.
+        bool friendly = !teams.areEnemies(*_factory._combatant, *aff) || isCharmedByTeamOf(_factory._combatant, aff);
+        acc += (friendly ? -3.0 : 1.0) * benefit;
       }
     return acc;
   }

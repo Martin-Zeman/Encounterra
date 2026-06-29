@@ -58,6 +58,10 @@ namespace enc
     int getDc() const { return _factory._dc; }
     Die getDmgDice() const { return DissonantWhispersFactory::dmgDice; }
 
+    // On a failed save the target spends its Reaction to dash away from the caster: it plans the safest route
+    // (lowest incoming threat) to the reachable cell that is as far from the caster as its Speed allows.
+    void forceFlee(Combatant *caster);
+
     double calculateThreat(const Kwargs &kwargs) override;
     double calculateThreatDelta(const ThreatModifiers &modifiers) const override;
     std::optional<CoordVector> getEligibleCoords(const blaze::DynamicVector<int> &distances = blaze::DynamicVector<int>(),

@@ -184,8 +184,8 @@ namespace enc
             auto effects = effectTracker.getAffectingCombatant(combatant);
             _actionResolver.resolveEffects(effects, combatant);
 
-            if(combatant->isAffectedByAny(
-                 {Conditions::INCAPACITATED, Conditions::STUNNED, Conditions::PARALYZED, Conditions::PETRIFIED, Conditions::UNCONSCIOUS}))
+            if(combatant->isAffectedByAny({Conditions::INCAPACITATED, Conditions::STUNNED, Conditions::PARALYZED, Conditions::PETRIFIED,
+                                           Conditions::UNCONSCIOUS, Conditions::CHARMED}))
               {
                 std::cout << combatant->toString() << " is affected by a condition which prevents any action. Skipping turn\n";
                 effectTracker.endOfTurn(combatant);

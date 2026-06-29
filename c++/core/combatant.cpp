@@ -577,6 +577,37 @@ namespace enc
         }
     }
 
+    void Combatant::removeToHitPenaltyDie(const Die &mod)
+    {
+      auto it = std::find(_toHitPenaltyDice.begin(), _toHitPenaltyDice.end(), mod);
+      if(it != _toHitPenaltyDice.end())
+        {
+          _toHitPenaltyDice.erase(it);
+        }
+    }
+
+    const std::vector<Die> &Combatant::getSavingThrowPenaltyDice(SavingThrow type) const
+    {
+      auto it = _savingThrowsPenaltyDice.find(type);
+      static const std::vector<Die> empty;
+      return it != _savingThrowsPenaltyDice.end() ? it->second : empty;
+    }
+
+    void Combatant::addSavingThrowPenaltyDie(SavingThrow type, const Die &mod) { _savingThrowsPenaltyDice[type].push_back(mod); }
+
+    void Combatant::removeSavingThrowPenaltyDie(SavingThrow type, const Die &mod)
+    {
+      auto it = _savingThrowsPenaltyDice.find(type);
+      if(it != _savingThrowsPenaltyDice.end())
+        {
+          auto modIt = std::find(it->second.begin(), it->second.end(), mod);
+          if(modIt != it->second.end())
+            {
+              it->second.erase(modIt);
+            }
+        }
+    }
+
     const std::unordered_set<RollType> &Combatant::getSavingThrowRollTypeMods(SavingThrow type) const
     {
       auto it = _savingThrowsRollTypeMod.find(type);

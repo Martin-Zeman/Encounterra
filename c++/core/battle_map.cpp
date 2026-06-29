@@ -2,6 +2,7 @@
 #include "core/geometry.hpp"
 #include "core/teams.hpp"
 #include "core/misc.hpp"
+#include "core/threat_utils.hpp"
 #include <algorithm>
 #include <limits>
 #include <stdexcept>
@@ -1544,7 +1545,16 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
             result.push_back(e);
           }
       }
-    return result;
+    // Targets charmed by our own side are friendly to us; avoid them unless they're the only enemies left.
+    std::vector<Combatant *> notCharmed;
+    for(auto *e : result)
+      {
+        if(!isCharmedByTeamOf(combatant, e))
+          {
+            notCharmed.push_back(e);
+          }
+      }
+    return notCharmed.empty() ? result : notCharmed;
   }
 
   std::vector<Combatant *> BattleMap::getNonSwallowedAlliesWithinRadius(const Combatant *combatant, int radius)
@@ -1572,7 +1582,16 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
             result.push_back(e);
           }
       }
-    return result;
+    // Targets charmed by our own side are friendly to us; avoid them unless they're the only enemies left.
+    std::vector<Combatant *> notCharmed;
+    for(auto *e : result)
+      {
+        if(!isCharmedByTeamOf(combatant, e))
+          {
+            notCharmed.push_back(e);
+          }
+      }
+    return notCharmed.empty() ? result : notCharmed;
   }
 
   std::vector<Combatant *> BattleMap::getNonSwallowedEnemiesWithoutHopDistance(const Combatant *combatant, int distance)
