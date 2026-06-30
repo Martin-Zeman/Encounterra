@@ -764,12 +764,20 @@ bool Combatant::checkConcentration(Combatant* combatant, int dmg) {
     
     // Calculate DC for the check (higher of 10 or half the damage taken)
     int dc = std::max(10, dmg / 2);
-    
+
+    // War Caster and the Eldritch Mind invocation grant Advantage on Constitution saves to maintain
+    // Concentration.
+    std::unordered_set<RollType> conRollTypes = _savingThrowsRollTypeMod[SavingThrow::CON];
+    if(hasPassiveAbility(AbilityType::WAR_CASTER) || hasPassiveAbility(AbilityType::ELDRITCH_MIND))
+      {
+        conRollTypes.insert(RollType::ADVANTAGE);
+      }
+
     // Roll the save
     bool saved = rollSavingThrow(
         _savingThrows.at(SavingThrow::CON),
         dc,
-        reconcileRollTypes(_savingThrowsRollTypeMod[SavingThrow::CON])
+        reconcileRollTypes(conRollTypes)
     );
     
     // If failed, break concentration

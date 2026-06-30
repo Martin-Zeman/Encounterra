@@ -144,7 +144,7 @@ namespace enc
             for(int id : ids)
               {
                 Combatant *enemy = _idToCombatant.at(id);
-                if(enemy->isAlive() && !enemy->getSwallower())
+                if(enemy->isTargetable())
                   {
                     result.push_back(enemy);
                   }
@@ -161,7 +161,7 @@ namespace enc
     for(int id : _colorToCombatantIds.at(combatantTeam))
       {
         Combatant *ally = _idToCombatant.at(id);
-        if(ally->isAlive() && !ally->getSwallower() && ally != &combatant)
+        if(ally->isTargetable() && ally != &combatant)
           {
             result.push_back(ally);
           }

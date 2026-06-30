@@ -8,7 +8,7 @@
 #include "core/session.hpp"
 #include "spells/spell_stats.hpp"
 #include "combatants/goblin.hpp"
-#include "combatants/draconic_sorcerer_lvl_1.hpp"
+#include "combatants/sorcerer_lvl_1.hpp"
 #include "combatants/bugbear_warrior.hpp"
 #include "combatants/stone_giant.hpp"
 #include "combatants/wild_heart_barbarian_lvl_3.hpp"
@@ -34,7 +34,7 @@ protected:
   Session *session;
   Goblin* goblin;
   BugbearWarrior* bugbear;
-  DraconicSorcererLvl1* draconic_sorcerer_lvl_1;
+  SorcererLvl1* sorcerer_lvl_1;
   WildHeartBarbarianLvl3* wild_heart_barbarian;
   BattlemasterFighterLvl5* battlemaster_fighter_lvl_5;
   MoonDruidLvl5* moon_druid_lvl_5;
@@ -51,7 +51,7 @@ protected:
     teams = &Teams::getInstance();
     session = new Session();
     goblin = new Goblin(1);
-    draconic_sorcerer_lvl_1 = new DraconicSorcererLvl1(1);
+    sorcerer_lvl_1 = new SorcererLvl1(1);
     bugbear = new BugbearWarrior(1);
     wild_heart_barbarian = new WildHeartBarbarianLvl3(1);
     stone_giant = new StoneGiant(1);
@@ -66,7 +66,7 @@ protected:
     {
         delete session;
         // delete goblin;
-        // delete draconic_sorcerer_lvl_1;
+        // delete sorcerer_lvl_1;
         // delete bugbear;
         // delete wild_heart_barbarian;
         // delete wild_heart_barbarian;
@@ -496,12 +496,12 @@ TEST_F(BattleMapTest, CombatantPositions)
 {
   const int N = battleMap->getGridSize();
   teams->addCombatantToTeam(*goblin, Color::BLUE);
-  teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::RED);
+  teams->addCombatantToTeam(*sorcerer_lvl_1, Color::RED);
   teams->addCombatantToTeam(*bugbear, Color::RED);
   // Place combatants (treated as obstacles for this test)
   Coord sorcererSrc{3, 3};
   Coord bugbearSrc{10, 10};
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, sorcererSrc);
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, sorcererSrc);
   battleMap->setCombatantCoordinates(*bugbear, bugbearSrc);
 
   Coord src{0, 0};
@@ -536,16 +536,16 @@ TEST_F(BattleMapTest, EdgeCases)
 
 TEST_F(BattleMapTest, GetPathToCombatantMediumToMedium)
 {
-  teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*sorcerer_lvl_1, Color::BLUE);
   teams->addCombatantToTeam(*bugbear, Color::BLUE);
   Coord sorcererSrc{0, 1};
   Coord bugbearSrc{11, 3};
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, sorcererSrc);
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, sorcererSrc);
   battleMap->setCombatantCoordinates(*bugbear, bugbearSrc);
 
   battleMap->buildBaseAdjacencyMatrix();
 
-  auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *bugbear);
+  auto path = battleMap->getPathToCombatant(*sorcerer_lvl_1, *bugbear);
   ASSERT_TRUE(path.has_value());
 
   CoordVector expectedPath = {{1, 1}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}};
@@ -554,12 +554,12 @@ TEST_F(BattleMapTest, GetPathToCombatantMediumToMedium)
 
 TEST_F(BattleMapTest, GetPathToCoordMediumToCoord)
 {
-  teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*sorcerer_lvl_1, Color::BLUE);
   battleMap->buildBaseAdjacencyMatrix();
   Coord sorcererSrc{0, 1};
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, sorcererSrc);
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, sorcererSrc);
 
-  auto path = battleMap->getPathToCoord(*draconic_sorcerer_lvl_1, {11, 3});
+  auto path = battleMap->getPathToCoord(*sorcerer_lvl_1, {11, 3});
   ASSERT_TRUE(path.has_value());
 
   CoordVector expectedPath = {{1, 1}, {1, 1}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}, {1, 0}};
@@ -568,15 +568,15 @@ TEST_F(BattleMapTest, GetPathToCoordMediumToCoord)
 
 TEST_F(BattleMapTest, GetPathToCombatantLargeToLarge)
 {
-  teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*sorcerer_lvl_1, Color::BLUE);
   teams->addCombatantToTeam(*bugbear, Color::BLUE);
   battleMap->buildBaseAdjacencyMatrix();
-  draconic_sorcerer_lvl_1->setSize(Size::LARGE);
+  sorcerer_lvl_1->setSize(Size::LARGE);
   bugbear->setSize(Size::LARGE);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {0, 1});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {0, 1});
   battleMap->setCombatantCoordinates(*bugbear, {5, 7});
 
-  auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *bugbear);
+  auto path = battleMap->getPathToCombatant(*sorcerer_lvl_1, *bugbear);
   ASSERT_TRUE(path.has_value());
 
   CoordVector expectedPath = {{1, 1}, {1, 1}, {1, 1}, {0, 1}};
@@ -585,14 +585,14 @@ TEST_F(BattleMapTest, GetPathToCombatantLargeToLarge)
 
 TEST_F(BattleMapTest, GetPathToCombatantMediumToLarge)
 {
-  teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*sorcerer_lvl_1, Color::BLUE);
   teams->addCombatantToTeam(*bugbear, Color::BLUE);
   battleMap->buildBaseAdjacencyMatrix();
   bugbear->setSize(Size::LARGE);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {0, 1});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {0, 1});
   battleMap->setCombatantCoordinates(*bugbear, {5, 7});
 
-  auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *bugbear);
+  auto path = battleMap->getPathToCombatant(*sorcerer_lvl_1, *bugbear);
   ASSERT_TRUE(path.has_value());
 
   CoordVector expectedPath1 = {{1, 1}, {1, 1}, {1, 1}, {1, 1}, {0, 1}};
@@ -602,14 +602,14 @@ TEST_F(BattleMapTest, GetPathToCombatantMediumToLarge)
 
 TEST_F(BattleMapTest, GetPathToCombatantLargeToMedium)
 {
-  teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*sorcerer_lvl_1, Color::BLUE);
   teams->addCombatantToTeam(*bugbear, Color::BLUE);
   battleMap->buildBaseAdjacencyMatrix();
-  draconic_sorcerer_lvl_1->setSize(Size::LARGE);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {0, 1});
+  sorcerer_lvl_1->setSize(Size::LARGE);
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {0, 1});
   battleMap->setCombatantCoordinates(*bugbear, {5, 7});
 
-  auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *bugbear);
+  auto path = battleMap->getPathToCombatant(*sorcerer_lvl_1, *bugbear);
   ASSERT_TRUE(path.has_value());
 
   CoordVector expectedPath = {{1, 1}, {1, 1}, {1, 1}, {0, 1}};
@@ -618,16 +618,16 @@ TEST_F(BattleMapTest, GetPathToCombatantLargeToMedium)
 
 TEST_F(BattleMapTest, GetPathToCombatantLargeToMedium2)
 {
-  teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*sorcerer_lvl_1, Color::BLUE);
   teams->addCombatantToTeam(*bugbear, Color::BLUE);
   battleMap->placeTerrain(Coord{7, 14}, Terrain::DIFFICULT_TERRAIN);
   battleMap->placeTerrain(Coord{9, 14}, Terrain::DIFFICULT_TERRAIN);
   battleMap->buildBaseAdjacencyMatrix();
-  draconic_sorcerer_lvl_1->setSize(Size::LARGE);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {4, 13});
+  sorcerer_lvl_1->setSize(Size::LARGE);
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {4, 13});
   battleMap->setCombatantCoordinates(*bugbear, {8, 14});
 
-  auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *bugbear);
+  auto path = battleMap->getPathToCombatant(*sorcerer_lvl_1, *bugbear);
   ASSERT_TRUE(path.has_value());
 
   CoordVector expectedPath = {{1, 0}, {1, 0}};
@@ -636,15 +636,15 @@ TEST_F(BattleMapTest, GetPathToCombatantLargeToMedium2)
 
 TEST_F(BattleMapTest, GetPathToCombatantHugeToHuge)
 {
-  teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*sorcerer_lvl_1, Color::BLUE);
   teams->addCombatantToTeam(*bugbear, Color::BLUE);
   battleMap->buildBaseAdjacencyMatrix();
-  draconic_sorcerer_lvl_1->setSize(Size::HUGE);
+  sorcerer_lvl_1->setSize(Size::HUGE);
   bugbear->setSize(Size::HUGE);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {0, 1});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {0, 1});
   battleMap->setCombatantCoordinates(*bugbear, {5, 7});
 
-  auto path = battleMap->getPathToCombatant(*draconic_sorcerer_lvl_1, *bugbear);
+  auto path = battleMap->getPathToCombatant(*sorcerer_lvl_1, *bugbear);
   ASSERT_TRUE(path.has_value());
 
   CoordVector expectedPath = {{1, 1}, {1, 1}, {0, 1}};
@@ -652,13 +652,13 @@ TEST_F(BattleMapTest, GetPathToCombatantHugeToHuge)
 }
 
 TEST_F(BattleMapTest, RemoveCombatant) {
-    draconic_sorcerer_lvl_1->setSize(Size::LARGE);
-    battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {4, 5});
+    sorcerer_lvl_1->setSize(Size::LARGE);
+    battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {4, 5});
 
-    battleMap->removeCombatant(*draconic_sorcerer_lvl_1);
+    battleMap->removeCombatant(*sorcerer_lvl_1);
 
     // Check that the combatant is no longer in the battle map
-    EXPECT_THROW(battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1), std::out_of_range);
+    EXPECT_THROW(battleMap->getCombatantCoordinates(*sorcerer_lvl_1), std::out_of_range);
 
     // Check that the grid cells previously occupied by the combatant are now empty
     EXPECT_EQ(battleMap->getCombatantGridValueAt({4, 5}), -1);
@@ -671,19 +671,19 @@ TEST_F(BattleMapTest, RemoveCombatant) {
 TEST_F(BattleMapTest, FindBestPlacementHarmfulSquare)
 {
     stone_giant->setSize(Size::MEDIUM);
-    teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
+    teams->addCombatantToTeam(*sorcerer_lvl_1, Color::BLUE);
     teams->addCombatantToTeam(*goblin, Color::RED);
     teams->addCombatantToTeam(*bugbear, Color::RED);
     teams->addCombatantToTeam(*wild_heart_barbarian, Color::BLUE);
     teams->addCombatantToTeam(*stone_giant, Color::RED);
-    battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {1, 1});
+    battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {1, 1});
     battleMap->setCombatantCoordinates(*goblin, {4, 4});
     battleMap->setCombatantCoordinates(*bugbear, {10, 5});
     battleMap->setCombatantCoordinates(*wild_heart_barbarian, {6, 7});
     battleMap->setCombatantCoordinates(*stone_giant, {5, 5});
 
     // Test case 1: Original scenario
-    auto [coord, score, affected] = battleMap->findBestPlacementHarmfulSquare(draconic_sorcerer_lvl_1, 20, 2);
+    auto [coord, score, affected] = battleMap->findBestPlacementHarmfulSquare(sorcerer_lvl_1, 20, 2);
     EXPECT_EQ(coord, (Coord{4, 4}));
     EXPECT_EQ(score, 2);
     EXPECT_TRUE(std::find(affected.begin(), affected.end(), goblin) != affected.end());
@@ -693,7 +693,7 @@ TEST_F(BattleMapTest, FindBestPlacementHarmfulSquare)
 
     // Test case 2: Ally blocking
     battleMap->moveCombatant(*wild_heart_barbarian, {5, 4});
-    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(draconic_sorcerer_lvl_1, 20, 2);
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(sorcerer_lvl_1, 20, 2);
     EXPECT_EQ(score, 1);
     EXPECT_TRUE(std::find(affected.begin(), affected.end(), goblin) != affected.end() ||
                 std::find(affected.begin(), affected.end(), bugbear) != affected.end() ||
@@ -703,7 +703,7 @@ TEST_F(BattleMapTest, FindBestPlacementHarmfulSquare)
     // Test case 3: A corner of a HUGE sized creature can be hit
     stone_giant->setSize(Size::HUGE);
     battleMap->moveCombatant(*stone_giant, {6, 1});  // move him so that only a corner can be hit
-    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(draconic_sorcerer_lvl_1, 20, 3);
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(sorcerer_lvl_1, 20, 3);
     EXPECT_EQ(coord, (Coord{8, 3}));
     EXPECT_EQ(score, 2);
     EXPECT_TRUE(std::find(affected.begin(), affected.end(), goblin) == affected.end());
@@ -714,44 +714,44 @@ TEST_F(BattleMapTest, FindBestPlacementHarmfulSquare)
     // Test case 4: Spell range too short to hit anybody
     stone_giant->setSize(Size::MEDIUM);  // shrink him again
     battleMap->moveCombatant(*stone_giant, {5, 5}); // move him back
-    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(draconic_sorcerer_lvl_1, 1, 2);
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(sorcerer_lvl_1, 1, 2);
     EXPECT_EQ(score, 0);
     EXPECT_TRUE(affected.empty());
 
     // Test case 5: Larger square size
     battleMap->moveCombatant(*wild_heart_barbarian, {6, 7});  // Move ally out of the way
-    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(draconic_sorcerer_lvl_1, 20, 3);
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(sorcerer_lvl_1, 20, 3);
     EXPECT_EQ(score, 2);
     EXPECT_TRUE(std::find(affected.begin(), affected.end(), goblin) != affected.end());
     EXPECT_TRUE(std::find(affected.begin(), affected.end(), stone_giant) != affected.end());
 
     // Test case 6: Edge of map
-    battleMap->moveCombatant(*draconic_sorcerer_lvl_1, {14, 14});
+    battleMap->moveCombatant(*sorcerer_lvl_1, {14, 14});
     battleMap->moveCombatant(*goblin, {13, 13});
-    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(draconic_sorcerer_lvl_1, 5, 2);
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(sorcerer_lvl_1, 5, 2);
     EXPECT_EQ(coord, (Coord{12, 12}));
     EXPECT_EQ(score, 1);
     EXPECT_TRUE(std::find(affected.begin(), affected.end(), goblin) != affected.end());
 
     // Test case 7: Allies and enemies bunched up
-    battleMap->moveCombatant(*draconic_sorcerer_lvl_1, {0, 0});
+    battleMap->moveCombatant(*sorcerer_lvl_1, {0, 0});
     battleMap->moveCombatant(*goblin, {14, 14});
     battleMap->moveCombatant(*bugbear, {14, 13});
     battleMap->moveCombatant(*stone_giant, {13, 14});
     battleMap->moveCombatant(*wild_heart_barbarian, {13, 13});
-    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(draconic_sorcerer_lvl_1, 16, 2);
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulSquare(sorcerer_lvl_1, 16, 2);
     EXPECT_TRUE(affected.empty());
 }
 
 TEST_F(BattleMapTest, FindBestPlacementHarmfulCircular)
 {
     goblin->setSize(Size::LARGE);
-    teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
+    teams->addCombatantToTeam(*sorcerer_lvl_1, Color::BLUE);
     teams->addCombatantToTeam(*goblin, Color::RED);
     teams->addCombatantToTeam(*bugbear, Color::RED);
     teams->addCombatantToTeam(*wild_heart_barbarian, Color::BLUE);
     
-    battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {1, 1});
+    battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {1, 1});
     battleMap->setCombatantCoordinates(*goblin, {4, 4});
     battleMap->setCombatantCoordinates(*bugbear, {10, 5});
     battleMap->setCombatantCoordinates(*wild_heart_barbarian, {6, 7});
@@ -760,7 +760,7 @@ TEST_F(BattleMapTest, FindBestPlacementHarmfulCircular)
     constexpr int FIREBALL_RANGE = static_cast<int>(enc::SpellRange::FEET_150);
     constexpr int FIREBALL_RADIUS = 4;
 
-    auto [coord, score, affected] = battleMap->findBestPlacementHarmfulCircular(draconic_sorcerer_lvl_1, FIREBALL_RANGE, FIREBALL_RADIUS);
+    auto [coord, score, affected] = battleMap->findBestPlacementHarmfulCircular(sorcerer_lvl_1, FIREBALL_RANGE, FIREBALL_RADIUS);
     
     EXPECT_EQ(coord, (Coord{7, 3}));
     EXPECT_EQ(score, 2);
@@ -772,7 +772,7 @@ TEST_F(BattleMapTest, FindBestPlacementHarmfulCircular)
     // Move the ally in between the targets
     battleMap->moveCombatant(*wild_heart_barbarian, {6, 4});
     
-    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulCircular(draconic_sorcerer_lvl_1, FIREBALL_RANGE, FIREBALL_RADIUS);
+    std::tie(coord, score, affected) = battleMap->findBestPlacementHarmfulCircular(sorcerer_lvl_1, FIREBALL_RANGE, FIREBALL_RADIUS);
     
     EXPECT_EQ(score, 1);  // Assuming only the large goblin is hit
     EXPECT_EQ(affected.size(), 1);
@@ -783,19 +783,19 @@ TEST_F(BattleMapTest, FindBestPlacementHarmfulCircular)
 
 TEST_F(BattleMapTest, FindBestPlacementsHarmfulCone1)
 {
-  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(sorcerer_lvl_1, Color::BLUE);
   session->addCombatant(goblin, Color::RED);
   session->addCombatant(bugbear, Color::RED);
   session->addCombatant(ogre, Color::BLUE);
   session->addCombatant(stone_giant, Color::RED);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {1, 1});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {1, 1});
   battleMap->setCombatantCoordinates(*goblin, {2, 11});
   battleMap->setCombatantCoordinates(*bugbear, {4, 11});
   battleMap->setCombatantCoordinates(*ogre, {5, 10});
   battleMap->setCombatantCoordinates(*stone_giant, {5, 12});
 
   // auto start = std::chrono::high_resolution_clock::now();
-  auto result = battleMap->findBestPlacementHarmfulCone(draconic_sorcerer_lvl_1, TRANSLATE_CONE.at(SpellTarget::CONE_30));
+  auto result = battleMap->findBestPlacementHarmfulCone(sorcerer_lvl_1, TRANSLATE_CONE.at(SpellTarget::CONE_30));
   //  auto end = std::chrono::high_resolution_clock::now();
   // auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     
@@ -807,7 +807,7 @@ TEST_F(BattleMapTest, FindBestPlacementsHarmfulCone1)
   EXPECT_NEAR(bestAngle, 48.43, 0.01);
 
   battleMap->moveCombatant(*ogre, {2, 12});
-  result = battleMap->findBestPlacementHarmfulCone(draconic_sorcerer_lvl_1, TRANSLATE_CONE.at(SpellTarget::CONE_30));
+  result = battleMap->findBestPlacementHarmfulCone(sorcerer_lvl_1, TRANSLATE_CONE.at(SpellTarget::CONE_30));
 
   ASSERT_TRUE(result.has_value());
   std::tie(bestCoord, bestAngle, maxScore) = *result;
@@ -818,14 +818,14 @@ TEST_F(BattleMapTest, FindBestPlacementsHarmfulCone1)
 
 TEST_F(BattleMapTest, FindBestPlacementsHarmfulCone2)
 {
-  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(sorcerer_lvl_1, Color::BLUE);
   session->addCombatant(goblin, Color::RED);
   session->addCombatant(bugbear, Color::RED);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {4, 4});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {4, 4});
   battleMap->setCombatantCoordinates(*goblin, {5, 8});
   battleMap->setCombatantCoordinates(*bugbear, {8, 5});
 
-  auto result = battleMap->findBestPlacementHarmfulCone(draconic_sorcerer_lvl_1, TRANSLATE_CONE.at(SpellTarget::CONE_30));
+  auto result = battleMap->findBestPlacementHarmfulCone(sorcerer_lvl_1, TRANSLATE_CONE.at(SpellTarget::CONE_30));
     
   ASSERT_TRUE(result.has_value());
   auto [bestCoord, bestAngle, maxScore] = *result;
@@ -836,12 +836,12 @@ TEST_F(BattleMapTest, FindBestPlacementsHarmfulCone2)
 
 TEST_F(BattleMapTest, FindBestPlacementsHarmfulCone3)
 {
-  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(sorcerer_lvl_1, Color::BLUE);
   session->addCombatant(wild_heart_barbarian, Color::RED);
   session->addCombatant(battlemaster_fighter_lvl_5, Color::BLUE);
   session->addCombatant(green_dragon_wyrmling, Color::BLUE);
   session->addCombatant(giant_toad, Color::BLUE);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {8, 8});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {8, 8});
   battleMap->setCombatantCoordinates(*wild_heart_barbarian, {7, 13});
   battleMap->setCombatantCoordinates(*battlemaster_fighter_lvl_5, {7, 12});
   battleMap->setCombatantCoordinates(*green_dragon_wyrmling, {8, 7});
@@ -854,19 +854,19 @@ TEST_F(BattleMapTest, FindBestPlacementsHarmfulCone3)
 
 TEST_F(BattleMapTest, FindBestPlacementsHarmfulLine1)
 {
-  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(sorcerer_lvl_1, Color::BLUE);
   session->addCombatant(goblin, Color::RED);
   session->addCombatant(bugbear, Color::RED);
   session->addCombatant(ogre, Color::BLUE);
   session->addCombatant(stone_giant, Color::RED);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {1, 1});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {1, 1});
   battleMap->setCombatantCoordinates(*goblin, {2, 11});
   battleMap->setCombatantCoordinates(*bugbear, {4, 11});
   battleMap->setCombatantCoordinates(*ogre, {5, 10});
   battleMap->setCombatantCoordinates(*stone_giant, {5, 12});
   // std::cout << battleMap->toString(true);
 
-  auto result = battleMap->findBestPlacementHarmfulLine(draconic_sorcerer_lvl_1, 6, 1); // 6 squares long, 1 square wide
+  auto result = battleMap->findBestPlacementHarmfulLine(sorcerer_lvl_1, 6, 1); // 6 squares long, 1 square wide
 
   ASSERT_TRUE(result.has_value());
   auto [bestCoord, bestAngle, maxScore] = *result;
@@ -878,19 +878,19 @@ TEST_F(BattleMapTest, FindBestPlacementsHarmfulLine1)
 TEST_F(BattleMapTest, FindBestPlacementsHarmfulLine2)
 {
   ogre->setSize(Size::MEDIUM);
-  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(sorcerer_lvl_1, Color::BLUE);
   session->addCombatant(goblin, Color::RED);
   session->addCombatant(bugbear, Color::RED);
   session->addCombatant(ogre, Color::BLUE);
   session->addCombatant(stone_giant, Color::RED);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {1, 1});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {1, 1});
   battleMap->setCombatantCoordinates(*goblin, {2, 11});
   battleMap->setCombatantCoordinates(*bugbear, {4, 11});
   battleMap->setCombatantCoordinates(*ogre, {3, 11});
   battleMap->setCombatantCoordinates(*stone_giant, {5, 12});
 
   // std::cout << battleMap->toString(true);
-  auto result = battleMap->findBestPlacementHarmfulLine(draconic_sorcerer_lvl_1, 6, 1);
+  auto result = battleMap->findBestPlacementHarmfulLine(sorcerer_lvl_1, 6, 1);
 
   ASSERT_TRUE(result.has_value());
   auto [bestCoord, bestAngle, maxScore] = *result;
@@ -901,20 +901,20 @@ TEST_F(BattleMapTest, FindBestPlacementsHarmfulLine2)
 
 TEST_F(BattleMapTest, FindBestPlacementsHarmfulLineDifferentLengths)
 {
-  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(sorcerer_lvl_1, Color::BLUE);
   session->addCombatant(wild_heart_barbarian, Color::RED);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {0, 0});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {0, 0});
   battleMap->setCombatantCoordinates(*wild_heart_barbarian, {14, 14});
   // std::cout << battleMap->toString(true);
 
-  auto result = battleMap->findBestPlacementHarmfulLine(draconic_sorcerer_lvl_1, 2, 1);
+  auto result = battleMap->findBestPlacementHarmfulLine(sorcerer_lvl_1, 2, 1);
   EXPECT_TRUE(result.has_value());
   auto [bestCoord, bestAngle, maxScore] = *result;
   EXPECT_EQ(bestCoord, (Coord{13, 13}));
   EXPECT_EQ(maxScore, 1);
   EXPECT_NEAR(bestAngle, 45.0, 0.01);
 
-  result = battleMap->findBestPlacementHarmfulLine(draconic_sorcerer_lvl_1, 20, 1);
+  result = battleMap->findBestPlacementHarmfulLine(sorcerer_lvl_1, 20, 1);
   EXPECT_TRUE(result.has_value());
   std::tie(bestCoord, bestAngle, maxScore) = *result;
   EXPECT_EQ(bestCoord, (Coord{0, 0}));
@@ -924,35 +924,35 @@ TEST_F(BattleMapTest, FindBestPlacementsHarmfulLineDifferentLengths)
 
 TEST_F(BattleMapTest, FindBestPlacementsHarmfulLineNoValidPlacement)
 {
-  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(sorcerer_lvl_1, Color::BLUE);
   session->addCombatant(goblin, Color::BLUE);
   session->addCombatant(bugbear, Color::BLUE);
   session->addCombatant(green_dragon_wyrmling, Color::BLUE);
   session->addCombatant(wild_heart_barbarian, Color::RED);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {0, 0});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {0, 0});
   battleMap->setCombatantCoordinates(*goblin, {13, 14});
   battleMap->setCombatantCoordinates(*bugbear, {13, 13});
   battleMap->setCombatantCoordinates(*green_dragon_wyrmling, {14, 13});
   battleMap->setCombatantCoordinates(*wild_heart_barbarian, {14, 14});
   // std::cout << battleMap->toString(true);
 
-  auto result = battleMap->findBestPlacementHarmfulLine(draconic_sorcerer_lvl_1, 2, 1);
+  auto result = battleMap->findBestPlacementHarmfulLine(sorcerer_lvl_1, 2, 1);
   EXPECT_FALSE(result.has_value());
 }
 
 TEST_F(BattleMapTest, FindBestPlacementsHarmfulLineWiderLine)
 {
-  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(sorcerer_lvl_1, Color::BLUE);
   session->addCombatant(goblin, Color::RED);
   session->addCombatant(bugbear, Color::RED);
   session->addCombatant(wild_heart_barbarian, Color::RED);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {4, 4});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {4, 4});
   battleMap->setCombatantCoordinates(*goblin, {5, 7});
   battleMap->setCombatantCoordinates(*bugbear, {8, 6});
   battleMap->setCombatantCoordinates(*wild_heart_barbarian, {8, 4});
   // std::cout << battleMap->toString(true);
 
-  auto result = battleMap->findBestPlacementHarmfulLine(draconic_sorcerer_lvl_1, 6, 3);
+  auto result = battleMap->findBestPlacementHarmfulLine(sorcerer_lvl_1, 6, 3);
 
   ASSERT_TRUE(result.has_value());
   auto [bestCoord, bestAngle, maxScore] = *result;
@@ -963,18 +963,18 @@ TEST_F(BattleMapTest, FindBestPlacementsHarmfulLineWiderLine)
 
 TEST_F(BattleMapTest, GetCombatantsAffectedBySphereAoE)
 {
-  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(sorcerer_lvl_1, Color::BLUE);
   session->addCombatant(ogre, Color::RED);
   session->addCombatant(bugbear, Color::RED);
   session->addCombatant(wild_heart_barbarian, Color::BLUE);
 
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 1});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, Coord{1, 1});
   battleMap->setCombatantCoordinates(*ogre, Coord{4, 4});
   battleMap->setCombatantCoordinates(*bugbear, Coord{10, 5});
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{6, 7});
-  auto combatants = battleMap->getCombatantsAffectedBySphereAoE(draconic_sorcerer_lvl_1, SpellTarget::RADIUS_20, SpellType::HARMFUL, Coord{7, 3});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, Coord{6, 7});
+  auto combatants = battleMap->getCombatantsAffectedBySphereAoE(sorcerer_lvl_1, SpellTarget::RADIUS_20, SpellType::HARMFUL, Coord{7, 3});
 
-  EXPECT_EQ(std::count(combatants.begin(), combatants.end(), draconic_sorcerer_lvl_1), 0);
+  EXPECT_EQ(std::count(combatants.begin(), combatants.end(), sorcerer_lvl_1), 0);
   EXPECT_NE(std::find(combatants.begin(), combatants.end(), ogre), combatants.end());
   EXPECT_NE(std::find(combatants.begin(), combatants.end(), bugbear), combatants.end());
   EXPECT_EQ(std::count(combatants.begin(), combatants.end(), wild_heart_barbarian), 0);
@@ -982,7 +982,7 @@ TEST_F(BattleMapTest, GetCombatantsAffectedBySphereAoE)
 
 TEST_F(BattleMapTest, GetCombatantsAffectedByBoxAoE)
 {
-    session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+    session->addCombatant(sorcerer_lvl_1, Color::BLUE);
     session->addCombatant(goblin, Color::RED);
     session->addCombatant(bugbear, Color::RED);
     session->addCombatant(wild_heart_barbarian, Color::BLUE);
@@ -991,7 +991,7 @@ TEST_F(BattleMapTest, GetCombatantsAffectedByBoxAoE)
 
     goblin->setSize(Size::LARGE);
 
-    battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 1});
+    battleMap->setCombatantCoordinates(*sorcerer_lvl_1, Coord{1, 1});
     battleMap->setCombatantCoordinates(*goblin, Coord{8, 5});
     battleMap->setCombatantCoordinates(*bugbear, Coord{10, 5});
     battleMap->setCombatantCoordinates(*wild_heart_barbarian, Coord{11, 4});
@@ -1000,7 +1000,7 @@ TEST_F(BattleMapTest, GetCombatantsAffectedByBoxAoE)
 
     auto combatants = battleMap->getCombatantsAffectedByBoxAoE(SpellTarget::BOX_20, Coord{7, 3});
 
-    EXPECT_EQ(std::count(combatants.begin(), combatants.end(), draconic_sorcerer_lvl_1), 0);
+    EXPECT_EQ(std::count(combatants.begin(), combatants.end(), sorcerer_lvl_1), 0);
     EXPECT_NE(std::find(combatants.begin(), combatants.end(), goblin), combatants.end());
     EXPECT_NE(std::find(combatants.begin(), combatants.end(), bugbear), combatants.end());
     EXPECT_EQ(std::count(combatants.begin(), combatants.end(), wild_heart_barbarian), 0);
@@ -1010,21 +1010,21 @@ TEST_F(BattleMapTest, GetCombatantsAffectedByBoxAoE)
 
 TEST_F(BattleMapTest, GetCombatantsAffectedByConeAoE)
 {
-  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(sorcerer_lvl_1, Color::BLUE);
   session->addCombatant(goblin, Color::RED);
   session->addCombatant(bugbear, Color::RED);
   session->addCombatant(wild_heart_barbarian, Color::BLUE);
   session->addCombatant(stone_giant, Color::RED);
 
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{5, 5});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, Coord{5, 5});
   battleMap->setCombatantCoordinates(*goblin, Coord{7, 7});
   battleMap->setCombatantCoordinates(*bugbear, Coord{8, 8});
   battleMap->setCombatantCoordinates(*wild_heart_barbarian, Coord{3, 3});
   battleMap->setCombatantCoordinates(*stone_giant, Coord{9, 9});
 
-  auto combatants = battleMap->getCombatantsAffectedByConeAoE(draconic_sorcerer_lvl_1, SpellTarget::CONE_30, Coord{5, 5}, 45.0);
+  auto combatants = battleMap->getCombatantsAffectedByConeAoE(sorcerer_lvl_1, SpellTarget::CONE_30, Coord{5, 5}, 45.0);
 
-  EXPECT_EQ(std::count(combatants.begin(), combatants.end(), draconic_sorcerer_lvl_1), 0);
+  EXPECT_EQ(std::count(combatants.begin(), combatants.end(), sorcerer_lvl_1), 0);
   EXPECT_NE(std::find(combatants.begin(), combatants.end(), goblin), combatants.end());
   EXPECT_NE(std::find(combatants.begin(), combatants.end(), bugbear), combatants.end());
   EXPECT_EQ(std::count(combatants.begin(), combatants.end(), wild_heart_barbarian), 0);
@@ -1033,22 +1033,22 @@ TEST_F(BattleMapTest, GetCombatantsAffectedByConeAoE)
 
 TEST_F(BattleMapTest, GetCombatantsAffectedByLineAoE)
 {
-  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(sorcerer_lvl_1, Color::BLUE);
   session->addCombatant(goblin, Color::RED);
   session->addCombatant(bugbear, Color::RED);
   session->addCombatant(wild_heart_barbarian, Color::BLUE);
   session->addCombatant(stone_giant, Color::RED);
 
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord{1, 1});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, Coord{1, 1});
   battleMap->setCombatantCoordinates(*goblin, Coord{3, 3});
   battleMap->setCombatantCoordinates(*bugbear, Coord{5, 5});
   battleMap->setCombatantCoordinates(*wild_heart_barbarian, Coord{2, 4});
   battleMap->setCombatantCoordinates(*stone_giant, Coord{7, 7});
   // std::cout << battleMap->toString(true);
 
-  auto combatants = battleMap->getCombatantsAffectedByLineAoE(draconic_sorcerer_lvl_1, Coord{1, 1}, 45.0, 8, 1);
+  auto combatants = battleMap->getCombatantsAffectedByLineAoE(sorcerer_lvl_1, Coord{1, 1}, 45.0, 8, 1);
 
-  EXPECT_EQ(std::count(combatants.begin(), combatants.end(), draconic_sorcerer_lvl_1), 0);
+  EXPECT_EQ(std::count(combatants.begin(), combatants.end(), sorcerer_lvl_1), 0);
   EXPECT_NE(std::find(combatants.begin(), combatants.end(), goblin), combatants.end());
   EXPECT_NE(std::find(combatants.begin(), combatants.end(), bugbear), combatants.end());
   EXPECT_EQ(std::count(combatants.begin(), combatants.end(), wild_heart_barbarian), 0);
@@ -1288,9 +1288,9 @@ TEST_F(BattleMapTest, PushLargeCombatant)
 
 TEST_F(BattleMapTest, GetAdjacentCoordsMedium)
 {
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {5, 7});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {5, 7});
   battleMap->setCombatantCoordinates(*goblin, {6, 7});
-  auto coords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  auto coords = battleMap->getCombatantCoordinates(*sorcerer_lvl_1);
   battleMap->placeTerrain({5, 6}, Terrain::IMPASSABLE_TERRAIN);
   auto adj = battleMap->getAdjacentCoords(coords);
   std::unordered_set<Coord> expected = {{4, 7}, {6, 7}, {4, 8}, {5, 8}, {6, 8}, {4, 6}, {6, 6}};
@@ -1299,11 +1299,11 @@ TEST_F(BattleMapTest, GetAdjacentCoordsMedium)
 
 TEST_F(BattleMapTest, GetAdjacentCoordsLarge)
 {
-  draconic_sorcerer_lvl_1->setSize(Size::LARGE);
+  sorcerer_lvl_1->setSize(Size::LARGE);
   goblin->setSize(Size::LARGE);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {5, 7});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {5, 7});
   battleMap->setCombatantCoordinates(*goblin, {5, 9});
-  auto coords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  auto coords = battleMap->getCombatantCoordinates(*sorcerer_lvl_1);
   auto adj = battleMap->getAdjacentCoords(coords);
   std::unordered_set<Coord> expected = {{4, 6}, {4, 7}, {4, 8}, {4, 9}, {5, 6}, {5, 9}, {6, 6}, {6, 9}, {7, 6}, {7, 7}, {7, 8}, {7, 9}};
   EXPECT_EQ(adj, expected);
@@ -1311,9 +1311,9 @@ TEST_F(BattleMapTest, GetAdjacentCoordsLarge)
 
 TEST_F(BattleMapTest, GetAdjacentCoordsLargeCorner)
 {
-  draconic_sorcerer_lvl_1->setSize(Size::LARGE);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {0, 1});
-  auto coords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  sorcerer_lvl_1->setSize(Size::LARGE);
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {0, 1});
+  auto coords = battleMap->getCombatantCoordinates(*sorcerer_lvl_1);
   battleMap->placeTerrain({2, 3}, Terrain::IMPASSABLE_TERRAIN);
   auto adj = battleMap->getAdjacentCoords(coords);
   std::unordered_set<Coord> expected = {{0, 0}, {1, 0}, {2, 0}, {2, 1}, {2, 2}, {0, 3}, {1, 3}};
@@ -1322,11 +1322,11 @@ TEST_F(BattleMapTest, GetAdjacentCoordsLargeCorner)
 
 TEST_F(BattleMapTest, GetAdjacentCoordsHugeWithTerrain)
 {
-  draconic_sorcerer_lvl_1->setSize(Size::HUGE);
+  sorcerer_lvl_1->setSize(Size::HUGE);
   goblin->setSize(Size::LARGE);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {8, 2});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {8, 2});
   battleMap->setCombatantCoordinates(*goblin, {11, 2});
-  auto coords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  auto coords = battleMap->getCombatantCoordinates(*sorcerer_lvl_1);
   battleMap->placeTerrain({7, 3}, Terrain::IMPASSABLE_TERRAIN);
   battleMap->placeTerrain({8, 5}, Terrain::IMPASSABLE_TERRAIN);
   auto adj = battleMap->getAdjacentCoords(coords);
@@ -1337,50 +1337,50 @@ TEST_F(BattleMapTest, GetAdjacentCoordsHugeWithTerrain)
 
 TEST_F(BattleMapTest, GetNearestFreeAdjacentCoord)
 {
-  session->addCombatant(draconic_sorcerer_lvl_1, Color::RED);
+  session->addCombatant(sorcerer_lvl_1, Color::RED);
   session->addCombatant(goblin, Color::BLUE);
 
   battleMap->buildBaseAdjacencyMatrix();
   goblin->setSize(Size::LARGE);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {1, 7});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {1, 7});
   battleMap->setCombatantCoordinates(*goblin, {5, 7});
-  auto [distances, _] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
-  auto myCoords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  auto [distances, _] = battleMap->calcDijkstra(*sorcerer_lvl_1);
+  auto myCoords = battleMap->getCombatantCoordinates(*sorcerer_lvl_1);
   auto targetCoords = battleMap->getCombatantCoordinates(*goblin);
-  auto nearest = battleMap->getNearestFreeAdjacentCoords(*draconic_sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
+  auto nearest = battleMap->getNearestFreeAdjacentCoords(*sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
   EXPECT_EQ(nearest.value(), (Coord{4, 7}));
 
-  battleMap->moveCombatant(*draconic_sorcerer_lvl_1, {3, 9});
-  myCoords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
-  nearest = battleMap->getNearestFreeAdjacentCoords(*draconic_sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
+  battleMap->moveCombatant(*sorcerer_lvl_1, {3, 9});
+  myCoords = battleMap->getCombatantCoordinates(*sorcerer_lvl_1);
+  nearest = battleMap->getNearestFreeAdjacentCoords(*sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
   EXPECT_EQ(nearest.value(), (Coord{4, 9}));
 
-  battleMap->moveCombatant(*draconic_sorcerer_lvl_1, {8, 6});
-  myCoords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
-  nearest = battleMap->getNearestFreeAdjacentCoords(*draconic_sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
+  battleMap->moveCombatant(*sorcerer_lvl_1, {8, 6});
+  myCoords = battleMap->getCombatantCoordinates(*sorcerer_lvl_1);
+  nearest = battleMap->getNearestFreeAdjacentCoords(*sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
   EXPECT_EQ(nearest.value(), (Coord{7, 6}));
 
-  battleMap->moveCombatant(*draconic_sorcerer_lvl_1, {7, 11});
-  myCoords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
-  nearest = battleMap->getNearestFreeAdjacentCoords(*draconic_sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
+  battleMap->moveCombatant(*sorcerer_lvl_1, {7, 11});
+  myCoords = battleMap->getCombatantCoordinates(*sorcerer_lvl_1);
+  nearest = battleMap->getNearestFreeAdjacentCoords(*sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
   EXPECT_EQ(nearest.value(), (Coord{7, 9}));
 }
 
 TEST_F(BattleMapTest, GetNearestFreeAdjacentCoordLargeHuge)
 {
   battleMap->buildBaseAdjacencyMatrix();
-  draconic_sorcerer_lvl_1->setSize(Size::HUGE);
+  sorcerer_lvl_1->setSize(Size::HUGE);
   goblin->setSize(Size::LARGE);
-  session->addCombatant(draconic_sorcerer_lvl_1, Color::BLUE);
+  session->addCombatant(sorcerer_lvl_1, Color::BLUE);
   session->addCombatant(goblin, Color::BLUE);
   session->addCombatant(bugbear, Color::RED);
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, {4, 10});
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, {4, 10});
   battleMap->setCombatantCoordinates(*goblin, {9, 10});
   battleMap->setCombatantCoordinates(*bugbear, {9, 13});
-  auto [distances, _] = battleMap->calcDijkstra(*draconic_sorcerer_lvl_1);
-  auto myCoords = battleMap->getCombatantCoordinates(*draconic_sorcerer_lvl_1);
+  auto [distances, _] = battleMap->calcDijkstra(*sorcerer_lvl_1);
+  auto myCoords = battleMap->getCombatantCoordinates(*sorcerer_lvl_1);
   auto targetCoords = battleMap->getCombatantCoordinates(*bugbear);
-  auto nearest = battleMap->getNearestFreeAdjacentCoords(*draconic_sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
+  auto nearest = battleMap->getNearestFreeAdjacentCoords(*sorcerer_lvl_1, myCoords, myCoords.getSize(), targetCoords, distances);
   EXPECT_NE(nearest.value(), (Coord{7, 10}));
 }
 

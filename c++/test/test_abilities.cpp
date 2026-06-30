@@ -8,7 +8,7 @@
 #include "core/session.hpp"
 #include "spells/spell_stats.hpp"
 #include "combatants/goblin.hpp"
-#include "combatants/draconic_sorcerer_lvl_1.hpp"
+#include "combatants/sorcerer_lvl_1.hpp"
 #include "combatants/bugbear_warrior.hpp"
 #include "combatants/stone_giant.hpp"
 #include "combatants/wild_heart_barbarian_lvl_3.hpp"
@@ -33,7 +33,7 @@ protected:
   Session *session;
   Goblin* goblin;
 //   Bugbear* bugbear;
-  DraconicSorcererLvl1* draconic_sorcerer_lvl_1;
+  SorcererLvl1* sorcerer_lvl_1;
 //   WildHeartBarbarianLvl3* wild_heart_barbarian;
 //   BattlemasterFighterLvl5* battlemaster_fighter_lvl_5;
 //   StoneGiant* stone_giant;
@@ -49,7 +49,7 @@ protected:
     teams = &Teams::getInstance();
     session = new Session();
     goblin = new Goblin(1);
-    draconic_sorcerer_lvl_1 = new DraconicSorcererLvl1(1);
+    sorcerer_lvl_1 = new SorcererLvl1(1);
     // bugbear = new Bugbear(1);
     // wild_heart_barbarian = new WildHeartBarbarianLvl3(1);
     // stone_giant = new StoneGiant(1);
@@ -63,11 +63,11 @@ protected:
 
 TEST_F(AbilityTest, FireboltCalculateThreatToTargetDelta) {
   battleMap->setCombatantCoordinates(*goblin, Coord({5, 0}));
-  battleMap->setCombatantCoordinates(*draconic_sorcerer_lvl_1, Coord({0, 0}));
+  battleMap->setCombatantCoordinates(*sorcerer_lvl_1, Coord({0, 0}));
   teams->addCombatantToTeam(*goblin, Color::RED);
-  teams->addCombatantToTeam(*draconic_sorcerer_lvl_1, Color::BLUE);
+  teams->addCombatantToTeam(*sorcerer_lvl_1, Color::BLUE);
 
-  std::shared_ptr<ActoidFactory> actoidFactory = draconic_sorcerer_lvl_1->getActionFactory(AbilityType::FIREBOLT).lock();
+  std::shared_ptr<ActoidFactory> actoidFactory = sorcerer_lvl_1->getActionFactory(AbilityType::FIREBOLT).lock();
   std::shared_ptr<FireboltFactory> fireboltFactory = std::dynamic_pointer_cast<FireboltFactory>(actoidFactory);
 
   ASSERT_NE(fireboltFactory, nullptr) << "Failed to cast ActoidFactory to FireboltFactory";

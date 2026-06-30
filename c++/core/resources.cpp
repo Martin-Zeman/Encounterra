@@ -76,11 +76,35 @@ namespace enc
           case AbilityType::FIREBALL:
             if(auto resource = actoid.getFactory().getResource())
               {
-                (*resource)->useResource(3);
+                (*resource)->useResource(combatant->getCastingSlotLevel(3));
               }
             else
               {
                 throw std::runtime_error("Fireball factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            break;
+
+          case AbilityType::HYPNOTIC_PATTERN:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(combatant->getCastingSlotLevel(3));
+              }
+            else
+              {
+                throw std::runtime_error("Hypnotic Pattern factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            break;
+
+          case AbilityType::BLINK:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(combatant->getCastingSlotLevel(3));
+              }
+            else
+              {
+                throw std::runtime_error("Blink factory must have an associated resource!");
               }
             combatant->setAlreadyUsedSpellslotThisTurn(true);
             break;
@@ -129,7 +153,7 @@ namespace enc
           case AbilityType::SLEEP:
             if(auto resource = actoid.getFactory().getResource())
               {
-                (*resource)->useResource(1);
+                (*resource)->useResource(combatant->getCastingSlotLevel(1));
               }
             else
               {
@@ -153,7 +177,7 @@ namespace enc
           case AbilityType::MOONBEAM:
             if(auto resource = actoid.getFactory().getResource())
               {
-                (*resource)->useResource(2);
+                (*resource)->useResource(combatant->getCastingSlotLevel(2));
               }
             else
               {
@@ -162,11 +186,23 @@ namespace enc
             combatant->setAlreadyUsedSpellslotThisTurn(true);
             break;
 
+          case AbilityType::DARKNESS:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(combatant->getCastingSlotLevel(2));
+              }
+            else
+              {
+                throw std::runtime_error("Darkness factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            break;
+
           case AbilityType::SCORCHING_RAY:
           case AbilityType::HOLD_PERSON:
             if(auto resource = actoid.getFactory().getResource())
               {
-                (*resource)->useResource(2);
+                (*resource)->useResource(combatant->getCastingSlotLevel(2));
               }
             else
               {
@@ -191,6 +227,8 @@ namespace enc
           case AbilityType::FIREBOLT:
           case AbilityType::SACRED_FLAME:
           case AbilityType::TOLL_THE_DEAD:
+          case AbilityType::ELDRITCH_BLAST:
+          case AbilityType::ARMOR_OF_SHADOWS:
             /*Nothing to do*/
             break;
 
@@ -222,13 +260,25 @@ namespace enc
             break;
           case AbilityType::HEALING_WORD:
           case AbilityType::SHIELD_OF_FAITH:
+          case AbilityType::HEX:
             if(auto resource = actoid.getFactory().getResource())
               {
-                (*resource)->useResource(1);
+                (*resource)->useResource(combatant->getCastingSlotLevel(1));
               }
             else
               {
-                throw std::runtime_error("Healing Word factory must have an associated resource!");
+                throw std::runtime_error("Leveled bonus-action spell factory must have an associated resource!");
+              }
+            combatant->setAlreadyUsedSpellslotThisTurn(true);
+            break;
+          case AbilityType::ARMOR_OF_AGATHYS:
+            if(auto resource = actoid.getFactory().getResource())
+              {
+                (*resource)->useResource(combatant->getCastingSlotLevel(1));
+              }
+            else
+              {
+                throw std::runtime_error("Armor of Agathys factory must have an associated resource!");
               }
             combatant->setAlreadyUsedSpellslotThisTurn(true);
             break;
@@ -263,13 +313,22 @@ namespace enc
           case AbilityType::MISTY_STEP:
             if(auto resource = actoid.getFactory().getResource())
               {
-                (*resource)->useResource(2);
+                // The Archfey Steps of the Fey invocation casts Misty Step from a free limited-use pool (a
+                // plain Uses resource): consume a single use and do not flag a leveled spell this turn.
+                if(!dynamic_cast<Spellslots *>(*resource))
+                  {
+                    (*resource)->useResource(1);
+                  }
+                else
+                  {
+                    (*resource)->useResource(combatant->getCastingSlotLevel(2));
+                    combatant->setAlreadyUsedSpellslotThisTurn(true);
+                  }
               }
             else
               {
                 throw std::runtime_error("Leveled bonus-action spell factory must have an associated resource!");
               }
-            combatant->setAlreadyUsedSpellslotThisTurn(true);
             break;
           case AbilityType::QUICKENED_SCORCHING_RAY:
           case AbilityType::QUICKENED_HOLD_PERSON:

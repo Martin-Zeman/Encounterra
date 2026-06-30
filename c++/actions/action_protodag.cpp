@@ -22,8 +22,7 @@ namespace enc
   {
     /**
      * Factory-level light feasibility check. This is the faithful port of Python's check_feasibility_light(), which
-     * operates on (action_type, factory) tuples (i.e. before any action is instantiated). The C++ Actoid-based
-     * checkFeasibilityLight() is the same predicate, just expressed over an already-created Actoid.
+     * operates on (action_type, factory) tuples (i.e. before any action is instantiated).
      */
     bool isFactoryFeasibleLight(Combatant *combatant, ActoidFactory *factory)
     {
@@ -65,9 +64,11 @@ namespace enc
           }
         case AbilityType::FIREBALL:
         case AbilityType::HUNGER_OF_HADAR:
+        case AbilityType::HYPNOTIC_PATTERN:
+        case AbilityType::BLINK:
           {
             if(auto resource = factory->getResource())
-              result = result && (*resource)->hasUses(3);
+              result = result && (*resource)->hasUses(combatant->getCastingSlotLevel(3));
             else
               throw std::runtime_error("Actoid factory must have an associated resource!");
             result = result && !combatant->hasAlreadyUsedSpellslotThisTurn();
@@ -75,13 +76,32 @@ namespace enc
           }
         case AbilityType::SCORCHING_RAY:
         case AbilityType::HOLD_PERSON:
-        case AbilityType::MISTY_STEP:
           {
             if(auto resource = factory->getResource())
-              result = result && (*resource)->hasUses(2);
+              result = result && (*resource)->hasUses(combatant->getCastingSlotLevel(2));
             else
               throw std::runtime_error("Actoid factory must have an associated resource!");
             result = result && !combatant->hasAlreadyUsedSpellslotThisTurn();
+            break;
+          }
+        case AbilityType::MISTY_STEP:
+          {
+            // Misty Step is cast either from a level-2 spell slot or, with the Archfey Steps of the Fey
+            // invocation, from a free limited-use pool (a plain Uses resource). The free version neither
+            // requires a slot nor counts as casting a leveled spell this turn.
+            if(auto resource = factory->getResource())
+              {
+                if(dynamic_cast<Spellslots *>(*resource))
+                  {
+                    result = result && (*resource)->hasUses(combatant->getCastingSlotLevel(2)) && !combatant->hasAlreadyUsedSpellslotThisTurn();
+                  }
+                else
+                  {
+                    result = result && (*resource)->hasUses();
+                  }
+              }
+            else
+              throw std::runtime_error("Actoid factory must have an associated resource!");
             break;
           }
         case AbilityType::QUICKENED_SCORCHING_RAY:
@@ -132,7 +152,7 @@ namespace enc
         case AbilityType::SLEEP:
           {
             if(auto resource = factory->getResource())
-              result = result && (*resource)->hasUses(1);
+              result = result && (*resource)->hasUses(combatant->getCastingSlotLevel(1));
             else
               throw std::runtime_error("Actoid factory must have an associated resource!");
             result = result && !combatant->hasAlreadyUsedSpellslotThisTurn();
@@ -141,9 +161,10 @@ namespace enc
         case AbilityType::SPIKE_GROWTH:
         case AbilityType::FLAMING_SPHERE:
         case AbilityType::MOONBEAM:
+        case AbilityType::DARKNESS:
           {
             if(auto resource = factory->getResource())
-              result = result && (*resource)->hasUses(2);
+              result = result && (*resource)->hasUses(combatant->getCastingSlotLevel(2));
             else
               throw std::runtime_error("Actoid factory must have an associated resource!");
             result = result && !combatant->hasAlreadyUsedSpellslotThisTurn();
@@ -156,6 +177,18 @@ namespace enc
             result = result && !combatant->isInnateSorceryActive();
             if(auto resource = factory->getResource())
               result = result && (*resource)->hasUses();
+            break;
+          }
+        case AbilityType::ARMOR_OF_AGATHYS:
+          {
+            // Level-1 bonus-action self-buff: don't recast while the ward is up, gated on a slot of the caster's
+            // casting level (Warlocks upcast to their pact-slot level) and the one-leveled-spell-per-turn rule.
+            result = result && !EffectTracker::getInstance().isAffectingCombatant(combatant, EffectType::ARMOR_OF_AGATHYS);
+            if(auto resource = factory->getResource())
+              result = result && (*resource)->hasUses(combatant->getCastingSlotLevel(1));
+            else
+              throw std::runtime_error("Armor of Agathys factory must have an associated resource!");
+            result = result && !combatant->hasAlreadyUsedSpellslotThisTurn();
             break;
           }
         case AbilityType::RAGE:

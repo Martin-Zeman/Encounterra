@@ -1258,7 +1258,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     for(const auto &[potentialTargetId, combatantCoords] : _combatantCoordinateCache)
       {
         Combatant *potentialTarget = teams.getCombatantById(potentialTargetId);
-        if(!potentialTarget->isAlive())
+        if(!potentialTarget->isAlive() || potentialTarget->isEtherealUntargetable())
           continue;
         
         if(abilityType == SpellType::HARMFUL)
@@ -1292,7 +1292,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     for(const auto &[potentialTargetId, combatantCoords] : _combatantCoordinateCache)
       {
         Combatant *potentialTarget = teams.getCombatantById(potentialTargetId);
-        if(!potentialTarget->isAlive())
+        if(!potentialTarget->isAlive() || potentialTarget->isEtherealUntargetable())
           continue;
 
         bool isAffected = std::any_of(combatantCoords.get().begin(), combatantCoords.get().end(),
@@ -1319,7 +1319,7 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     for(const auto &[potentialTargetId, combatantCoords] : _combatantCoordinateCache)
       {
         Combatant *potentialTarget = teams.getCombatantById(potentialTargetId);
-        if(!potentialTarget->isAlive())
+        if(!potentialTarget->isAlive() || potentialTarget->isEtherealUntargetable())
           continue;
 
         bool isAffected = std::any_of(combatantCoords.get().begin(), combatantCoords.get().end(),
@@ -1345,7 +1345,8 @@ bool BattleMap::isAllyAdjacentToTarget(const Combatant &combatant, const Combata
     for(const auto &[potentialTargetId, combatantCoords] : _combatantCoordinateCache)
       {
         Combatant *potentialTarget = teams.getCombatantById(potentialTargetId);
-        if(potentialTarget->isAlive() && getCartesianDistanceCoords(combatantCoords, affectedCoords) == 0)
+        if(potentialTarget->isAlive() && !potentialTarget->isEtherealUntargetable()
+           && getCartesianDistanceCoords(combatantCoords, affectedCoords) == 0)
           {
             affectedCombatants.push_back(potentialTarget);
           }

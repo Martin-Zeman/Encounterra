@@ -153,6 +153,22 @@ namespace enc
     const std::unordered_map<int, int> &getCurrentSlots() const { return _currSpellslots; }
     void setCurrentSlots(const std::unordered_map<int, int> &slots) { _currSpellslots = slots; }
 
+    //! Highest spell level (ignoring cantrips at level 0) for which this caster has any maximum slots.
+    //! For a Warlock's Pact Magic this is the single level at which all of its slots exist, so it doubles as
+    //! the level every leveled Warlock spell is automatically cast (upcast) at.
+    int getMaxSlotLevel() const
+    {
+      int maxLevel = 0;
+      for(const auto &[level, count] : _maxSpellslots)
+        {
+          if(level != 0 && count > 0 && level > maxLevel)
+            {
+              maxLevel = level;
+            }
+        }
+      return maxLevel;
+    }
+
   private:
     std::unordered_map<int, int> _maxSpellslots;
     std::unordered_map<int, int> _currSpellslots;

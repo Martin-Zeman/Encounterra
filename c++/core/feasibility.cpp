@@ -6,6 +6,7 @@
 #include "actions/movement.hpp"
 #include "actions/smite_melee_attack.hpp"
 #include "abilities/on_hit_divine_smite.hpp"
+#include "effects/effect_tracker.hpp"
 
 namespace enc
 {
@@ -124,10 +125,12 @@ namespace enc
       }
       case AbilityType::FIREBALL:
       case AbilityType::HUNGER_OF_HADAR:
+      case AbilityType::HYPNOTIC_PATTERN:
+      case AbilityType::BLINK:
       {
         if(auto resource = actoid.getFactory().getResource())
           {
-            result &= (*resource)->hasUses(3);
+            result &= (*resource)->hasUses(combatant->getCastingSlotLevel(3));
           }
         else
           {
@@ -142,7 +145,15 @@ namespace enc
       {
         if(auto resource = actoid.getFactory().getResource())
           {
-            result &= (*resource)->hasUses(2);
+            // Misty Step can be cast from a level-2 slot or, with the Archfey Steps of the Fey invocation,
+            // from a free limited-use pool (a plain Uses resource). The free version neither needs a slot nor
+            // counts as casting a leveled spell this turn.
+            if(actoid.getAbilityType() == AbilityType::MISTY_STEP && !dynamic_cast<Spellslots *>(*resource))
+              {
+                result &= (*resource)->hasUses();
+                break;
+              }
+            result &= (*resource)->hasUses(combatant->getCastingSlotLevel(2));
           }
         else
           {
@@ -197,10 +208,11 @@ namespace enc
       case AbilityType::MAGIC_MISSILE:
       case AbilityType::MAGE_ARMOR:
       case AbilityType::SLEEP:
+      case AbilityType::HEX:
       {
         if(auto resource = actoid.getFactory().getResource())
           {
-            result &= (*resource)->hasUses(1);
+            result &= (*resource)->hasUses(combatant->getCastingSlotLevel(1));
           }
         else
           {
@@ -212,10 +224,11 @@ namespace enc
       case AbilityType::SPIKE_GROWTH:
       case AbilityType::FLAMING_SPHERE:
       case AbilityType::MOONBEAM:
+      case AbilityType::DARKNESS:
       {
         if(auto resource = actoid.getFactory().getResource())
           {
-            result &= (*resource)->hasUses(2);
+            result &= (*resource)->hasUses(combatant->getCastingSlotLevel(2));
           }
         else
           {
@@ -235,9 +248,27 @@ namespace enc
           }
         break;
       }
+      case AbilityType::ARMOR_OF_AGATHYS:
+      {
+        // Level-1 bonus-action self-buff. Don't recast while the ward is still up; gated on a slot of the
+        // caster's casting level (Warlocks upcast it to their pact-slot level) and the one-leveled-spell rule.
+        result &= !EffectTracker::getInstance().isAffectingCombatant(combatant, EffectType::ARMOR_OF_AGATHYS);
+        if(auto resource = actoid.getFactory().getResource())
+          {
+            result &= (*resource)->hasUses(combatant->getCastingSlotLevel(1));
+          }
+        else
+          {
+            throw std::runtime_error("Armor of Agathys factory must have an associated resource!");
+          }
+        result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
+        break;
+      }
       case AbilityType::FIREBOLT:
       case AbilityType::SACRED_FLAME:
       case AbilityType::TOLL_THE_DEAD:
+      case AbilityType::ELDRITCH_BLAST:
+      case AbilityType::ARMOR_OF_SHADOWS:
         /*Nothing to do*/
         break;
 
@@ -269,227 +300,5 @@ namespace enc
       }
     return result;
   }
-
-  bool checkFeasibilityLight(Combatant *combatant, Actoid &actoid)
-  {
-    bool result = false;
-    AbilityType abilityType = actoid.getAbilityType();
-    if(abilityType == AbilityType::LAY_ON_HANDS || abilityType == AbilityType::DIVINE_SMITE)
-      {
-        result = combatant->hasBonusAction();
-      }
-    else if(abilityType > AbilityType::NOP && abilityType < AbilityType::BONUS_ACTION_DELIMITER)
-      {
-        result = combatant->hasAction();
-      }
-    else if(abilityType > AbilityType::BONUS_ACTION_DELIMITER && abilityType < AbilityType::REACTION_DELIMITER)
-      {
-        result = combatant->hasBonusAction();
-      }
-    else if(abilityType > AbilityType::REACTION_DELIMITER && abilityType < AbilityType::HASTE_ACTION_DELIMITER)
-      {
-        result = combatant->hasReaction();
-      }
-    else if(abilityType > AbilityType::HASTE_ACTION_DELIMITER && abilityType < AbilityType::PASSIVE_DELIMITER)
-      {
-        result = combatant->hasHasteAction();
-      }
-    else if(isMovementAbility(abilityType))
-      {
-        // Mirrors Python check_feasibility_light's Movement branch.
-        return combatant->getMovement() > 0 && !combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::RESTRAINED});
-      }
-    else if(abilityType == AbilityType::ACTION_SURGE)
-      {
-        // Free action: gated purely by its limited-use resource (checked in the switch below).
-        result = true;
-      }
-    else
-      {
-        throw std::runtime_error("Unknown Ability Type in checkFeasibilityLight!");
-      }
-    switch(actoid.getAbilityType())
-      {
-      case AbilityType::MELEE_ATTACK:
-      case AbilityType::RANGED_ATTACK:
-      case AbilityType::HASTE_MELEE_ATTACK:
-      case AbilityType::HASTE_RANGED_ATTACK:
-      case AbilityType::VAMPIRIC_BITE:
-      case AbilityType::HASTE_VAMPIRIC_BITE:
-      case AbilityType::PARALYZING_MELEE_ATTACK:
-      case AbilityType::HASTE_PARALYZING_MELEE_ATTACK:
-      {
-        // @todo: Add is reckless attack has been used
-        Attack &attack = dynamic_cast<Attack &>(actoid);
-        // Multiattack: a second, complementary attack can be granted by the attack FSM even once the action
-        // economy is spent (mirrors Python feasibility's `res |= not attack_fsm.is_0() and ...`).
-        result = result || (!combatant->isAttackFsmAtStart() && combatant->attackFsmHasTransition(&attack.getFactory()));
-        if(auto ammo = attack.getFactory().getResource())
-          {
-            result &= (*ammo)->hasUses();
-          }
-        else
-          {
-            throw std::runtime_error("Attack factory has no ammo!");
-          }
-        break;
-      }
-      case AbilityType::SMITE_MELEE_ATTACK:
-      {
-        Attack &attack = dynamic_cast<Attack &>(actoid);
-        auto *smite = dynamic_cast<SmiteMeleeAttackFactory *>(&attack.getFactory());
-        const ActoidFactory *base = smite ? smite->getBaseFactory() : &attack.getFactory();
-        result = result || (!combatant->isAttackFsmAtStart() && combatant->attackFsmHasTransition(base));
-        result &= combatant->hasBonusAction() && OnHitDivineSmite::canSmite(combatant);
-        if(auto ammo = attack.getFactory().getResource())
-          {
-            result &= (*ammo)->hasUses();
-          }
-        break;
-      }
-      case AbilityType::FIREBALL:
-      case AbilityType::HUNGER_OF_HADAR:
-      {
-        if(auto resource = actoid.getFactory().getResource())
-          {
-            result &= (*resource)->hasUses(3);
-          }
-        else
-          {
-            throw std::runtime_error("Actoid factory must have an associated resource!");
-          }
-        result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
-        break;
-      }
-      case AbilityType::SCORCHING_RAY:
-      case AbilityType::HOLD_PERSON:
-      case AbilityType::MISTY_STEP:
-      {
-        if(auto resource = actoid.getFactory().getResource())
-          {
-            result &= (*resource)->hasUses(2);
-          }
-        else
-          {
-            throw std::runtime_error("Actoid factory must have an associated resource!");
-          }
-        result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
-        break;
-      }
-      case AbilityType::QUICKENED_SCORCHING_RAY:
-      case AbilityType::QUICKENED_HOLD_PERSON:
-      {
-        if(auto resource = actoid.getFactory().getResource())
-          {
-            result &= (*resource)->hasUses(2);
-          }
-        else
-          {
-            throw std::runtime_error("Actoid factory must have an associated resource!");
-          }
-        result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
-        result &= combatant->getSorceryPoints() > 1;
-        break;
-      }
-      case AbilityType::TWINNED_HOLD_PERSON:
-      {
-        // Twinned Spell (2024): costs 1 sorcery point to add a second target.
-        if(auto resource = actoid.getFactory().getResource())
-          {
-            result &= (*resource)->hasUses(2);
-          }
-        else
-          {
-            throw std::runtime_error("Actoid factory must have an associated resource!");
-          }
-        result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
-        result &= combatant->getSorceryPoints() > 0;
-        break;
-      }
-      case AbilityType::QUICKENED_FIREBOLT:
-      case AbilityType::QUICKENED_RAY_OF_FROST:
-      {
-        result &= combatant->getSorceryPoints() > 1;
-        break;
-      }
-      case AbilityType::HEALING_WORD:
-      case AbilityType::CURE_WOUNDS:
-      case AbilityType::THUNDERWAVE:
-      case AbilityType::FAERIE_FIRE:
-      case AbilityType::BLESS:
-      case AbilityType::GUIDING_BOLT:
-      case AbilityType::SHIELD_OF_FAITH:
-      case AbilityType::MAGIC_MISSILE:
-      case AbilityType::MAGE_ARMOR:
-      case AbilityType::SLEEP:
-      {
-        if(auto resource = actoid.getFactory().getResource())
-          {
-            result &= (*resource)->hasUses(1);
-          }
-        else
-          {
-            throw std::runtime_error("Actoid factory must have an associated resource!");
-          }
-        result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
-        break;
-      }
-      case AbilityType::SPIKE_GROWTH:
-      case AbilityType::FLAMING_SPHERE:
-      case AbilityType::MOONBEAM:
-      {
-        if(auto resource = actoid.getFactory().getResource())
-          {
-            result &= (*resource)->hasUses(2);
-          }
-        else
-          {
-            throw std::runtime_error("Actoid factory must have an associated resource!");
-          }
-        result &= !combatant->hasAlreadyUsedSpellslotThisTurn();
-        break;
-      }
-      case AbilityType::INNATE_SORCERY:
-      {
-        // A bonus-action self-buff that lasts the encounter: never re-channel it while it is already active,
-        // and only while uses remain.
-        result &= !combatant->isInnateSorceryActive();
-        if(auto resource = actoid.getFactory().getResource())
-          {
-            result &= (*resource)->hasUses();
-          }
-        break;
-      }
-      case AbilityType::FIREBOLT:
-      case AbilityType::SACRED_FLAME:
-      case AbilityType::TOLL_THE_DEAD:
-        /*Nothing to do*/
-        break;
-
-      case AbilityType::SECOND_WIND:
-      case AbilityType::ACTION_SURGE:
-      case AbilityType::RIPOSTE:
-      case AbilityType::LAY_ON_HANDS:
-      case AbilityType::VOW_OF_ENMITY:
-      {
-        if(auto resource = actoid.getFactory().getResource())
-          {
-            result &= (*resource)->hasUses();
-          }
-        else
-          {
-            throw std::runtime_error("Second Wind / Action Surge / Riposte factory must have an associated resource!");
-          }
-        break;
-      }
-      case AbilityType::DIVINE_SMITE:
-      {
-        result &= OnHitDivineSmite::canSmite(combatant);
-        break;
-      }
-
-      default: break;
-      }
-    return result;
-  }
+  
 }

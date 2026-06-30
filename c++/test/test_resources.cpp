@@ -14,7 +14,7 @@
 #include "spells/scorching_ray.hpp"
 #include "combatants/goblin.hpp"
 #include "combatants/acolyte.hpp"
-#include "combatants/draconic_sorcerer_lvl_1.hpp"
+#include "combatants/sorcerer_lvl_1.hpp"
 #include "combatants/draconic_sorcerer_lvl_5.hpp"
 #include "combatants/moon_druid_lvl_5.hpp"
 #include "combatants/wild_heart_barbarian_lvl_3.hpp"
@@ -33,7 +33,7 @@ protected:
     Session* session;
     Goblin* goblin;
     Acolyte* acolyte;
-    DraconicSorcererLvl1* draconic_sorcerer_lvl_1;
+    SorcererLvl1* sorcerer_lvl_1;
     DraconicSorcererLvl5* draconic_sorcerer_lvl_5;
     MoonDruidLvl5* moon_druid_lvl_5;
     WildHeartBarbarianLvl3* wild_heart_barbarian_lvl_3;
@@ -47,7 +47,7 @@ protected:
         session = new Session();
         goblin = new Goblin(1);
         acolyte = new Acolyte(1);
-        draconic_sorcerer_lvl_1 = new DraconicSorcererLvl1(1);
+        sorcerer_lvl_1 = new SorcererLvl1(1);
         draconic_sorcerer_lvl_5 = new DraconicSorcererLvl5(1);
         moon_druid_lvl_5 = new MoonDruidLvl5(1);
         wild_heart_barbarian_lvl_3 = new WildHeartBarbarianLvl3(1);
@@ -58,7 +58,7 @@ protected:
         delete session;
         delete goblin;
         delete acolyte;
-        delete draconic_sorcerer_lvl_1;
+        delete sorcerer_lvl_1;
         delete draconic_sorcerer_lvl_5;
         delete moon_druid_lvl_5;
         delete wild_heart_barbarian_lvl_3;
@@ -142,41 +142,41 @@ TEST_F(ResourceTest, UseResourcesScorchingRayConsumesSlotAndFlagsTurn)
 
 // TEST_F(ResourceTest, UseResourcesAlreadyUsedSpellslotThisTurn)
 // {
-//     teams->addCombatantToTeam(draconic_sorcerer_lvl_1, Color::BLUE);
+//     teams->addCombatantToTeam(sorcerer_lvl_1, Color::BLUE);
     
-//     FireboltFactory firebolt_factory(1, Action::FIREBOLT, draconic_sorcerer_lvl_1, draconic_sorcerer_lvl_1->getSpellslots());
+//     FireboltFactory firebolt_factory(1, Action::FIREBOLT, sorcerer_lvl_1, sorcerer_lvl_1->getSpellslots());
 //     auto firebolt = firebolt_factory.create(goblin);
     
-//     FireballFactory fireball_factory(1, Action::FIREBALL, draconic_sorcerer_lvl_1, draconic_sorcerer_lvl_1->getSpellslots());
+//     FireballFactory fireball_factory(1, Action::FIREBALL, sorcerer_lvl_1, sorcerer_lvl_1->getSpellslots());
 //     auto fireball = fireball_factory.create(std::array<int, 2>{0, 0});
 
-//     EXPECT_FALSE(draconic_sorcerer_lvl_1->alreadyUsedSpellslotThisTurn());
-//     useResources(draconic_sorcerer_lvl_1, firebolt.get());
-//     EXPECT_FALSE(draconic_sorcerer_lvl_1->alreadyUsedSpellslotThisTurn());
-//     useResources(draconic_sorcerer_lvl_1, fireball.get());
-//     EXPECT_TRUE(draconic_sorcerer_lvl_1->alreadyUsedSpellslotThisTurn());
+//     EXPECT_FALSE(sorcerer_lvl_1->alreadyUsedSpellslotThisTurn());
+//     useResources(sorcerer_lvl_1, firebolt.get());
+//     EXPECT_FALSE(sorcerer_lvl_1->alreadyUsedSpellslotThisTurn());
+//     useResources(sorcerer_lvl_1, fireball.get());
+//     EXPECT_TRUE(sorcerer_lvl_1->alreadyUsedSpellslotThisTurn());
 // }
 
 // TEST_F(ResourceTest, DepleteResourceSpellslots)
 // {
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getUses(3), 2);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getUses(2), 3);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getUses(1), 4);
+//     EXPECT_EQ(sorcerer_lvl_1->getSpellslots()->getUses(3), 2);
+//     EXPECT_EQ(sorcerer_lvl_1->getSpellslots()->getUses(2), 3);
+//     EXPECT_EQ(sorcerer_lvl_1->getSpellslots()->getUses(1), 4);
 
-//     draconic_sorcerer_lvl_1->getSpellslots()->depleteResource(ResourceDepletionLevel::PARTIALLY_DEPLETED);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getUses(3), 1);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getUses(2), 1);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getUses(1), 2);
+//     sorcerer_lvl_1->getSpellslots()->depleteResource(ResourceDepletionLevel::PARTIALLY_DEPLETED);
+//     EXPECT_EQ(sorcerer_lvl_1->getSpellslots()->getUses(3), 1);
+//     EXPECT_EQ(sorcerer_lvl_1->getSpellslots()->getUses(2), 1);
+//     EXPECT_EQ(sorcerer_lvl_1->getSpellslots()->getUses(1), 2);
 
-//     draconic_sorcerer_lvl_1->getSpellslots()->depleteResource(ResourceDepletionLevel::FULLY_DEPLETED);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getUses(3), 0);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getUses(2), 0);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getUses(1), 0);
+//     sorcerer_lvl_1->getSpellslots()->depleteResource(ResourceDepletionLevel::FULLY_DEPLETED);
+//     EXPECT_EQ(sorcerer_lvl_1->getSpellslots()->getUses(3), 0);
+//     EXPECT_EQ(sorcerer_lvl_1->getSpellslots()->getUses(2), 0);
+//     EXPECT_EQ(sorcerer_lvl_1->getSpellslots()->getUses(1), 0);
 
-//     draconic_sorcerer_lvl_1->getSpellslots()->depleteResource(ResourceDepletionLevel::PARTIALLY_DEPLETED);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getUses(3), 1);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getUses(2), 1);
-//     EXPECT_EQ(draconic_sorcerer_lvl_1->getSpellslots()->getUses(1), 2);
+//     sorcerer_lvl_1->getSpellslots()->depleteResource(ResourceDepletionLevel::PARTIALLY_DEPLETED);
+//     EXPECT_EQ(sorcerer_lvl_1->getSpellslots()->getUses(3), 1);
+//     EXPECT_EQ(sorcerer_lvl_1->getSpellslots()->getUses(2), 1);
+//     EXPECT_EQ(sorcerer_lvl_1->getSpellslots()->getUses(1), 2);
 // }
 
 // TEST_F(ResourceTest, DepleteResourceUses)
@@ -208,7 +208,7 @@ TEST_F(ResourceTest, UseResourcesScorchingRayConsumesSlotAndFlagsTurn)
 // {
 //     auto& barbarian_rage = wild_heart_barbarian_lvl_3->getResources()[BonusAction::TOTEM_RAGE];
 //     auto& druid_wildshape = moon_druid_lvl_5->getResources()[Action::WILDSHAPE];
-//     auto& sorcerer_metamagic = draconic_sorcerer_lvl_1->getResources()[Passive::METAMAGIC];
+//     auto& sorcerer_metamagic = sorcerer_lvl_1->getResources()[Passive::METAMAGIC];
 
 //     EXPECT_TRUE(barbarian_rage->hasUses1));
 //     EXPECT_EQ(barbarian_rage->getUses(1), 3);
@@ -228,9 +228,9 @@ TEST_F(ResourceTest, UseResourcesScorchingRayConsumesSlotAndFlagsTurn)
 
 //     EXPECT_TRUE(sorcerer_metamagic->hasUses1));
 //     EXPECT_EQ(sorcerer_metamagic->getUses(1), 5);
-//     draconic_sorcerer_lvl_1->depleteResources(ResourceDepletionLevel::PARTIALLY_DEPLETED);
+//     sorcerer_lvl_1->depleteResources(ResourceDepletionLevel::PARTIALLY_DEPLETED);
 //     EXPECT_EQ(sorcerer_metamagic->getUses(1), 2);
-//     draconic_sorcerer_lvl_1->depleteResources(ResourceDepletionLevel::FULLY_DEPLETED);
+//     sorcerer_lvl_1->depleteResources(ResourceDepletionLevel::FULLY_DEPLETED);
 //     EXPECT_EQ(sorcerer_metamagic->getUses(1), 0);
 //     EXPECT_FALSE(sorcerer_metamagic->hasUses1));
 // }
@@ -243,7 +243,7 @@ TEST_F(ResourceTest, UseResourcesScorchingRayConsumesSlotAndFlagsTurn)
 
 // TEST_F(ResourceTest, ResourceDepletionOnSession)
 // {
-//     session->addCombatant(DraconicSorcererLvl1::id, Color::BLUE, ResourceDepletionLevel::FULLY_DEPLETED);
+//     session->addCombatant(SorcererLvl1::id, Color::BLUE, ResourceDepletionLevel::FULLY_DEPLETED);
 //     session->addCombatant(MoonDruidLvl5::id, Color::RED, ResourceDepletionLevel::PARTIALLY_DEPLETED);
 
 //     EXPECT_EQ(session->getCombatants()[0]->getSpellslots()->getUses3), 0);

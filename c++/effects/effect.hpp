@@ -48,6 +48,11 @@ namespace enc
     CHARM_PERSON,
     COLOR_SPRAY,
     BARDIC_INSPIRATION,
+    HEX,
+    ARMOR_OF_AGATHYS,
+    DARKNESS,
+    HYPNOTIC_PATTERN,
+    BLINK,
   };
 
   class Effect : public std::enable_shared_from_this<Effect>

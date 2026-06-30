@@ -24,7 +24,7 @@ namespace enc
     static constexpr bool concentration = false;
     static constexpr SpellType type = SpellType::BUFF;
 
-    MageArmorFactory(Combatant *caster, Resource *resource, int armoredBaseAc);
+    MageArmorFactory(Combatant *caster, Resource *resource, int armoredBaseAc, AbilityType abilityType = AbilityType::MAGE_ARMOR);
 
     std::vector<Combatant *> getEligibleTargets() const;
     std::vector<std::shared_ptr<Actoid>> createAll(void *previousActionInDag = nullptr) override;

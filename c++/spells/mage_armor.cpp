@@ -11,8 +11,11 @@ namespace enc
     constexpr int INCOMING_ATTACK_THREAT_RADIUS = 6;
   }
 
-  MageArmorFactory::MageArmorFactory(Combatant *caster, Resource *resource, int armoredBaseAc)
-      : ThreatModifierFactory("MageArmorFactory", "Mage Armor", caster, AbilityType::MAGE_ARMOR), _resource(resource), _armoredBaseAc(armoredBaseAc)
+  MageArmorFactory::MageArmorFactory(Combatant *caster, Resource *resource, int armoredBaseAc, AbilityType abilityType)
+      : ThreatModifierFactory("MageArmorFactory",
+                              abilityType == AbilityType::ARMOR_OF_SHADOWS ? "Armor of Shadows" : "Mage Armor",
+                              caster, abilityType),
+        _resource(resource), _armoredBaseAc(armoredBaseAc)
   {}
 
   std::vector<Combatant *> MageArmorFactory::getEligibleTargets() const

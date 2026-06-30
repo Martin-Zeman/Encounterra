@@ -28,6 +28,12 @@
 #include "spells/bane.hpp"
 #include "spells/charm_person.hpp"
 #include "spells/color_spray.hpp"
+#include "spells/eldritch_blast.hpp"
+#include "spells/hex.hpp"
+#include "spells/armor_of_agathys.hpp"
+#include "spells/darkness.hpp"
+#include "spells/hypnotic_pattern.hpp"
+#include "spells/blink.hpp"
 #include "abilities/bardic_inspiration.hpp"
 #include "abilities/cutting_words.hpp"
 #include "spells/sleep.hpp"
@@ -45,6 +51,27 @@
 
 namespace enc
 {
+  // When a Hex curse cast by the attacker is active on the target, every successful attack roll (weapon or
+  // spell) deals an extra 1d6 Necrotic. A critical hit doubles the curse's damage dice just like the rest.
+  void applyHexDamageOnHit(Combatant *attacker, Combatant *target, int multiplier)
+  {
+    EffectTracker &tracker = EffectTracker::getInstance();
+    for(const auto &effect : tracker.getEffectsByInitiator(attacker))
+      {
+        if(effect->getEffectType() == EffectType::HEX && effect->isAffecting(target))
+          {
+            int hexDmg = multiplier * rollDiceMulti({HexFactory::extraDmgDice});
+            if(hexDmg < 0)
+              {
+                hexDmg = 0;
+              }
+            std::cout << "Hex deals an extra " << hexDmg << " Necrotic damage to " << target->_name << std::endl;
+            target->receiveDmg(hexDmg, HexFactory::dmgType, multiplier);
+            return;
+          }
+      }
+  }
+
   bool hasAdvantageSavingThrow(SavingThrow savingThrow, Combatant *target, bool isSpellEffect)
   {
     if(target->getSavingThrowRollTypeMods(savingThrow).contains(RollType::ADVANTAGE))
@@ -447,8 +474,31 @@ namespace enc
                   << std::endl;
         std::vector<std::pair<int, DamageType>> compoundDmg = {{baseDmg, factory.getDmgType()}};
         attack->setRollType(finalModifier);
+        // Armor of Agathys: a creature that hits the warded caster with a melee attack takes Cold damage,
+        // provided the caster still has the spell's temporary Hit Points at the moment of the hit. The
+        // retaliation amount scales with the (upcast) slot level the spell was cast at, so read it from the
+        // active effect instance.
+        int agathysRetaliation = 0;
+        if(factory.hasFlag(FactoryFlags::IS_MELEE) && target->getTemporaryHp() > 0)
+          {
+            for(const auto &effect : effectTracker.getAffectingCombatant(target))
+              {
+                if(auto armor = std::dynamic_pointer_cast<ArmorOfAgathys>(effect))
+                  {
+                    agathysRetaliation = armor->getRetaliationDamage();
+                    break;
+                  }
+              }
+          }
         target->receiveCompoundDmg(compoundDmg, multiplier);
+        applyHexDamageOnHit(attacker, target, multiplier);
         battleMap.removeCombatantIfDead(*target);
+        if(agathysRetaliation > 0 && attacker->isAlive())
+          {
+            std::cout << attacker->_name << " takes " << agathysRetaliation << " Cold damage from Armor of Agathys" << std::endl;
+            attacker->receiveDmg(agathysRetaliation, DamageType::Cold);
+            battleMap.removeCombatantIfDead(*attacker);
+          }
         // Apply on-hit riders (e.g. the grapple from a Grab) while the target is still in play.
         if(target->isAlive())
           {
@@ -488,7 +538,7 @@ namespace enc
     return ActionResult::MISS;
   }
 
-  ActionResult ActionResolver::resolveRangedSpellAttack(Combatant *caster, int toHit, const Die &dmgDice, DamageType dmgType, Combatant *target)
+  ActionResult ActionResolver::resolveRangedSpellAttack(Combatant *caster, int toHit, const Die &dmgDice, DamageType dmgType, Combatant *target, int dmgBonus)
   {
     auto &battleMap = BattleMap::getInstance();
 
@@ -566,13 +616,14 @@ namespace enc
 
     if(rolled + toHit >= target->getAC())
       {
-        int dmg = multiplier * rollDiceMulti({dmgDice});
+        int dmg = multiplier * rollDiceMulti({dmgDice}) + dmgBonus;
         if(dmg < 0)
           {
             dmg = 0;
           }
         std::cout << "The spell " << (multiplier == 2 ? "CRITS" : "hits") << " " << target->_name << " for " << dmg << " damage" << std::endl;
         target->receiveDmg(dmg, dmgType, multiplier);
+        applyHexDamageOnHit(caster, target, multiplier);
         battleMap.removeCombatantIfDead(*target);
         return ActionResult::HIT;
       }
@@ -749,6 +800,73 @@ namespace enc
           return ActionResult::OTHER;
         }
 
+      case AbilityType::HEX:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          // Hex registers itself with the EffectTracker and the caster's concentration in activate().
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::ARMOR_OF_AGATHYS:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          // Armor of Agathys registers itself with the EffectTracker and grants temporary Hit Points in activate().
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::DARKNESS:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          // Darkness registers itself with the EffectTracker and the caster's concentration in activate().
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::HYPNOTIC_PATTERN:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          // Hypnotic Pattern only becomes a tracked Concentration effect if at least one creature fails its
+          // save; activate() calls setConcentrationEffect() in that case (see Sleep / Faerie Fire).
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::BLINK:
+        {
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          // Blink registers itself with the EffectTracker in activate(); the end-of-turn d6 and the
+          // start-of-turn return are handled by the effect's turn hooks.
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
       case AbilityType::FIREBOLT:
       case AbilityType::QUICKENED_FIREBOLT:
         {
@@ -759,6 +877,42 @@ namespace enc
             }
           std::cout << combatant->_name << " casts " << action->toString() << std::endl;
           return resolveRangedSpellAttack(combatant, firebolt->getToHit(), firebolt->getDmgDice(), FireboltFactory::dmgType, &firebolt->getTarget());
+        }
+
+      case AbilityType::ELDRITCH_BLAST:
+        {
+          auto *eldritchBlast = dynamic_cast<EldritchBlast *>(action.get());
+          if(!eldritchBlast)
+            {
+              return ActionResult::MISS;
+            }
+          std::cout << combatant->_name << " casts " << action->toString() << std::endl;
+          Combatant *target = &eldritchBlast->getTarget();
+          // Each beam is a separate spell attack roll. At level 1 there is a single beam; higher levels add
+          // more. The planner concentrates every beam on this target, so stop early once it is defeated.
+          ActionResult result = ActionResult::MISS;
+          for(int beam = 0; beam < eldritchBlast->getNumBeams(); ++beam)
+            {
+              if(!target->isAlive())
+                {
+                  break;
+                }
+              ActionResult beamResult = resolveRangedSpellAttack(combatant, eldritchBlast->getToHit(), eldritchBlast->getDmgDice(),
+                                                                 EldritchBlastFactory::dmgType, target, eldritchBlast->getDmgBonus());
+              if(beamResult == ActionResult::HIT)
+                {
+                  result = ActionResult::HIT;
+                  // Eldritch Invocation: Repelling Blast pushes a hit Large-or-smaller target 10 ft (2 cells)
+                  // straight away from the caster.
+                  if(eldritchBlast->isRepelling() && target->isAlive() && target->getSize() <= Size::LARGE)
+                    {
+                      auto &battleMap = BattleMap::getInstance();
+                      std::cout << combatant->_name << " repels " << target->_name << " away" << std::endl;
+                      battleMap.pushCombatantAwayFrom(battleMap.getCombatantCoordinates(*combatant).getCenter(), target, 2);
+                    }
+                }
+            }
+          return result;
         }
 
       case AbilityType::SACRED_FLAME:
@@ -968,6 +1122,7 @@ namespace enc
         }
 
       case AbilityType::MAGE_ARMOR:
+      case AbilityType::ARMOR_OF_SHADOWS:
         {
           auto effect = std::dynamic_pointer_cast<Effect>(action);
           if(!effect)
@@ -1195,6 +1350,14 @@ namespace enc
             }
           std::cout << combatant->_name << " casts " << action->toString() << std::endl;
           BattleMap::getInstance().moveCombatant(*combatant, mistyStep->getCoord());
+          // Refreshing Step (Archfey Steps of the Fey): right after teleporting, the warlock gains 1d10
+          // temporary hit points.
+          if(combatant->hasPassiveAbility(AbilityType::STEPS_OF_THE_FEY))
+            {
+              int tempHp = rollDice(Die{1, 10});
+              combatant->setTemporaryHp(tempHp);
+              std::cout << combatant->_name << " gains " << tempHp << " temporary hit points from Refreshing Step" << std::endl;
+            }
           return ActionResult::OTHER;
         }
 
@@ -1348,6 +1511,10 @@ ActionResult ActionResolver::resolveAction(const std::shared_ptr<Actoid>& action
           case EffectType::BANE:
           case EffectType::CHARM_PERSON:
           case EffectType::COLOR_SPRAY:
+          case EffectType::ARMOR_OF_AGATHYS:
+          case EffectType::DARKNESS:
+          case EffectType::HYPNOTIC_PATTERN:
+          case EffectType::BLINK:
           case EffectType::BARDIC_INSPIRATION:
             // TODO: track if the barbarian attacked or received damage
             break;

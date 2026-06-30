@@ -51,6 +51,12 @@
 #include "spells/bane.hpp"
 #include "spells/charm_person.hpp"
 #include "spells/color_spray.hpp"
+#include "spells/eldritch_blast.hpp"
+#include "spells/hex.hpp"
+#include "spells/armor_of_agathys.hpp"
+#include "spells/darkness.hpp"
+#include "spells/hypnotic_pattern.hpp"
+#include "spells/blink.hpp"
 #include "abilities/bardic_inspiration.hpp"
 #include "abilities/cutting_words.hpp"
 #include "abilities/on_hit_grapple.hpp"
@@ -184,6 +190,14 @@ namespace enc
     Combatant *getSwallower() const { return _swallower; }
     void setSwallower(Combatant *swallower) { _swallower = swallower; }
     bool isSwallowed() const { return _swallower != nullptr; }
+    //! While Blinked into the Border Ethereal, the creature can't be targeted or affected by anything on the
+    //! material plane (it returns at the start of its next turn). Modeled by excluding it from enemy/ally
+    //! target lists, mirroring how a swallowed creature is untargetable.
+    bool isEtherealUntargetable() const { return _etherealUntargetable; }
+    void setEtherealUntargetable(bool value) { _etherealUntargetable = value; }
+    //! A creature is a valid target only while it is alive, not swallowed by another creature, and not
+    //! Blinked into the Border Ethereal.
+    bool isTargetable() const { return isAlive() && !isSwallowed() && !isEtherealUntargetable(); }
     const std::vector<Condition> &getConditions() const { return _conditions; }
     const std::vector<ConditionWithDC> &getDCConditions() const { return _dcConditions; }
     bool isAffectedBy(Conditions condition) const;
@@ -232,6 +246,18 @@ namespace enc
     //! The caster's spellcasting ability modifier, derived from the spell save DC (DC = 8 + proficiency +
     //! ability modifier). Used by heals such as Healing Word / Cure Wounds.
     int getSpellcastingModifier() const { return _dc - 8 - (2 + (_level - 1) / 4); }
+    //! The spell-slot level a leveled spell with the given base level is actually cast at. A Warlock's Pact
+    //! Magic only has slots at a single (highest) level and automatically upcasts every spell to it, so for
+    //! Warlocks this returns that pact-slot level (never below the spell's own base level). Every other caster
+    //! casts at the spell's base level.
+    int getCastingSlotLevel(int spellBaseLevel) const
+    {
+      if(_type == CombatantType::WARLOCK && _spellslots)
+        {
+          return std::max(spellBaseLevel, _spellslots->getMaxSlotLevel());
+        }
+      return spellBaseLevel;
+    }
     // A creature is humanoid if it's a player-class combatant or a monster of the Humanoid type
     // (used by spells such as Hold Person that only affect humanoids).
     bool isHumanoid() const
@@ -522,6 +548,32 @@ namespace enc
       _actionFactories.emplace_back(factory);
       return factory;
     }
+    //! Darkness (2024): level-2 Concentration spell creating a 15-foot sphere of magical darkness that Blinds
+    //! creatures inside it (except those with Devil's Sight). Modeled with no lighting system as a Blinding
+    //! sphere effect.
+    std::shared_ptr<ActoidFactory> addDarkness()
+    {
+      auto factory = std::make_shared<DarknessFactory>(AbilityType::DARKNESS, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    //! Hypnotic Pattern (2024): level-3 Concentration spell. Creatures in a 30-foot cube that fail a Wisdom
+    //! save are Charmed + Incapacitated (Speed 0) until they take damage or are shaken awake.
+    std::shared_ptr<ActoidFactory> addHypnoticPattern()
+    {
+      auto factory = std::make_shared<HypnoticPatternFactory>(_dc, AbilityType::HYPNOTIC_PATTERN, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    //! Blink (2024): level-3 self buff. At the end of each of the caster's turns, a d6 of 4-6 sends it into
+    //! the Border Ethereal until the start of its next turn, making it untargetable. Lasts 1 minute, no
+    //! Concentration.
+    std::shared_ptr<ActoidFactory> addBlink()
+    {
+      auto factory = std::make_shared<BlinkFactory>(AbilityType::BLINK, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addWeb() { return nullptr; }
     std::shared_ptr<ActoidFactory> addHoldPerson()
     {
@@ -663,6 +715,46 @@ namespace enc
       _actionFactories.emplace_back(factory);
       return factory;
     }
+    //! Armor of Shadows (Eldritch Invocation). The warlock can cast Mage Armor on itself at will without
+    //! expending a spell slot, so it reuses the Mage Armor effect but under its own ability type (no slot gate).
+    std::shared_ptr<ActoidFactory> addArmorOfShadows(int armoredBaseAc)
+    {
+      auto factory = std::make_shared<MageArmorFactory>(this, nullptr, armoredBaseAc, AbilityType::ARMOR_OF_SHADOWS);
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+    std::shared_ptr<ActoidFactory> addEldritchBlast()
+    {
+      auto factory = std::make_shared<EldritchBlastFactory>(_spellToHit, AbilityType::ELDRITCH_BLAST, this, _spellslots.get());
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+
+    //! Agonizing Blast (Eldritch Invocation). Adds the warlock's spellcasting modifier to each Eldritch
+    //! Blast beam's damage. Must be called after addEldritchBlast().
+    void addAgonizingBlast()
+    {
+      for(auto &factory : _actionFactories)
+        {
+          if(auto *eb = dynamic_cast<EldritchBlastFactory *>(factory.get()))
+            {
+              eb->setAgonizingBlast(getSpellcastingModifier());
+            }
+        }
+    }
+
+    //! Repelling Blast (Eldritch Invocation). A hit Large-or-smaller target is pushed 10 ft away from the
+    //! warlock. Must be called after addEldritchBlast().
+    void addRepellingBlast()
+    {
+      for(auto &factory : _actionFactories)
+        {
+          if(auto *eb = dynamic_cast<EldritchBlastFactory *>(factory.get()))
+            {
+              eb->setRepellingBlast();
+            }
+        }
+    }
 
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -795,6 +887,20 @@ namespace enc
       _bonusActionFactories.emplace_back(factory);
       return factory;
     }
+    std::shared_ptr<ActoidFactory> addHex()
+    {
+      auto factory = std::make_shared<HexFactory>(AbilityType::HEX, this, _spellslots.get());
+      _bonusActionFactories.emplace_back(factory);
+      return factory;
+    }
+    //! Armor of Agathys (2024): bonus-action level-1 self-buff granting 5 temporary Hit Points and Cold
+    //! retaliation against melee attackers while those temporary Hit Points last.
+    std::shared_ptr<ActoidFactory> addArmorOfAgathys()
+    {
+      auto factory = std::make_shared<ArmorOfAgathysFactory>(AbilityType::ARMOR_OF_AGATHYS, this, _spellslots.get());
+      _bonusActionFactories.emplace_back(factory);
+      return factory;
+    }
     std::shared_ptr<ActoidFactory> addAggressive() { return nullptr; }
     /**
      * ----------------------------------------------------------------------------------------------------------------------------------------------
@@ -914,8 +1020,27 @@ namespace enc
     //! allies is within 5 ft of the target and the ally is not Incapacitated. Registered as a passive marker.
     void addPackTactics() { _passiveAbilities.insert(AbilityType::PACK_TACTICS); }
     void addFanaticAdvantage() {}
-    void addWarCaster() {}
-    void addEldritchMind() {}
+    //! War Caster: Advantage on Constitution saving throws made to maintain Concentration. Passive marker.
+    void addWarCaster() { _passiveAbilities.insert(AbilityType::WAR_CASTER); }
+    //! Eldritch Mind (Eldritch Invocation): Advantage on Constitution saving throws to maintain
+    //! Concentration. Passive marker (mirrors War Caster for concentration purposes).
+    void addEldritchMind() { _passiveAbilities.insert(AbilityType::ELDRITCH_MIND); }
+    //! Devil's Sight (Eldritch Invocation): the warlock sees normally in Darkness, magical or not, so it is
+    //! never Blinded by its own Darkness spell. Passive marker.
+    void addDevilsSight() { _passiveAbilities.insert(AbilityType::DEVILS_SIGHT); }
+    //! Steps of the Fey (Archfey patron, 2024): the warlock can cast Misty Step without expending a spell
+    //! slot a number of times equal to its spellcasting modifier per long rest. Registers the free-use pool
+    //! and a Misty Step factory drawing from it, plus a passive marker so the Refreshing Step rider (temp HP)
+    //! is granted on resolution.
+    std::shared_ptr<ActoidFactory> addStepsOfTheFey()
+    {
+      auto resource = std::make_shared<Uses>(std::max(1, getSpellcastingModifier()), ResourceRefreshType::LONG_REST);
+      _resources.insert({AbilityType::MISTY_STEP, resource});
+      _passiveAbilities.insert(AbilityType::STEPS_OF_THE_FEY);
+      auto factory = std::make_shared<MistyStepFactory>(this, resource.get());
+      _bonusActionFactories.emplace_back(factory);
+      return factory;
+    }
     void addSneakAttack() {}
     void addCunningAction() {}
     void addAssassinate() {}
@@ -1125,6 +1250,7 @@ namespace enc
     Combatant *_swallower = nullptr;
     Combatant *_swallowedTarget = nullptr;
     Combatant *_constrictedTarget = nullptr;
+    bool _etherealUntargetable = false;
     std::vector<Condition> _conditions;
     std::vector<ConditionWithDC> _dcConditions;
     ResourceDepletionLevel _resouceDepletionLevel;

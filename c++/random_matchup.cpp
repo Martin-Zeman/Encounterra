@@ -22,7 +22,7 @@
 #include "combatants/bugbear_warrior.hpp"
 #include "combatants/cleric_lvl_1.hpp"
 #include "combatants/dire_wolf.hpp"
-#include "combatants/draconic_sorcerer_lvl_1.hpp"
+#include "combatants/sorcerer_lvl_1.hpp"
 #include "combatants/draconic_sorcerer_lvl_3.hpp"
 #include "combatants/draconic_sorcerer_lvl_5.hpp"
 #include "combatants/fighter_lvl_1.hpp"
@@ -76,7 +76,7 @@ namespace
       [](int id) { return new BugbearWarrior(id); },
       [](int id) { return new ClericLvl1(id); },
       [](int id) { return new DireWolf(id); },
-      [](int id) { return new DraconicSorcererLvl1(id); },
+      [](int id) { return new SorcererLvl1(id); },
       [](int id) { return new DraconicSorcererLvl3(id); },
       [](int id) { return new DraconicSorcererLvl5(id); },
       [](int id) { return new FighterLvl1(id); },

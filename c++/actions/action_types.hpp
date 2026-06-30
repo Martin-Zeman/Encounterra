@@ -182,6 +182,11 @@ namespace enc
     BANE,
     CHARM_PERSON,
     COLOR_SPRAY,
+    ELDRITCH_BLAST,
+    ARMOR_OF_SHADOWS,
+    DARKNESS,
+    HYPNOTIC_PATTERN,
+    BLINK,
 
     /* Bonus Action */
     BONUS_ACTION_DELIMITER,
@@ -226,6 +231,8 @@ namespace enc
     AGGRESSIVE,
     INNATE_SORCERY,
     BARDIC_INSPIRATION,
+    HEX,
+    ARMOR_OF_AGATHYS,
 
     /* Reaction */
     REACTION_DELIMITER,
@@ -263,6 +270,8 @@ namespace enc
     FANATIC_ADVANTAGE,
     WAR_CASTER,
     ELDRITCH_MIND,
+    DEVILS_SIGHT,
+    STEPS_OF_THE_FEY,
     SNEAK_ATTACK,
     CUNNING_ACTION,
     ASSASSINATE,

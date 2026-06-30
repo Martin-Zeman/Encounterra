@@ -6,6 +6,7 @@
 #include "core/action_resolver.hpp"
 #include "core/battle_map.hpp"
 #include "core/conditions.hpp"
+#include "core/misc.hpp"
 #include "core/session.hpp"
 #include "core/teams.hpp"
 #include "effects/effect_tracker.hpp"
@@ -25,6 +26,11 @@ namespace
       BattleMap::resetInstance();
       Teams::resetInstance();
       EffectTracker::resetInstance();
+      // Seed the RNG to a known state so save-roll outcomes are deterministic and independent of test
+      // ordering. Several tests use extreme save modifiers (+/-30) to force a save success/failure, but the
+      // engine treats a natural 1 as an auto-fail and a natural 20 as an auto-success, so an unseeded roll
+      // could occasionally override the intended outcome.
+      seedThreadRNG(7);
     }
 
     void TearDown() override { EffectTracker::getInstance().clearEffects(); }
