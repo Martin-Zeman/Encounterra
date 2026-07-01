@@ -12,6 +12,15 @@
 #include "combatants/cleric_lvl_1.hpp"
 #include "combatants/brown_bear.hpp"
 #include "combatants/stone_giant.hpp"
+#include "combatants/zombie.hpp"
+#include "combatants/owlbear.hpp"
+#include "combatants/manticore.hpp"
+#include "combatants/kobold_warrior.hpp"
+#include "combatants/hill_giant.hpp"
+#include "combatants/fire_giant.hpp"
+#include "combatants/frost_giant.hpp"
+#include "combatants/cultist_fanatic.hpp"
+#include "combatants/chimera.hpp"
 #include "combatants/bugbear_warrior.hpp"
 #include "combatants/goblin.hpp"
 #include "combatants/sorcerer_lvl_1.hpp"
@@ -34,6 +43,11 @@
 #include "combatants/warlock_lvl_3.hpp"
 #include "combatants/warlock_lvl_4.hpp"
 #include "combatants/warlock_lvl_5.hpp"
+#include "combatants/rogue_lvl_1.hpp"
+#include "combatants/rogue_lvl_2.hpp"
+#include "combatants/assassin_rogue_lvl_3.hpp"
+#include "combatants/assassin_rogue_lvl_4.hpp"
+#include "combatants/assassin_rogue_lvl_5.hpp"
 
 namespace enc
 {
@@ -61,6 +75,15 @@ namespace enc
     registerCombatantType<GreenDragonWyrmling>();
     registerCombatantType<Ogre>();
     registerCombatantType<StoneGiant>();
+    registerCombatantType<Zombie>();
+    registerCombatantType<Owlbear>();
+    registerCombatantType<Manticore>();
+    registerCombatantType<KoboldWarrior>();
+    registerCombatantType<HillGiant>();
+    registerCombatantType<FireGiant>();
+    registerCombatantType<FrostGiant>();
+    registerCombatantType<CultistFanatic>();
+    registerCombatantType<Chimera>();
     registerCombatantType<WildHeartBarbarianLvl3>();
     registerCombatantType<WildHeartBarbarianLvl4>();
     registerCombatantType<WildHeartBarbarianLvl5>();
@@ -76,6 +99,11 @@ namespace enc
     registerCombatantType<WarlockLvl3>();
     registerCombatantType<WarlockLvl4>();
     registerCombatantType<WarlockLvl5>();
+    registerCombatantType<RogueLvl1>();
+    registerCombatantType<RogueLvl2>();
+    registerCombatantType<AssassinRogueLvl3>();
+    registerCombatantType<AssassinRogueLvl4>();
+    registerCombatantType<AssassinRogueLvl5>();
     // Register other combatant types...
   }
 
@@ -128,6 +156,15 @@ namespace enc
   template void Session::addCombatant<GreenDragonWyrmling>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<Ogre>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<StoneGiant>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Zombie>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Owlbear>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Manticore>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<KoboldWarrior>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<HillGiant>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<FireGiant>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<FrostGiant>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<CultistFanatic>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Chimera>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<WildHeartBarbarianLvl3>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<WildHeartBarbarianLvl4>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<WildHeartBarbarianLvl5>(Color, ResourceDepletionLevel);
@@ -143,6 +180,11 @@ namespace enc
   template void Session::addCombatant<WarlockLvl3>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<WarlockLvl4>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<WarlockLvl5>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<RogueLvl1>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<RogueLvl2>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<AssassinRogueLvl3>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<AssassinRogueLvl4>(Color, ResourceDepletionLevel);
+  template void Session::addCombatant<AssassinRogueLvl5>(Color, ResourceDepletionLevel);
   template void Session::addCombatant<BattlemasterFighterLvl5>(BattlemasterFighterLvl5*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<PaladinLvl1>(PaladinLvl1*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<PaladinLvl2>(PaladinLvl2*, Color, ResourceDepletionLevel);
@@ -159,6 +201,15 @@ namespace enc
   template void Session::addCombatant<GreenDragonWyrmling>(GreenDragonWyrmling*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<Ogre>(Ogre*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<StoneGiant>(StoneGiant*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Zombie>(Zombie*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Owlbear>(Owlbear*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Manticore>(Manticore*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<KoboldWarrior>(KoboldWarrior*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<HillGiant>(HillGiant*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<FireGiant>(FireGiant*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<FrostGiant>(FrostGiant*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<CultistFanatic>(CultistFanatic*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<Chimera>(Chimera*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<WildHeartBarbarianLvl3>(WildHeartBarbarianLvl3*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<WildHeartBarbarianLvl4>(WildHeartBarbarianLvl4*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<WildHeartBarbarianLvl5>(WildHeartBarbarianLvl5*, Color, ResourceDepletionLevel);
@@ -174,6 +225,11 @@ namespace enc
   template void Session::addCombatant<WarlockLvl3>(WarlockLvl3*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<WarlockLvl4>(WarlockLvl4*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<WarlockLvl5>(WarlockLvl5*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<RogueLvl1>(RogueLvl1*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<RogueLvl2>(RogueLvl2*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<AssassinRogueLvl3>(AssassinRogueLvl3*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<AssassinRogueLvl4>(AssassinRogueLvl4*, Color, ResourceDepletionLevel);
+  template void Session::addCombatant<AssassinRogueLvl5>(AssassinRogueLvl5*, Color, ResourceDepletionLevel);
   template void Session::addCombatant<Combatant>(Combatant*, Color, ResourceDepletionLevel);
 
   // Add more explicit instantiations for other combatant types

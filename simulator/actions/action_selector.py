@@ -577,6 +577,14 @@ def find_best_sequence(combatant, dag, transition_name_to_action, transition_to_
                 sequence_to_threat[idx][0] += 0.01 if np.array_equal(np.array(coord), current_coords) else 0  # Small bias towards current position prevents oscillations
 
     sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]) if sequence_to_threat[x][1] > 0 else -math.inf, reverse=True)
+    import os as _os
+    if _os.environ.get("PY_DEBUG_TOPSEQ") and "Assassin" in str(combatant):
+        import sys as _sys
+        print(f"=== PY TOP SEQUENCES for {combatant} ===", file=_sys.stderr)
+        for _k, _idx in enumerate(sorted_sequences[:12]):
+            _st = sequence_to_threat[_idx]
+            _score = sum(_st) if _st[1] > 0 else float('-inf')
+            print(f"  score={_score:.4f} mv={_st[0]:.4f} second={_st[1]:.4f} | {sequences[_idx]}", file=_sys.stderr)
     # sorted_sequences = sorted(sequence_to_threat, key=lambda x: sum(sequence_to_threat[x]), reverse=True) This has significance to NOP, 'sequence_to_threat[x][1] > 0' precludes NOP being selected. I should check Fighter vs Fighter again
     nearest_and_minimized_sequence, max_threat = get_nearest_and_minimize(sequences, sorted_sequences, sequence_to_threat, distances, sequence_idx_to_transition_step_threat, transition_name_to_action)
     return nearest_and_minimized_sequence, transition_name_to_ms_path, max_threat

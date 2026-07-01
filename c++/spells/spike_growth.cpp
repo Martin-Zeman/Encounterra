@@ -113,6 +113,7 @@ namespace enc
   void SpikeGrowth::deactivate() { _factory._combatant->breakConcentration(); }
   bool SpikeGrowth::deactivateForCombatant(Combatant *combatant) {
     assert(false);
+    return false;
   }
 
   void SpikeGrowth::onEnter(Combatant *combatant)

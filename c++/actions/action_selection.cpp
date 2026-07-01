@@ -518,7 +518,7 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
 {
   auto &battleMap = BattleMap::getInstance();
   auto &effectTracker = EffectTracker::getInstance();
-  std::unordered_map<AoeEffect *,CoordVector> effectToCoords;
+  std::unordered_map<AoeEffect *, CoordVector> effectToCoords;
   for(const auto &effect : effectTracker.getAoeEffects())
     {
       effectToCoords[effect.get()] = effect->getAffectedCoords();
@@ -641,6 +641,7 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
     const int numTransitions = static_cast<int>(indexToActoid.size());
     std::vector<uint8_t> txEndsSequence(numTransitions, 0); // null actoid or DummyActoid -> stop scanning the sequence
     std::vector<uint8_t> txIsMovement(numTransitions, 0);   // MovementIncrement -> handled separately, skip in scoring
+    std::vector<uint8_t> txIsDash(numTransitions, 0);       // IS_DASH -> needs the movementThreat kwarg threaded in
     std::vector<Threat *> txThreat(numTransitions, nullptr);
     std::vector<AttackThreatModifier *> txAttackMod(numTransitions, nullptr);
     for(int i = 0; i < numTransitions; ++i)
@@ -652,6 +653,7 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
             continue;
           }
         txIsMovement[i] = dynamic_cast<MovementIncrement *>(a) != nullptr ? 1 : 0;
+        txIsDash[i] = a->hasFlag(ActoidFlags::IS_DASH) ? 1 : 0;
         txThreat[i] = dynamic_cast<Threat *>(a);
         txAttackMod[i] = dynamic_cast<AttackThreatModifier *>(a);
       }
@@ -873,14 +875,20 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
                             }
                         }
 
-                        // Mirrors Python action.calculate_threat(consider_dist=...). Only "considerDist" is ever read
-                        // by a C++ calculateThreat implementation (attack.cpp). The Python reference also threads a
-                        // movement_threat kwarg, but no C++ override consumes it, so it is intentionally not built here:
-                        // doing so copied sequenceToThreat[idx].first into a std::any (heap alloc) and added a red-black
-                        // tree node + string key on every one of the Fighter's ~69k per-decision threat calls, all for
-                        // a value nobody reads. Dropping it is behaviour-identical (verified by the unit suite).
+                        // Mirrors Python action.calculate_threat(consider_dist=..., movement_threat=...). Only
+                        // "considerDist" is read by most C++ calculateThreat overrides (attack.cpp), so building
+                        // the movement_threat kwarg for every one of the Fighter's ~69k per-decision threat calls
+                        // (a std::any heap alloc + red-black tree node + string key) is wasteful. Dash is the sole
+                        // override that consumes it, so thread it in ONLY for dash actoids: pass a pointer to this
+                        // sequence's already-computed movement-threat array (stable for the duration of the call —
+                        // sequenceToThreat is not structurally modified inside this loop). Behaviour for every
+                        // non-dash action is byte-identical to before.
                         Kwargs threatKwargs;
                         threatKwargs["considerDist"] = !battleMap.isWildshapeActive();
+                        if (txIsDash[txi]) {
+                            threatKwargs["movementThreat"] =
+                                static_cast<const std::vector<double> *>(&sequenceToThreat.at(idx).first);
+                        }
                         double threat = 0.0;
                         if (Threat *threatIface = txThreat[txi]) {
                             threat = threatIface->calculateThreat(threatKwargs);
@@ -942,12 +950,24 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
             return a.first > b.first;
         });
 
+    if (std::getenv("ENC_DEBUG_TOPSEQ") && combatant->toString().find("Assassin") != std::string::npos) {
+        std::cerr << "=== TOPSEQ for " << combatant->toString() << " ===\n";
+        int shown = 0;
+        for (const auto& [score, idx] : scoredSequences) {
+            if (shown++ >= 12) break;
+            const auto& st = sequenceToThreat.at(idx);
+            std::cerr << "  score=" << score << " mv=" << (st.first.empty() ? 0.0 : st.first.back())
+                      << " second=" << st.second << " | ";
+            for (Actoid* a : sequences[idx]) std::cerr << "[" << (a ? a->toString() : std::string("null")) << "]";
+            std::cerr << "\n";
+        }
+    }
+
     std::vector<size_t> sortedSequences;
     sortedSequences.reserve(scoredSequences.size());
     for (const auto& [score, idx] : scoredSequences) {
         sortedSequences.push_back(idx);
     }
-
     auto [nearestAndMinimizedSequence, maxThreat] = getNearestAndMinimize(
         sequences, sortedSequences, sequenceToThreat, distances,
         sequenceIdxToTransitionStepThreat);

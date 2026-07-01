@@ -32,7 +32,7 @@ namespace enc
     std::vector<std::pair<int, DamageType>>
     hit(Combatant *attacker, Actoid *attack, Combatant *target, double multiplier, double dmgSoFar) override;
 
-    double calculateThreat(Combatant *attacker, Combatant *target) override { return 0.0; }
+    double calculateThreat(Combatant *attacker, Combatant *target, RollType rollType = RollType::STRAIGHT) override { return 0.0; }
 
     std::unique_ptr<OnHit> clone() const override { return std::make_unique<OnHitGrapple>(_dc, _escapeSkill); }
 

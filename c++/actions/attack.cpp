@@ -15,6 +15,10 @@ namespace enc
   {
     setFlag(FactoryFlags::IS_ATTACK_LIKE);
     setFlag(FactoryFlags::IS_HASTE_ELIGIBLE_ATTACK);
+    if(usesDex)
+      {
+        setFlag(FactoryFlags::USES_DEX);
+      }
   }
 
   AttackFactory::AttackFactory(const AttackFactory &other)

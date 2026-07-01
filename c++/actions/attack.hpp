@@ -48,6 +48,9 @@ namespace enc
     DamageType getDmgType() const { return _dmgType; }
     int getCritRange() const { return _critRange; }
     const std::vector<std::unique_ptr<OnHit>> &getOnHits() const { return _onHit; }
+    //! Always-applied extra damage dice (e.g. a Fire Giant's Flame Sword 3d6 Fire, a Cultist's necrotic
+    //! Pact Blade). Kept distinct from the base damage because it carries its own DamageType.
+    const std::vector<DmgDieWithType> &getExtraDmg() const { return _extraDmg; }
     //! Attach an on-hit rider after construction (used to bolt weapon-mastery behaviour onto a weapon).
     void addOnHit(std::unique_ptr<OnHit> onHit) { _onHit.push_back(std::move(onHit)); }
     void setMastery(WeaponMastery mastery) { _mastery = mastery; }
@@ -83,6 +86,7 @@ namespace enc
     Combatant &getTarget() const { return _target; }
     AttackFactory &getAttackFactory() const { return _factory; }
     void setRollType(RollType rollType) { _rollType = rollType; }
+    RollType getRollType() const { return _rollType; }
     std::string shorthandStr() const;
 
   protected:

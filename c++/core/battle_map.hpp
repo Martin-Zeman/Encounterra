@@ -43,6 +43,11 @@ namespace enc
 
     size_t getGridSize() const;
 
+    // Returns every coordinate reachable by the combatant given the Dijkstra shortest-paths matrix (entries of
+    // {-1,-1} are unreachable), always including the combatant's current position. Mirrors Python
+    // Map.get_all_accessible_coords, used by location-independent actions (e.g. Dash) to fan out over the board.
+    CoordVector getAllAccessibleCoords(const blaze::DynamicMatrix<Coord> &shortestPaths, const Combatant &combatant) const;
+
     CoordVector getFreeCoordsInHopRange(const Coords &target, const blaze::DynamicVector<double> &distances = blaze::DynamicVector<double>(),
                                                Size moverSize = Size::MEDIUM, int rng = 1, int combatantId = -1) const;
 
@@ -98,6 +103,10 @@ namespace enc
     std::unordered_map<const Combatant *, Visibility> calcVisibilityDict(const Combatant *combatant, const Coord &theoreticalRootCoord);
     void calcVisibilityDictForAllCoords(const Combatant *combatant, const blaze::DynamicMatrix<Coord> &shortestPaths);
     Visibility getVisibilityFromCoord(const Coord &fromCoord, const Combatant * target) const;
+    const std::unordered_map<Coord, std::unordered_map<const Combatant *, Visibility>> &getVisibilityDictForAllCoords() const
+    {
+      return _visibilityDictForAllCoords;
+    }
     std::vector<Combatant*> getNonSwallowedEnemiesWithinRadius(const Combatant* combatant, int radius);
     std::vector<Combatant*> getNonSwallowedAlliesWithinRadius(const Combatant* combatant, int radius);
     std::vector<Combatant*> getNonSwallowedEnemiesWithinHopDistance(const Combatant* combatant, int distance);

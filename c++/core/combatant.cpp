@@ -73,7 +73,11 @@ namespace enc
     EffectTracker::getInstance().combatantDied(this);
   }
 
-  void Combatant::onEndOfTurn() { _dmgTypesTookLastRound.clear(); }
+  void Combatant::onEndOfTurn()
+  {
+    _dmgTypesTookLastRound.clear();
+    _alreadyUsedSneakAttackThisTurn = false;
+  }
 
   void Combatant::rollInitiative()
   {
@@ -116,6 +120,7 @@ namespace enc
         _oneTimeAcbonus = 0 ; // Not really needed
         _actionPlan.clear();
         _weaponDmgDealtThisTurn = 0;
+        _alreadyUsedSneakAttackThisTurn = false;
   }
 
   void Combatant::newTurn() {
@@ -143,6 +148,7 @@ namespace enc
         _isDisengaging = false;
         _masteriesUsedThisTurn.clear();
         _pendingDivineSmite = false;
+        _alreadyUsedSneakAttackThisTurn = false;
   }
 
   Combatant *Combatant::getCurrentForm() { return _currentWildshapeForm == nullptr ? _originalForm : _currentWildshapeForm; }

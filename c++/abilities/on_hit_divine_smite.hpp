@@ -27,7 +27,7 @@ namespace enc
     std::vector<std::pair<int, DamageType>>
     hit(Combatant *attacker, Actoid *attack, Combatant *target, double multiplier, double dmgSoFar) override;
 
-    double calculateThreat(Combatant *attacker, Combatant *target) override;
+    double calculateThreat(Combatant *attacker, Combatant *target, RollType rollType = RollType::STRAIGHT) override;
 
     std::unique_ptr<OnHit> clone() const override { return std::make_unique<OnHitDivineSmite>(*this); }
   };

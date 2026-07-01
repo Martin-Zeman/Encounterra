@@ -1,4 +1,6 @@
 #include "actions/disengage.hpp"
+#include "core/battle_map.hpp"
+#include "core/combatant.hpp"
 
 namespace enc
 {
@@ -21,8 +23,21 @@ namespace enc
   std::optional<CoordVector>
   Disengage::getEligibleCoords(const blaze::DynamicVector<int> &distances, const blaze::DynamicMatrix<Coord> &shortestPaths)
   {
-    return {};
+    // Both the base-action Disengage and Cunning Action's bonus Disengage are location independent: they are
+    // always available from the current square, provided the combatant can actually move. Mirrors the Python
+    // Disengage.get_eligible_coords (returns None when Grappled/Grappling/Restrained/Swallowed or movement 0).
+    Combatant *combatant = _factory.getCombatant();
+    if(combatant->getSwallower() != nullptr || combatant->getMovement() == 0
+       || combatant->isAffectedByAny({Conditions::GRAPPLED, Conditions::GRAPPLING, Conditions::RESTRAINED}))
+      {
+        return std::nullopt;
+      }
+    return CoordVector{BattleMap::getInstance().getCombatantCoordinates(*combatant).getRoot()};
   }
 
-  std::string Disengage::toString() const { return "Disengage"; }
+  std::string Disengage::toString() const
+  {
+    std::string prefix = _factory.getAbilityType() == AbilityType::CUNNING_DISENGAGE ? "Cunning " : "";
+    return prefix + "Disengage of " + _factory.getCombatant()->_name;
+  }
 }

@@ -108,7 +108,7 @@ namespace enc
     return {{dmg, DamageType::Radiant}};
   }
 
-  double OnHitDivineSmite::calculateThreat(Combatant *attacker, Combatant *target)
+  double OnHitDivineSmite::calculateThreat(Combatant *attacker, Combatant *target, RollType rollType)
   {
     int chosenLevel = chooseSmiteLevel(attacker, target);
     if(chosenLevel == 0)

@@ -168,7 +168,9 @@ namespace enc
             Actoid *msAction = makeMovementActoid(coord, MovementThreatType::MISTY_STEPPED, syntheticActoids, movementFactory);
             movementTransToCoordAndType[msAction] = {coord, MovementThreatType::MISTY_STEPPED};
 
-            stateMachine.addTransition(msAction, 0, postMsState);
+            // Mirror Python's "ms_" + str(coord) transition name so Misty Step moves stay distinct from STANDARD/priority
+            // moves to the same coord (getFlattenedDag dedups by transition name).
+            stateMachine.addTransition(msAction, "ms_" + msAction->toString(), 0, postMsState);
             stateMachine.addTransition(action, postMsState, destState);
           }
       }
@@ -220,7 +222,10 @@ namespace enc
                 Actoid *moveAction = makeMovementActoid(coord, priorityInfo.threatType, syntheticActoids, movementFactory);
                 movementTransToCoordAndType[moveAction] = {coord, priorityInfo.threatType};
 
-                stateMachine.addTransition(moveAction, newPrioState, postPtState);
+                // Mirror Python's prefix + str(coord) transition name ("di_", "do_", "cdi_", "m_") so priority moves stay
+                // distinct per MovementThreatType; getFlattenedDag dedups by transition name and would otherwise collapse
+                // DISENGAGED/DODGED moves onto the STANDARD move to the same coord, silently negating the priority action.
+                stateMachine.addTransition(moveAction, priorityInfo.prefix + moveAction->toString(), newPrioState, postPtState);
                 stateMachine.addTransition(postAction, postPtState, destState);
               }
           }
@@ -370,7 +375,9 @@ namespace enc
                   Actoid *moveAction = makeMovementActoid(coord, MovementThreatType::STANDARD, result.syntheticActoids, *result.movementFactory);
                   coordToMovementActoid[coord] = moveAction;
                   movementTransToCoordAndType[moveAction] = {coord, MovementThreatType::STANDARD};
-                  stateMachine.addTransition(moveAction, 0, movementState);
+                  // Mirror Python's "m_" + str(coord) transition name so STANDARD moves stay distinct from DISENGAGED/
+                  // DODGED/MISTY moves to the same coord (getFlattenedDag dedups by transition name).
+                  stateMachine.addTransition(moveAction, "m_" + moveAction->toString(), 0, movementState);
                 }
 
               stateMachine.addTransition(action, movementState, dest);

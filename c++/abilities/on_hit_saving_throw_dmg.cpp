@@ -32,7 +32,7 @@ namespace enc
     return {{dmg, _dmgType}};
   }
 
-  double OnHitSavingThrowDmg::calculateThreat(Combatant *attacker, Combatant *target)
+  double OnHitSavingThrowDmg::calculateThreat(Combatant *attacker, Combatant *target, RollType rollType)
   {
     return meanDmgDcAttack(_dc, _dmgDice, _halfOnSuccess, target->getSavingThrow(_saveType), target->isImmuneTo(_dmgType),
                            target->isResistantTo(_dmgType));

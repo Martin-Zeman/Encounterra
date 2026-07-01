@@ -67,6 +67,10 @@
 #include "abilities/rage.hpp"
 #include "abilities/reckless_attack.hpp"
 #include "abilities/on_hit_mastery.hpp"
+#include "abilities/on_hit_sneak_attack.hpp"
+#include "actions/dash.hpp"
+#include "actions/disengage.hpp"
+#include "actions/hide.hpp"
 #include "abilities/second_wind.hpp"
 #include "abilities/action_surge.hpp"
 #include "abilities/riposte.hpp"
@@ -178,6 +182,9 @@ namespace enc
     // Innate Sorcery (2024): while active the caster has advantage on its own spell attack rolls.
     bool isInnateSorceryActive() const { return _innateSorceryActive; }
     void setInnateSorceryActive(bool active) { _innateSorceryActive = active; }
+    // Uncanny Dodge (reaction): while active the next incoming damage instance is halved in doReceiveDmg.
+    bool isUncannyDodgeActive() const { return _uncannyDodgeActive; }
+    void setUncannyDodgeActive(bool active) { _uncannyDodgeActive = active; }
     bool hasPendingDivineSmite() const { return _pendingDivineSmite; }
     void armDivineSmite() { _pendingDivineSmite = true; }
     void clearPendingDivineSmite() { _pendingDivineSmite = false; }
@@ -318,6 +325,12 @@ namespace enc
     void setAthletics(int value) { _athletics = value; }
     int getAcrobatics() const { return _acrobatics; }
     void setAcrobatics(int value) { _acrobatics = value; }
+    int getStealth() const { return _stealth; }
+    void setStealth(int value) { _stealth = value; }
+    int getPassivePerception() const { return _passivePerception; }
+    void setPassivePerception(int value) { _passivePerception = value; }
+    bool hasAlreadyUsedSneakAttackThisTurn() const { return _alreadyUsedSneakAttackThisTurn; }
+    void setAlreadyUsedSneakAttackThisTurn(bool used) { _alreadyUsedSneakAttackThisTurn = used; }
     const std::vector<int> &getSavingThrowFlatMods(SavingThrow type) const;
     void addSavingThrowFlatMod(SavingThrow type, int mod);
     void clearSavingThrowFlatMods(SavingThrow type);
@@ -413,9 +426,11 @@ namespace enc
      */
 
     std::shared_ptr<ActoidFactory> addMeleeAttack(const std::string &name, Combatant *owner, int toHit, const std::vector<Die> &dmgDice, int dmgBonus,
-                                                  DamageType damageType, int attackRange)
+                                                  DamageType damageType, int attackRange, bool usesDex = false)
     {
-      auto factory = std::make_shared<MeleeAttackFactory>("MeleeAttackFactory", name, owner, AbilityType::MELEE_ATTACK, toHit, dmgDice, dmgBonus, damageType, attackRange);
+      auto factory = std::make_shared<MeleeAttackFactory>("MeleeAttackFactory", name, owner, AbilityType::MELEE_ATTACK, toHit, dmgDice, dmgBonus,
+                                                          damageType, attackRange, 1, Uses(), std::vector<std::unique_ptr<OnHit>>{},
+                                                          std::vector<DmgDieWithType>{}, usesDex);
       _actionFactories.emplace_back(factory);
       return factory;
     }
@@ -439,6 +454,21 @@ namespace enc
       auto factory = std::make_shared<RangedAttackFactory>("RangedAttackFactory", name, owner, AbilityType::RANGED_ATTACK, toHit, dmgDice,
                                                            dmgBonus, damageType, attackRange, 1,
                                                            ammo == Uses::INFINITE_USES ? Uses() : Uses(ammo));
+      _actionFactories.emplace_back(factory);
+      return factory;
+    }
+
+    //! Ranged attack carrying on-hit riders and/or always-applied extra damage dice (e.g. a Fire Giant's Hammer
+    //! Throw with rider Fire damage, a Frost Giant's Great Bow with rider Cold damage). Mirrors the melee
+    //! addMeleeAttackWithRiders.
+    std::shared_ptr<ActoidFactory> addRangedAttackWithRiders(const std::string &name, Combatant *owner, int toHit,
+                                                             const std::vector<Die> &dmgDice, int dmgBonus, DamageType damageType, int attackRange,
+                                                             std::vector<std::unique_ptr<OnHit>> onHit,
+                                                             std::vector<DmgDieWithType> extraDmg = {}, int ammo = Uses::INFINITE_USES)
+    {
+      auto factory = std::make_shared<RangedAttackFactory>("RangedAttackFactory", name, owner, AbilityType::RANGED_ATTACK, toHit, dmgDice,
+                                                           dmgBonus, damageType, attackRange, 1,
+                                                           ammo == Uses::INFINITE_USES ? Uses() : Uses(ammo), std::move(onHit), std::move(extraDmg));
       _actionFactories.emplace_back(factory);
       return factory;
     }
@@ -924,6 +954,7 @@ namespace enc
       _reactionFactories.emplace_back(factory);
       _aoOFactory = static_cast<AttackFactory *>(factory.get());
       _dangerZoneAttack = static_cast<DirectThreatFactory *>(factory.get());
+      _meleeReactionRange = attackRange;
       return factory;
     }
     std::shared_ptr<ActoidFactory> addShield()
@@ -946,7 +977,15 @@ namespace enc
       return factory;
     }
     std::shared_ptr<ActoidFactory> addPreSwallowBiteReaction() { return nullptr; }
-    std::shared_ptr<ActoidFactory> addUncannyDodge() { return nullptr; }
+    //! Uncanny Dodge (2024 Rogue, level 5): when the rogue is hit by an attack it can see, it may spend its
+    //! Reaction to halve that attack's damage. Modelled as a passive marker consulted in the action resolver
+    //! (which sets uncannyDodgeActive before the damage is applied). Mirrors Python
+    //! combatant.add_ability(Reaction.UNCANNY_DODGE) + prompt_after_hit_reaction.
+    std::shared_ptr<ActoidFactory> addUncannyDodge()
+    {
+      _passiveAbilities.insert(AbilityType::UNCANNY_DODGE);
+      return nullptr;
+    }
     std::shared_ptr<ActoidFactory> addParry() { return nullptr; }
     std::shared_ptr<ActoidFactory> addRiposte() { return nullptr; }    std::shared_ptr<ActoidFactory> addReactionParalyzingMeleeAttack() { return nullptr; }
     /**
@@ -1041,9 +1080,47 @@ namespace enc
       _bonusActionFactories.emplace_back(factory);
       return factory;
     }
-    void addSneakAttack() {}
-    void addCunningAction() {}
-    void addAssassinate() {}
+    //! Sneak Attack (2024 Rogue). Marks the passive and attaches an OnHitSneakAttack rider to every Finesse
+    //! or ranged weapon attack the rogue has (across the action, bonus action, haste and reaction factory
+    //! lists). Mirrors Python combatant.add_ability(Passive.SNEAK_ATTACK). Must be called after the rogue's
+    //! attacks have been registered.
+    void addSneakAttack()
+    {
+      _passiveAbilities.insert(AbilityType::SNEAK_ATTACK);
+      _alreadyUsedSneakAttackThisTurn = false;
+      auto attachSneakAttack = [this](const std::vector<std::shared_ptr<ActoidFactory>> &factories) {
+        for(const auto &factory : factories)
+          {
+            auto *attackFactory = dynamic_cast<AttackFactory *>(factory.get());
+            if(attackFactory == nullptr)
+              {
+                continue;
+              }
+            if(attackFactory->usesDex() || attackFactory->hasFlag(FactoryFlags::IS_RANGED))
+              {
+                attackFactory->addOnHit(std::make_unique<OnHitSneakAttack>(
+                  std::vector<Die>{OnHitSneakAttack::getDmgDice(_level)}, attackFactory->getDmgType(), attackFactory->getCritRange()));
+              }
+          }
+      };
+      attachSneakAttack(_actionFactories);
+      attachSneakAttack(_bonusActionFactories);
+      attachSneakAttack(_hasteActionFactories);
+      attachSneakAttack(_reactionFactories);
+    }
+    //! Cunning Action (2024 Rogue): grants Disengage, Dash and Hide as Bonus Action options. Mirrors Python
+    //! combatant.add_ability(Passive.CUNNING_ACTION).
+    void addCunningAction()
+    {
+      _passiveAbilities.insert(AbilityType::CUNNING_ACTION);
+      _bonusActionFactories.emplace_back(std::make_shared<DisengageFactory>(this, AbilityType::CUNNING_DISENGAGE));
+      _bonusActionFactories.emplace_back(std::make_shared<DashFactory>(this, AbilityType::CUNNING_DASH));
+      _bonusActionFactories.emplace_back(std::make_shared<HideFactory>(this, AbilityType::CUNNING_HIDE));
+    }
+    //! Assassinate (2024 Assassin, level 3): the rogue has Advantage on attack rolls against any creature that
+    //! has not yet taken a turn in the combat. Resolved in the action resolver; here it is only a passive
+    //! marker. Mirrors Python combatant.add_ability(Passive.ASSASSINATE).
+    void addAssassinate() { _passiveAbilities.insert(AbilityType::ASSASSINATE); }
     void addRegeneration() {}
     void addEvasion() {}
     void addHeartOfHruggek() {}
@@ -1215,6 +1292,9 @@ namespace enc
     int _movement;
     int _athletics = 0;
     int _acrobatics = 0;
+    int _stealth = 0;
+    int _passivePerception = 0;
+    bool _alreadyUsedSneakAttackThisTurn = false;
     Color _teamColor;
     AttackFsm _attackFsm;
     std::unordered_map<std::string, std::shared_ptr<Uses>> _ammo; // TODO: Unify this with attacks so that it's shared between them

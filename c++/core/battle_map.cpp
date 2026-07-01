@@ -117,6 +117,29 @@ namespace enc
 
   size_t BattleMap::getGridSize() const { return _size; }
 
+  CoordVector BattleMap::getAllAccessibleCoords(const blaze::DynamicMatrix<Coord> &shortestPaths, const Combatant &combatant) const
+  {
+    CoordVector accessibleCoords;
+    for(size_t x = 0; x < shortestPaths.rows(); ++x)
+      {
+        for(size_t y = 0; y < shortestPaths.columns(); ++y)
+          {
+            if(shortestPaths(x, y) != Coord{-1, -1})
+              {
+                accessibleCoords.push_back(Coord{static_cast<int>(x), static_cast<int>(y)});
+              }
+          }
+      }
+
+    const Coord currentPosition = getCombatantCoordinates(combatant).getRoot();
+    if(std::find(accessibleCoords.begin(), accessibleCoords.end(), currentPosition) == accessibleCoords.end())
+      {
+        accessibleCoords.push_back(currentPosition);
+      }
+
+    return accessibleCoords;
+  }
+
   void BattleMap::buildBaseAdjacencyMatrix()
   {
     int N = _size;

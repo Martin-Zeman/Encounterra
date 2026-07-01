@@ -31,7 +31,7 @@ namespace enc
     std::vector<std::pair<int, DamageType>>
     hit(Combatant *attacker, Actoid *attack, Combatant *target, double multiplier, double dmgSoFar) override;
 
-    double calculateThreat(Combatant *attacker, Combatant *target) override { return 0.0; }
+    double calculateThreat(Combatant *attacker, Combatant *target, RollType rollType = RollType::STRAIGHT) override { return 0.0; }
 
     bool requiresSave() const { return _requiresSave; }
     SavingThrow getSaveType() const { return _saveType; }

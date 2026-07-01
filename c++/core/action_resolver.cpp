@@ -351,6 +351,20 @@ namespace enc
       {
         types.insert(RollType::ADVANTAGE);
       }
+    // A Hidden attacker (2024 Hide) — or an Invisible one — has Advantage on its attack rolls. The Hidden
+    // condition is tracked as a per-target HIDE effect (see EffectTracker::isCombatantHiddenFrom).
+    if(attacker->isAffectedBy(Conditions::INVISIBLE) || effectTracker.isCombatantHiddenFrom(attacker, target))
+      {
+        types.insert(RollType::ADVANTAGE);
+      }
+    // Assassinate (2024 Assassin): the assassin has Advantage on attack rolls against any creature that has
+    // not yet taken its turn in the combat. Approximated by the opening round with the assassin acting (higher
+    // initiative) before the target.
+    if(attacker->hasPassiveAbility(AbilityType::ASSASSINATE) && battleMap.getCombatRound() == 0
+       && attacker->getCurrentInit() > target->getCurrentInit())
+      {
+        types.insert(RollType::ADVANTAGE);
+      }
     return types;
   }
 
@@ -473,6 +487,13 @@ namespace enc
         std::cout << "The attack " << (multiplier == 2 ? "CRITS" : "hits") << " " << target->_name << " for " << baseDmg << " damage"
                   << std::endl;
         std::vector<std::pair<int, DamageType>> compoundDmg = {{baseDmg, factory.getDmgType()}};
+        // Always-applied extra damage dice carried by the weapon (e.g. a Fire Giant Flame Sword's 3d6 Fire or a
+        // Frost Giant Frost Axe's 2d8 Cold). Each entry rolls its own dice, is multiplied on a critical hit like
+        // the base dice, and keeps its own damage type so target immunities/resistances apply independently.
+        for(const auto &extra : factory.getExtraDmg())
+          {
+            compoundDmg.emplace_back(multiplier * rollDiceMulti({extra.first}), extra.second);
+          }
         attack->setRollType(finalModifier);
         // Armor of Agathys: a creature that hits the warded caster with a melee attack takes Cold damage,
         // provided the caster still has the spell's temporary Hit Points at the moment of the hit. The
@@ -489,6 +510,16 @@ namespace enc
                     break;
                   }
               }
+          }
+        // Uncanny Dodge (2024 Rogue level 5): a rogue that is hit by an attack it can see may spend its
+        // Reaction to halve the damage. Mirrors the Python prompt_after_hit_reaction, which always uses the
+        // reaction when available. It must be activated before the damage is applied so doReceiveDmg halves it.
+        if(target->hasPassiveAbility(AbilityType::UNCANNY_DODGE) && target->hasReaction()
+           && !target->isAffectedByAny({Conditions::INCAPACITATED, Conditions::STUNNED, Conditions::PARALYZED}))
+          {
+            std::cout << target->_name << " uses Uncanny Dodge" << std::endl;
+            target->setUncannyDodgeActive(true);
+            target->setHasReaction(false);
           }
         target->receiveCompoundDmg(compoundDmg, multiplier);
         applyHexDamageOnHit(attacker, target, multiplier);
@@ -684,7 +715,11 @@ namespace enc
             {
               return ActionResult::MISS;
             }
-          return resolveAttack(attack, &attack->getTarget(), combatant);
+          ActionResult result = resolveAttack(attack, &attack->getTarget(), combatant);
+          // 2024: making an attack ends the Hidden condition, so the rogue is no longer hidden from anyone
+          // once it strikes (the Advantage was already applied to this attack in collectAttackRollTypes).
+          EffectTracker::getInstance().removeEffectFromCombatantByType(combatant, EffectType::HIDE);
+          return result;
         }
 
       case AbilityType::RECKLESS_ATTACK:
@@ -760,8 +795,42 @@ namespace enc
         return ActionResult::OTHER;
 
       case AbilityType::DODGE:
-      case AbilityType::DISENGAGE:
         // Minimal: the defensive effect is not applied yet, but the action is consumed by the planner.
+        std::cout << combatant->_name << " takes the " << action->toString() << " action" << std::endl;
+        return ActionResult::OTHER;
+
+      case AbilityType::DISENGAGE:
+        // The base-action Disengage, like Cunning Action's bonus Disengage, stops the combatant's movement from
+        // provoking opportunity attacks this turn. Mirrors the Python Disengage.activate (has_disengaged = True).
+        combatant->setDisengaging(true);
+        std::cout << combatant->_name << " takes the " << action->toString() << " action" << std::endl;
+        return ActionResult::OTHER;
+
+      case AbilityType::HIDE:
+      case AbilityType::CUNNING_HIDE:
+      case AbilityType::HASTE_HIDE:
+        {
+          // Hide (2024): the effect rolls the Stealth check and, on success, registers the Hidden condition
+          // with the EffectTracker in activate() (see Hide::activate).
+          auto effect = std::dynamic_pointer_cast<Effect>(action);
+          if(!effect)
+            {
+              return ActionResult::MISS;
+            }
+          effect->activate();
+          return ActionResult::OTHER;
+        }
+
+      case AbilityType::DASH:
+      case AbilityType::CUNNING_DASH:
+        // Dashing grants extra movement equal to the combatant's Speed for the current turn.
+        combatant->setMovement(combatant->getMovement() + combatant->getSpeed());
+        std::cout << combatant->_name << " takes the " << action->toString() << " action" << std::endl;
+        return ActionResult::OTHER;
+
+      case AbilityType::CUNNING_DISENGAGE:
+        // Disengaging: the combatant's movement no longer provokes opportunity attacks this turn.
+        combatant->setDisengaging(true);
         std::cout << combatant->_name << " takes the " << action->toString() << " action" << std::endl;
         return ActionResult::OTHER;
 
