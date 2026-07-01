@@ -17,6 +17,7 @@
 #include "effects/effect_tracker.hpp"
 #include "combatants/assassin_rogue_lvl_5.hpp"
 #include "combatants/bugbear_warrior.hpp"
+#include "combatants/bugbear.hpp"
 #include "combatants/ogre.hpp"
 #include "combatants/goblin.hpp"
 #include "combatants/brown_bear.hpp"
@@ -60,6 +61,7 @@ namespace
       Teams::resetInstance();
       teams = &Teams::getInstance();
       EffectTracker::resetInstance();
+      Combatant::resetInstanceIdCounter(); // hermetic ids: keep tie-breaking independent of test-execution order
       session = new Session();
     }
 
@@ -401,7 +403,10 @@ namespace
   TEST_F(RogueScenarioTest, CunningDashIsAvailableAndRogueSneakAttacks)
   {
     auto *rogue = new AssassinRogueLvl5(1);
-    auto *bugbear = new BugbearWarrior(1);
+    // Faithful port: the Python `test_bugbear` fixture is the Monster Manual Bugbear (Morningstar, reach 5 ft.
+    // = 1 square). Its opportunity-attack reach is what lets the rogue start at Chebyshev distance 2 and kite
+    // away with the Shortbow without provoking. (BugbearWarrior is a different statblock with reach 10 ft.)
+    auto *bugbear = new Bugbear(1);
     auto *ogre = new Ogre(1);
     auto *goblin = new Goblin(1);
 

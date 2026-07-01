@@ -312,10 +312,44 @@ getNearestAndMinimize(std::vector<std::vector<Actoid *>> &sequences, const std::
         sequence = std::move(newSequence);
     }
 
-    // Sort by sequence length and get shortest
+    // Choose the winning sequence deterministically among the max-threat, min-distance candidates.
+    //
+    // Python selects with a *stable* `sort(key=len)` over an insertion-ordered list, so among equal-length ties the
+    // smallest generated sequence index wins. Here the candidate order comes from iterating an unordered_map and an
+    // unstable std::sort, so the "first" equal-length candidate is not stable between runs (it depends on process
+    // state carried over from earlier work) and does not track Python's index order. Two effects have to be pinned:
+    //
+    //   1. Determinism: identical turns must always resolve the same way regardless of what executed before.
+    //   2. Kiting order: when a plan reaches a coordinate and can both Dash (a location-independent bonus action that
+    //      grants movement) and make a location-dependent attack, the Dash must come *first* so the granted movement
+    //      is actually spent moving before the attack ends the turn. Python emits the Dash-first ordering here (its
+    //      generated index for "[move][Dash][Attack]" is smaller than "[move][Attack][Dash]"); ordering the equal
+    //      -threat, equal-length ties by the position of the first Dash reproduces that without depending on the
+    //      opaque, implementation-specific sequence-index assignment. Sequences without a Dash are unaffected (they
+    //      all share the same sentinel), so the hide/disengage scenarios — whose winning sets are not Dash-order
+    //      ambiguous — keep their existing outcome.
+    //
+    // The trailing comparison on the sequence index only breaks any remaining exact ties, purely for determinism.
+    auto firstDashPos = [&](size_t idx) -> size_t {
+        const auto& seq = sequences[idx];
+        for (size_t i = 0; i < seq.size(); ++i) {
+            if (seq[i] && seq[i]->hasFlag(ActoidFlags::IS_DASH)) {
+                return i;
+            }
+        }
+        return std::numeric_limits<size_t>::max();
+    };
     auto shortestIdx = *std::min_element(minDistSequences.begin(), minDistSequences.end(),
-        [&sequences](size_t a, size_t b) {
-            return sequences[a].size() < sequences[b].size();
+        [&](size_t a, size_t b) {
+            if (sequences[a].size() != sequences[b].size()) {
+                return sequences[a].size() < sequences[b].size();
+            }
+            const size_t dashA = firstDashPos(a);
+            const size_t dashB = firstDashPos(b);
+            if (dashA != dashB) {
+                return dashA < dashB;
+            }
+            return a < b;
         });
 
     const auto& bestSequence = sequences[shortestIdx];
@@ -950,19 +984,6 @@ findBestSequence(Combatant *combatant, const StateMachine &dag,
             return a.first > b.first;
         });
 
-    if (std::getenv("ENC_DEBUG_TOPSEQ") && combatant->toString().find("Assassin") != std::string::npos) {
-        std::cerr << "=== TOPSEQ for " << combatant->toString() << " ===\n";
-        int shown = 0;
-        for (const auto& [score, idx] : scoredSequences) {
-            if (shown++ >= 12) break;
-            const auto& st = sequenceToThreat.at(idx);
-            std::cerr << "  score=" << score << " mv=" << (st.first.empty() ? 0.0 : st.first.back())
-                      << " second=" << st.second << " | ";
-            for (Actoid* a : sequences[idx]) std::cerr << "[" << (a ? a->toString() : std::string("null")) << "]";
-            std::cerr << "\n";
-        }
-    }
-
     std::vector<size_t> sortedSequences;
     sortedSequences.reserve(scoredSequences.size());
     for (const auto& [score, idx] : scoredSequences) {
@@ -1025,7 +1046,7 @@ std::shared_ptr<Actoid> getAction(Combatant* combatant) {
 
     // Calculate new action plan if needed
     combatant->setActionPlan(combatant->calculateActionPlan(distances, shortestPaths));
-    
+
     // Return first action from plan or nullptr if no actions possible
     if (combatant->getActionPlan().empty()) {
         return nullptr;

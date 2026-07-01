@@ -139,9 +139,26 @@ namespace enc
     {
       // thread_local: each worker thread numbers its own combatants independently (deterministic per
       // thread, no data race) so parallel simulations stay self-contained.
-      static thread_local int nextId = 1;
-      return ++nextId;
+      return ++instanceIdCounter();
     }
+
+    // Resets the per-thread instance-id counter. Tests call this in their fixture SetUp so that a scenario's
+    // combatants always receive the same ids regardless of how many combatants earlier tests created; several
+    // planner containers are keyed on the instance id, so leaving the counter to accumulate across tests can
+    // change equal-threat tie-breaking order and make otherwise-deterministic scenarios sensitive to test
+    // ordering. Never needed by production simulation code.
+    static void resetInstanceIdCounter() { instanceIdCounter() = 1; }
+
+  private:
+    // Per-thread monotonic combatant counter. Wrapped in a function so the single thread_local definition is
+    // shared by generateInstanceId() and resetInstanceIdCounter() without an out-of-class definition.
+    static int &instanceIdCounter()
+    {
+      static thread_local int nextId = 1;
+      return nextId;
+    }
+
+  public:
 
     std::string toString() const;
     void setShortCode(const std::string &shortCode) { _shortCode = shortCode; }
