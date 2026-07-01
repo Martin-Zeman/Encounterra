@@ -1,4 +1,4 @@
-#include "bugbear.hpp"
+#include "bugbear2014.hpp"
 #include "core/misc.hpp"
 #include "core/utils.hpp"
 #include "actions/action_types.hpp"
@@ -18,7 +18,7 @@ namespace enc
   // rogue-kiting scenarios ported from the Python test suite.
   namespace
   {
-    void buildBugbear(Bugbear *self)
+    void buildBugbear(Bugbear2014 *self)
     {
       auto morningstar = self->addMeleeAttack("Morningstar", self,
                                               4,                        // toHit
@@ -59,7 +59,7 @@ namespace enc
     }
   } // namespace
 
-  Bugbear::Bugbear(int num)
+  Bugbear2014::Bugbear2014(int num)
       : Combatant(CombatantType::MONSTER, Monster::HUMANOID, _classLevel, concatName(std::string(_className), num), 27, 16, 2, 0, 30, 0)
   {
     _instanceId = generateInstanceId();
@@ -67,7 +67,7 @@ namespace enc
     buildBugbear(this);
   }
 
-  Bugbear::Bugbear(const std::string &name)
+  Bugbear2014::Bugbear2014(const std::string &name)
       : Combatant(CombatantType::MONSTER, Monster::HUMANOID, _classLevel, name, 27, 16, 2, 0, 30, 0)
   {
     _instanceId = generateInstanceId();

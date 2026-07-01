@@ -17,7 +17,7 @@
 #include "effects/effect_tracker.hpp"
 #include "combatants/assassin_rogue_lvl_5.hpp"
 #include "combatants/bugbear_warrior.hpp"
-#include "combatants/bugbear.hpp"
+#include "combatants/bugbear2014.hpp"
 #include "combatants/ogre.hpp"
 #include "combatants/goblin.hpp"
 #include "combatants/brown_bear.hpp"
@@ -406,7 +406,7 @@ namespace
     // Faithful port: the Python `test_bugbear` fixture is the Monster Manual Bugbear (Morningstar, reach 5 ft.
     // = 1 square). Its opportunity-attack reach is what lets the rogue start at Chebyshev distance 2 and kite
     // away with the Shortbow without provoking. (BugbearWarrior is a different statblock with reach 10 ft.)
-    auto *bugbear = new Bugbear(1);
+    auto *bugbear = new Bugbear2014(1);
     auto *ogre = new Ogre(1);
     auto *goblin = new Goblin(1);
 
